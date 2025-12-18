@@ -9,7 +9,7 @@ import math
 class tipsEx(ft.SnackBar):
     def __init__(self, text:str):
         super().__init__(text)
-        self._text = ft.Text(text, color="#fdf0d5"
+        self._text = ft.Text(text, color="#fdf0d5")
         self.content = self._text
         self.bgcolor = "#c1121f"
         
