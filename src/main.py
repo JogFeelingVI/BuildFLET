@@ -1,181 +1,181 @@
 # -*- coding: utf-8 -*-
-# @Author: Your name
-# @Date:   2025-03-04 20:30:55
-# @Last Modified by:   Your name
-# @Last Modified time: 2025-03-15 09:03:30
-import flet as ft, json, random, string
+# @Author: JogFeelingVI
+# @Date:   2025-12-15 00:52:00
+# @Last Modified by:   JogFeelingVI
+# @Last Modified time: 2025-12-16 11:43:18
+import flet as ft
+import math
 
-def generate_unique_id(length=8):
-    characters = string.ascii_letters + string.digits
-    unique_id = ''.join(random.choice(characters) for _ in range(length))
-    return unique_id
-
-class taskExc(ft.Column):
-    def __init__(self, Name, Task_status, Task_delete, Task_edit, unique_id=None):
-        super().__init__()
-        self.Name = Name
-        self.unique_id = generate_unique_id() if unique_id is None else unique_id
-        self.Task_delete = Task_delete
-        self.Task_status = Task_status
-        self.Task_edit = Task_edit
-        self.display_checkbox = ft.Checkbox(value=False, label=self.Name, on_change=self.status_change)
-        self.completed = self.display_checkbox.value
-        self.edit_name = ft.TextField(expand=1)
-        
-        self.display_view = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            controls=[
-                self.display_checkbox,
-                ft.Row(
-                    spacing=0,
-                    controls=[
-                        ft.IconButton(ft.Icons.EDIT, on_click=self.edit_clicked, tooltip="Edit"),
-                        ft.IconButton(ft.Icons.DELETE, on_click=self.delete_clicked, tooltip="Delete"),
-                    ]
-                )
-            ]
-        )
-        
-        self.edit_view = ft.Row(
-            visible=False,
-            controls=[
-                self.edit_name,
-                ft.IconButton(ft.Icons.SAVE, on_click=self.save_clicked),
-                ],
-        )
-        self.controls = [self.display_view, self.edit_view]
-        
-    def status_change(self, e):
-        self.completed = self.display_checkbox.value
-        self.Task_status()
-
-    def edit_clicked(self, e):
-        self.edit_name.value = self.Name
-        self.display_view.visible = False
-        self.edit_view.visible = True
-        self.update()
-        
-    def save_clicked(self, e):
-        self.display_checkbox.label = self.edit_name.value
-        self.Name = self.display_checkbox.label
-        self.edit_view.visible = False
-        self.display_view.visible = True
-        self.Task_edit()
-        self.update()
-        
-    def delete_clicked(self, e):
-        self.Task_delete(self)
+class tipsEx(ft.SnackBar):
+    def __init__(self, text:str):
+        super().__init__(text)
+        self._text = ft.Text(text, color="#fdf0d5"
+        self.content = self._text
+        self.bgcolor = "#c1121f"
         
     
+    def setText(self, text:str):
+        self._text.value = text
         
-
-class TodoApp(ft.Column):
-    def __init__(self):
+class AppDialog(ft.CupertinoAlertDialog):
+    def __init__(
+        self,
+        title: str,
+        content: str,
+        on_submit = None,              # 点击确定时的回调函数
+        submit_text: str = "确定",
+        cancel_text: str = "取消",
+        is_destructive: bool = False, # 确定按钮是否显示为红色（警告）
+    ):
+        """
+        :param title: 弹窗标题
+        :param content: 弹窗内容文本
+        :param on_submit: 点击“确定”执行的函数 (e) -> None
+        :param submit_text: 确定按钮的文字
+        :param cancel_text: 取消按钮的文字
+        :param is_destructive: 如果为 True 确定按钮会变红（适合删除操作）
+        """
+        
+        # 保存回调函数
+        self.user_on_submit = on_submit if on_submit else None
+        
+        # 初始化父类
         super().__init__()
-        self.data_file = "./data.json"
-        self.Dataed = {}
-        self.new_task = ft.TextField(hint_text="What needs to be done?", expand=True, on_submit=self.submit)
-        self.tasks = ft.Column()
-        self.items_count = ft.Text(value="0 items", color=ft.Colors.WHITE, size=16)
-        self.filter = ft.Tabs(
-            selected_index=0,
-            tabs=[
-                ft.Tab(text="All"),
-                ft.Tab(text="Active"),
-                ft.Tab(text="Completed"),
-            ],
-            on_change=self.filter_change,
-        )
-        self.controls = [
-            ft.Row(
-                [self.new_task,
-                ft.FloatingActionButton(text="ADD", icon=ft.Icons.ADD, on_click=self.add_click, tooltip='Add Task')],
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=10,
+
+        # 1. 设置标题和内容 (你可以统一设置字体样式)
+        self.title = ft.Text(title, weight=ft.FontWeight.BOLD)
+        self.content = ft.Text(content, size=16)
+
+        # 2. 构建按钮列表
+        self.actions = [
+            # 取消按钮 (默认逻辑：点击直接关闭)
+            ft.CupertinoDialogAction(
+                text=cancel_text,
+                on_click=self.dismiss
             ),
-            self.filter,
-            self.tasks,
-            ft.Row(
-                alignment=ft.MainAxisAlignment.END,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[self.items_count,
-                          ft.OutlinedButton(text="Clear Completed", icon=ft.Icons.DELETE, on_click=self.clear_clicked, tooltip='Clear Completed Tasks')
-                          ],
-            )
+            # 确定按钮
+            ft.CupertinoDialogAction(
+                text=submit_text,
+                is_destructive_action=is_destructive,
+                on_click=self.submit
+            ),
         ]
-        self.load_data()
-        
-        
-    def clear_clicked(self, e):
-        for task in self.tasks.controls[:]:
-            if task.completed:
-                self.delete_click(task)
-                
+
+    def dismiss(self, e):
+        """关闭弹窗"""
+        e.page.close(self)
+
     def submit(self, e):
-        self.add_click(e)
-    
-    def add_click(self, e):
-        if self.new_task.value == "":
-            return
-        self.tasks.controls.append(taskExc(Name=self.new_task.value, Task_status=self.task_status,Task_edit=self.task_edit, Task_delete=self.delete_click))
-        self.new_task.value = ""
-        self.update()
-    
-    def delete_click(self, e):
-        self.Dataed.pop(f"{e.unique_id}")
-        self.tasks.controls.remove(e)
-        self.update()
-        
-    def filter_change(self, e):
-        self.update()
-        
-    def task_status(self):
-        self.update()
-        
-    def task_edit(self):
-        self.update()
-        
-    def before_update(self):
-        status = self.filter.tabs[self.filter.selected_index].text
-        count = 0
-        for task in self.tasks.controls:
-            task.visible = (
-                status == "All"
-                or status == "Active" and task.completed == False
-                or status == "Completed" and task.completed)
-            if not task.completed:
-                count += 1
-            
-            self.Dataed.update({f"{task.unique_id}": {"Name": task.Name, "completed": task.completed}})
-        self.items_count.value = f"{count} active item(s) left"
-        # print(f'[before_update save]')
-        with open(self.data_file, "w") as f:
-            json.dump(self.Dataed, f)
-            
-    def load_data(self):
-        try:
-            with open(self.data_file, "r") as f:
-                self.Dataed = json.load(f)
-        except FileNotFoundError:
-            self.Dataed = {}
-        
-        if self.Dataed == {}:
-            return
-        tasks = []
-        for id, task in self.Dataed.items():
-            temp = taskExc(Name=task["Name"], Task_status=self.task_status, Task_edit=self.task_edit, Task_delete=self.delete_click, unique_id=id)
-            if task["completed"]:
-                temp.display_checkbox.value = True
-                temp.completed = True
-            tasks.append(temp)
-        self.tasks.controls = tasks
-        print(f'[load_data] {self.Dataed}')
+        """执行回调并关闭弹窗"""
+        # 1. 先关闭弹窗
+        self.dismiss(e)
+        # 2. 执行用户传入的逻辑
+        if self.user_on_submit:
+            self.user_on_submit(e)
 
 def main(page: ft.Page):
-    page.title = "To-Do List"
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    todo = TodoApp()
-    page.add(todo)
+    page.title = "youtebe flet exp 2"
+    page.theme_mode = ft.ThemeMode.DARK
+    page.padding = 20
+
+    side_length_a = ft.TextField(
+        label="Triangle A/mm",
+        hint_text="Enter Triangle side length mm",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    side_length_b = ft.TextField(
+        label="Triangle B/mm",
+        hint_text="Enter Triangle side length mm",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    side_length_c = ft.TextField(
+        label="Triangle C/mm",
+        hint_text="Enter Triangle side length mm",
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    
+    _tips = tipsEx(f"ALL Side Clear.")
+    
+    def clear_click(e):
+        side_length_a.value = side_length_b.value = side_length_c.value = ""
+        _tips.setText(f'Clear all triangle data.')
+        page.open(_tips)
+        page.update()
+
+    def done_click(e):
+        abc = []
+        try:
+            abc.append(int(side_length_a.value))
+            abc.append(int(side_length_b.value))
+            abc.append(int(side_length_c.value))
+        except:
+            _tips.setText('None of the data points for the triangle can be empty.')
+            return
+        abc.sort()
+        a, b, c = abc
+        if a + b <= c:
+            error_dig = AppDialog(
+                title = "错误提示",
+                content = f"{a} {b} {c} 不符合三角形的基本原理."
+            )
+            page.open(error_dig)
+            return
+        s = (a + b + c) / 2
+        area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+        area_dig = AppDialog(
+            title="三角形面积",
+            content=f"{a} {b} {c} 所构成的三角形面积为 {area}"
+        )
+        page.open(area_dig)
+
+    page.add(
+        ft.Column(
+            [
+                ft.Text(
+                    value="计算物体面积",
+                    text_align=ft.TextAlign.RIGHT,
+                    size=28,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.Colors.PURPLE_100,
+                ),
+                ft.Divider(height=20),
+                side_length_a,
+                side_length_b,
+                side_length_c,
+                ft.Divider(height=5),
+                ft.Row(
+                    [
+                        ft.ElevatedButton(
+                            text="Clear",
+                            bgcolor=ft.Colors.RED,
+                            color=ft.Colors.WHITE,
+                            on_click=clear_click,
+                        ),
+                        ft.ElevatedButton(
+                            text="Done",
+                            bgcolor=ft.Colors.GREEN_100,
+                            color=ft.Colors.WHITE,
+                            on_click=done_click,
+                        ),
+                    ]
+                ),
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Text(
+                                "海伦公式 (Heron's Formula)", weight=ft.FontWeight.BOLD
+                            ),
+                            ft.Text("公式: S=sqrt(p(p-a)(p-b)(p-c))"),
+                            ft.Text("条件: 已知三角形三条边长 a,b,b"),
+                            ft.Text("步骤:", weight=ft.FontWeight.BOLD),
+                            ft.Text("计算半周长 p={a+b+c} / 2"),
+                            ft.Text("代入公式计算面积 (S)。"),
+                        ]
+                    )
+                ),
+            ]
+        )
+    )
+
 
 ft.app(main)
