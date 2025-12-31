@@ -1,0 +1,23 @@
+[project]
+name = "Lotter-app"
+version = "0.1.0"
+description = "Lotter application."
+requires-python = ">=3.12"
+authors = [
+    { name = "JogFeelingVI", email = "glifelse@gmail.com" }
+]
+
+dependencies = [
+  "flet==0.80.0",
+]
+
+[tool.flet]
+company = "Flet"
+bundle_id = "com.flet.Lotter-app"
+
+[tool.poetry]
+package-mode = false
+
+[tool.flet.app]
+path = "."
+

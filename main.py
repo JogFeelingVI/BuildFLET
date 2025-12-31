@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 # @Author: JogFeelingVI
-# @Date:   2025-12-28 00:32:58
+# @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2025-12-31 15:45:43
+# @Last Modified time: 2025-12-31 20:27:59
+
 import flet as ft
 import json
 import os
-import pathlib
 
+# 获取系统标示
+app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
+app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
+jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 class Selectable(ft.Column):
     """setings page setings"""
@@ -146,12 +150,6 @@ def main(page: ft.Page):
     # 设置移动端适配的内边距
     page.padding = 0
 
-    # 获取系统标示
-    app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
-    app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
-
-    jackpot_settings_path = pathlib.Path(app_data_path) / "jackpot_settings.json"
-    jackpot_settings_path.parent.mkdir(parents=True, exist_ok=True)
 
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
@@ -173,21 +171,23 @@ def main(page: ft.Page):
     def read_from_json():
         json_data = {}
         select_pn = []
-        with open(jackpot_settings_path, "r") as f:
-            json_data = json.load(f)
-        for k,item in json_data['randomData'].items():
-            if k == 'note':
-                continue
-            temp=Selectable().set_json(k,item)
-            select_pn.append(temp)
+        try:
+            with open(jackpot_seting, "r") as f:
+                json_data = json.load(f)
+            for k,item in json_data['randomData'].items():
+                if k == 'note':
+                    continue
+                temp=Selectable().set_json(k,item)
+                select_pn.append(temp)
+        except Exception as e:
+            json_data = {}
+            
+        
         if select_pn.__len__()==0:
             for k in ["PA", "PB", "PC"]:
                 select_pn.append(Selectable(k))
         return select_pn
-    # --- 1. 各个页面的 UI 定义 ---
-    # select_pa = Selectable("PA")
-    # select_pb = Selectable("PB")
-    # select_pc = Selectable("PC")
+    
     selectPx = read_from_json()
 
     def save_to_json():
@@ -197,7 +197,7 @@ def main(page: ft.Page):
         for sPn in selectPx:
             json_data['randomData'].update(sPn.get_json())
 
-        with open(jackpot_settings_path, "w") as f:
+        with open(jackpot_seting, "w") as f:
             json.dump(json_data, f, indent=4, ensure_ascii=False)
 
         # snack_bar
