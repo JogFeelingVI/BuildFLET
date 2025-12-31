@@ -1,181 +1,358 @@
 # -*- coding: utf-8 -*-
 # @Author: JogFeelingVI
-# @Date:   2025-12-15 00:52:00
+# @Date:   2025-12-28 00:32:58
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2025-12-16 11:43:18
+# @Last Modified time: 2025-12-31 15:45:43
+import select
+from fastapi.background import P
 import flet as ft
-import math
+import json
+import os
+import pathlib
 
-class tipsEx(ft.SnackBar):
-    def __init__(self, text:str):
-        super().__init__(text)
-        self._text = ft.Text(text, color="#fdf0d5")
-        self.content = self._text
-        self.bgcolor = "#c1121f"
-        
-    
-    def setText(self, text:str):
-        self._text.value = text
-        
-class AppDialog(ft.CupertinoAlertDialog):
+
+class Selectable(ft.Column):
+    """setings page setings"""
+
     def __init__(
-        self,
-        title: str,
-        content: str,
-        on_submit = None,              # 点击确定时的回调函数
-        submit_text: str = "确定",
-        cancel_text: str = "取消",
-        is_destructive: bool = False, # 确定按钮是否显示为红色（警告）
+        self, text: str="test", range_min: int = 1, range_max: int = 100, onff: bool = True
     ):
-        """
-        :param title: 弹窗标题
-        :param content: 弹窗内容文本
-        :param on_submit: 点击“确定”执行的函数 (e) -> None
-        :param submit_text: 确定按钮的文字
-        :param cancel_text: 取消按钮的文字
-        :param is_destructive: 如果为 True 确定按钮会变红（适合删除操作）
-        """
+        # 1. 初始化控件（去掉末尾逗号！）
+        self.base_text = text
+        self.counter_value = 5
+        self.start = range_min
+        self.end = range_max
+        self.text_label = ft.Text(f"{self.base_text} {range_min}-{range_max}")
+        self.range_slider = ft.RangeSlider(
+            min=range_min,
+            max=range_max,
+            start_value=range_min,
+            end_value=range_max,
+            label="{value}",
+            disabled=not onff,
+            expand=True,  # 在 Row 中让 Slider 自动拉伸填满剩余空间
+            on_change=self.handle_range_change,
+        )
+        self.switch_control = ft.Switch(
+            label="ON" if onff else "OFF",
+            value=onff,
+            on_change=self.handle_switch_change,
+        )
+
+        # 第三行：计数器控件
+        self.num_display = ft.Text(str(self.counter_value), size=20, weight="bold")
+
+        self.counter_row = ft.Row(
+            controls=[
+                ft.IconButton(
+                    icon=ft.Icons.REMOVE,
+                    on_click=self.handle_decrement,
+                    disabled=not onff,  # 初始状态跟随开关
+                ),
+                self.num_display,
+                ft.IconButton(
+                    icon=ft.Icons.ADD,
+                    on_click=self.handle_increment,
+                    disabled=not onff,  # 初始状态跟随开关
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=20,
+        )
+
+        # 2. 调用父类初始化，直接传入控件列表
+        super().__init__(
+            controls=[
+                # 第一行：标题和开关 左右分布
+                ft.Row(
+                    controls=[self.text_label, self.switch_control],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,  # 左右撑开,
+                    expand=True,
+                ),
+                # 第二行：滑动条
+                ft.Row(
+                    controls=[self.range_slider],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    expand=True,
+                ),
+                ft.Row(controls=[self.counter_row], alignment=ft.MainAxisAlignment.END),
+            ],
+            spacing=10,  # 行与行之间的间距
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,  # 内部控件水平拉伸
+        )
+
+    # --- 事件处理 ---
+    def handle_increment(self, e):
+        self.counter_value += 1
+        self.num_display.value = str(self.counter_value)
+        self.update()
+
+    def handle_decrement(self, e):
+        if self.counter_value > 0:
+            self.counter_value -= 1
+            self.num_display.value = str(self.counter_value)
+            self.update()
+
+    def handle_range_change(self, e):
+        """当滑动条范围改变时触发"""
+        self.start = int(self.range_slider.start_value)
+        self.end = int(self.range_slider.end_value)
+        # 更新文本显示
+        self.text_label.value = f"{self.base_text} {self.start}-{self.end}"
+        # 注意：在自定义控件内部修改属性后，需要调用 self.update() 才能看到变化
+        self.update()
+
+    def handle_switch_change(self, e):
+        """当开关状态改变时触发"""
+        e_vale = self.switch_control.value
+        self.switch_control.label = "ON" if e_vale else "OFF"
+        # 如果开关关闭 (False)，则禁用滑动条 (disabled=True)
+        self.range_slider.disabled = not e_vale
+        self.counter_row.disabled = not e_vale
+        self.update()
+
+    def get_json(self):
+        return {
+            f"{self.base_text}": {
+                "enabled": self.switch_control.value,
+                "range_start": int(self.range_slider.start_value),
+                "range_end": int(self.range_slider.end_value),
+                "count": self.counter_value,
+            }
+        }
+    
+    def set_json(self,key:str, json_data_item:dict):
+        self.base_text = key
         
-        # 保存回调函数
-        self.user_on_submit = on_submit if on_submit else None
+        self.switch_control.value = json_data_item["enabled"]
+        self.range_slider.disabled = not json_data_item["enabled"]
+        self.counter_row.disabled = not json_data_item["enabled"]
+            
+        s = json_data_item.get("range_start", self.range_slider.min)
+        e = json_data_item.get("range_end", self.range_slider.max)
+        self.range_slider.start_value = s
+        self.range_slider.end_value = e
         
-        # 初始化父类
-        super().__init__()
+        self.counter_value = json_data_item["count"]
+        self.num_display.value = str(self.counter_value) # 必须更新已有控件的 value
+            
+        # 2. 更新标题文字 (修改已有控件的属性，而不是创建新控件)
+        self.text_label.value = f"{self.base_text} {int(s)}-{int(e)}"
+        
+        return self
 
-        # 1. 设置标题和内容 (你可以统一设置字体样式)
-        self.title = ft.Text(title, weight=ft.FontWeight.BOLD)
-        self.content = ft.Text(content, size=16)
-
-        # 2. 构建按钮列表
-        self.actions = [
-            # 取消按钮 (默认逻辑：点击直接关闭)
-            ft.CupertinoDialogAction(
-                text=cancel_text,
-                on_click=self.dismiss
-            ),
-            # 确定按钮
-            ft.CupertinoDialogAction(
-                text=submit_text,
-                is_destructive_action=is_destructive,
-                on_click=self.submit
-            ),
-        ]
-
-    def dismiss(self, e):
-        """关闭弹窗"""
-        e.page.close(self)
-
-    def submit(self, e):
-        """执行回调并关闭弹窗"""
-        # 1. 先关闭弹窗
-        self.dismiss(e)
-        # 2. 执行用户传入的逻辑
-        if self.user_on_submit:
-            self.user_on_submit(e)
 
 def main(page: ft.Page):
-    page.title = "youtebe flet exp 2"
+    page.title = "Jackpot App"
     page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 20
+    # 设置移动端适配的内边距
+    page.padding = 0
 
-    side_length_a = ft.TextField(
-        label="Triangle A/mm",
-        hint_text="Enter Triangle side length mm",
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-    side_length_b = ft.TextField(
-        label="Triangle B/mm",
-        hint_text="Enter Triangle side length mm",
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-    side_length_c = ft.TextField(
-        label="Triangle C/mm",
-        hint_text="Enter Triangle side length mm",
-        keyboard_type=ft.KeyboardType.NUMBER,
-    )
-    
-    _tips = tipsEx(f"ALL Side Clear.")
-    
-    def clear_click(e):
-        side_length_a.value = side_length_b.value = side_length_c.value = ""
-        _tips.setText(f'Clear all triangle data.')
-        page.open(_tips)
+    # 获取系统标示
+    app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
+    app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
+
+    jackpot_settings_path = pathlib.Path(app_data_path) / "jackpot_settings.json"
+    jackpot_settings_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # --- 页面逻辑控制 ---
+    def on_navigation_change(e):
+        index = e.control.selected_index
+        # 切换中间的内容区域
+        if index == 0:
+            content_area.content = setting_view
+        elif index == 1:
+            content_area.content = filter_view
+        elif index == 2:
+            content_area.content = data_view
         page.update()
 
-    def done_click(e):
-        abc = []
-        try:
-            abc.append(int(side_length_a.value))
-            abc.append(int(side_length_b.value))
-            abc.append(int(side_length_c.value))
-        except:
-            _tips.setText('None of the data points for the triangle can be empty.')
-            return
-        abc.sort()
-        a, b, c = abc
-        if a + b <= c:
-            error_dig = AppDialog(
-                title = "错误提示",
-                content = f"{a} {b} {c} 不符合三角形的基本原理."
-            )
-            page.open(error_dig)
-            return
-        s = (a + b + c) / 2
-        area = math.sqrt(s * (s - a) * (s - b) * (s - c))
-        area_dig = AppDialog(
-            title="三角形面积",
-            content=f"{a} {b} {c} 所构成的三角形面积为 {area}"
-        )
-        page.open(area_dig)
+    def handle_menu_click(e):
+        print(f"Menu clicked: {e.control.data}")
+        if e.control.data == "quit":
+            page.window_close()
 
-    page.add(
-        ft.Column(
-            [
-                ft.Text(
-                    value="计算物体面积",
-                    text_align=ft.TextAlign.RIGHT,
-                    size=28,
-                    weight=ft.FontWeight.BOLD,
-                    color=ft.Colors.PURPLE_100,
-                ),
-                ft.Divider(height=20),
-                side_length_a,
-                side_length_b,
-                side_length_c,
-                ft.Divider(height=5),
-                ft.Row(
-                    [
-                        ft.ElevatedButton(
-                            text="Clear",
-                            bgcolor=ft.Colors.RED,
-                            color=ft.Colors.WHITE,
-                            on_click=clear_click,
-                        ),
-                        ft.ElevatedButton(
-                            text="Done",
-                            bgcolor=ft.Colors.GREEN_100,
-                            color=ft.Colors.WHITE,
-                            on_click=done_click,
-                        ),
-                    ]
-                ),
-                ft.Container(
-                    content=ft.Column(
-                        [
-                            ft.Text(
-                                "海伦公式 (Heron's Formula)", weight=ft.FontWeight.BOLD
-                            ),
-                            ft.Text("公式: S=sqrt(p(p-a)(p-b)(p-c))"),
-                            ft.Text("条件: 已知三角形三条边长 a,b,b"),
-                            ft.Text("步骤:", weight=ft.FontWeight.BOLD),
-                            ft.Text("计算半周长 p={a+b+c} / 2"),
-                            ft.Text("代入公式计算面积 (S)。"),
-                        ]
-                    )
-                ),
-            ]
+    def read_from_json():
+        json_data = {}
+        select_pn = []
+        with open(jackpot_settings_path, "r") as f:
+            json_data = json.load(f)
+        for k,item in json_data['randomData'].items():
+            if k == 'note':
+                continue
+            temp=Selectable().set_json(k,item)
+            select_pn.append(temp)
+        if select_pn.__len__()==0:
+            for k in ["PA", "PB", "PC"]:
+                select_pn.append(Selectable(k))
+        return select_pn
+    # --- 1. 各个页面的 UI 定义 ---
+    # select_pa = Selectable("PA")
+    # select_pb = Selectable("PB")
+    # select_pc = Selectable("PC")
+    selectPx = read_from_json()
+
+    def save_to_json():
+        json_data = {
+            "randomData": {"note":"setings json code save_to_json()"}
+        }
+        for sPn in selectPx:
+            json_data['randomData'].update(sPn.get_json())
+
+        with open(jackpot_settings_path, "w") as f:
+            json.dump(json_data, f, indent=4, ensure_ascii=False)
+
+        # snack_bar
+        snack_bar = ft.SnackBar(
+            content=ft.Text(
+                f"Settings have been saved successfully.",
+                style=ft.TextStyle(color="WHITE"),
+            ),
+            bgcolor="PINK",
         )
+        page.show_dialog(snack_bar)
+        page.update()
+    
+
+    # Setting 页面
+    setting_view = ft.Column(
+        controls=[
+            ft.Text("Setings", size=25, weight=ft.FontWeight.BOLD),
+            *selectPx,
+            ft.Divider(height=5),
+            ft.Row(
+                controls=[
+                    ft.Button(
+                        "Save Steings",
+                        icon=ft.Icons.SAVE,
+                        icon_color=ft.Colors.WHITE,
+                        color=ft.Colors.WHITE,
+                        on_click=save_to_json,
+                        style=ft.ButtonStyle(
+                            bgcolor="PINK", shape=ft.RoundedRectangleBorder(radius=10)
+                        ),
+                    )
+                ],
+                alignment="END",
+            ),
+        ],
+        scroll=ft.ScrollMode.ADAPTIVE,
+        expand=True,
+        alignment=ft.MainAxisAlignment.START,
     )
 
+    # Filter 页面
+    filter_view = ft.Column(
+        controls=[
+            ft.Text("Filter", size=25, weight=ft.FontWeight.BOLD),
+            ft.Text("在此添加各种过滤条件："),
+            ft.TextField(label="关键词过滤", prefix_icon=ft.Icons.FILTER_2_SHARP),
+            ft.Dropdown(
+                label="分类筛选",
+                options=[
+                    ft.dropdown.Option("选项 1"),
+                    ft.dropdown.Option("选项 2"),
+                ],
+            ),
+            ft.Checkbox(label="仅显示有效数据"),
+        ],
+        expand=True,
+    )
 
-ft.app(main)
+    # Data 页面
+    data_view = ft.Column(
+        controls=[
+            ft.Text("DataView", size=25, weight=ft.FontWeight.BOLD),
+            ft.Text("显示筛选后的结果："),
+            ft.DataTable(
+                columns=[
+                    ft.DataColumn(ft.Text("ID")),
+                    ft.DataColumn(ft.Text("结果")),
+                ],
+                rows=[
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text("1")),
+                            ft.DataCell(ft.Text("数据 A")),
+                        ]
+                    ),
+                    ft.DataRow(
+                        cells=[
+                            ft.DataCell(ft.Text("2")),
+                            ft.DataCell(ft.Text("数据 B")),
+                        ]
+                    ),
+                ],
+            ),
+        ],
+        expand=True,
+        scroll=ft.ScrollMode.ADAPTIVE,
+    )
+
+    # --- 2. 界面组件定义 ---
+
+    # 中间显示区域容器
+    content_area = ft.Container(
+        content=setting_view,  # 默认显示设置页
+        expand=True,
+        padding=20,
+    )
+
+    # 顶部 AppBar
+    page.appbar = ft.AppBar(
+        leading=ft.Icon(
+            ft.Icons.MONEY_OFF_CSRED_ROUNDED, color=ft.Colors.AMBER
+        ),  # 程序图标
+        leading_width=40,
+        title=ft.Text("jackpot", weight=ft.FontWeight.BOLD),
+        center_title=False,
+        bgcolor=ft.Colors.BLACK_12,
+        actions=[
+            ft.PopupMenuButton(
+                items=[
+                    ft.PopupMenuItem(
+                        "Send",
+                        icon=ft.Icons.SEND,
+                        data="send",
+                        on_click=handle_menu_click,
+                    ),
+                    ft.PopupMenuItem(
+                        "Compo",
+                        icon=ft.Icons.IMAGE_OUTLINED,
+                        data="compo",
+                        on_click=handle_menu_click,
+                    ),
+                    ft.PopupMenuItem(
+                        "Quit",
+                        icon=ft.Icons.EXIT_TO_APP,
+                        data="quit",
+                        on_click=handle_menu_click,
+                    ),
+                ]
+            ),
+        ],
+    )
+
+    # 底部 NavigationBar
+    page.navigation_bar = ft.NavigationBar(
+        destinations=[
+            ft.NavigationBarDestination(
+                icon=ft.Icons.SETTINGS_OUTLINED,
+                selected_icon=ft.Icons.SETTINGS,
+                label="Setting",
+            ),
+            ft.NavigationBarDestination(icon=ft.Icons.FILTER_LIST_ALT, label="Filter"),
+            ft.NavigationBarDestination(
+                icon=ft.Icons.DATA_EXPLORATION_OUTLINED, label="Data"
+            ),
+        ],
+        on_change=on_navigation_change,
+    )
+
+    # 将内容添加到页面
+    page.add(content_area)
+    page.update()
+
+
+# 运行应用
+ft.run(main)
