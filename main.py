@@ -144,11 +144,13 @@ class Selectable(ft.Column):
         return self
 
 
+
 def main(page: ft.Page):
     page.title = "Jackpot App"
     page.theme_mode = ft.ThemeMode.DARK
     # 设置移动端适配的内边距
     page.padding = 0
+    page.ScrollMode = "hidden"
 
 
     # --- 页面逻辑控制 ---
@@ -216,6 +218,7 @@ def main(page: ft.Page):
     setting_view = ft.Column(
         controls=[
             ft.Text("Setings", size=25, weight=ft.FontWeight.BOLD),
+            # 彩票选择
             *selectPx,
             ft.Divider(height=5),
             ft.Row(
@@ -296,40 +299,40 @@ def main(page: ft.Page):
         padding=20,
     )
 
-    # 顶部 AppBar
-    page.appbar = ft.AppBar(
-        leading=ft.Icon(
-            ft.Icons.MONEY_OFF_CSRED_ROUNDED, color=ft.Colors.AMBER
-        ),  # 程序图标
-        leading_width=40,
-        title=ft.Text("jackpot", weight=ft.FontWeight.BOLD),
-        center_title=False,
-        bgcolor=ft.Colors.BLACK_12,
-        actions=[
-            ft.PopupMenuButton(
-                items=[
-                    ft.PopupMenuItem(
-                        "Send",
-                        icon=ft.Icons.SEND,
-                        data="send",
-                        on_click=handle_menu_click,
-                    ),
-                    ft.PopupMenuItem(
-                        "Compo",
-                        icon=ft.Icons.IMAGE_OUTLINED,
-                        data="compo",
-                        on_click=handle_menu_click,
-                    ),
-                    ft.PopupMenuItem(
-                        "Quit",
-                        icon=ft.Icons.EXIT_TO_APP,
-                        data="quit",
-                        on_click=handle_menu_click,
-                    ),
-                ]
-            ),
-        ],
-    )
+    # # 顶部 AppBar
+    # page.appbar = ft.AppBar(
+    #     leading=ft.Icon(
+    #         ft.Icons.MONEY_OFF_CSRED_ROUNDED, color=ft.Colors.AMBER
+    #     ),  # 程序图标
+    #     leading_width=40,
+    #     title=ft.Text("jackpot", weight=ft.FontWeight.BOLD),
+    #     center_title=False,
+    #     bgcolor=ft.Colors.BLACK_12,
+    #     actions=[
+    #         ft.PopupMenuButton(
+    #             items=[
+    #                 ft.PopupMenuItem(
+    #                     "Send",
+    #                     icon=ft.Icons.SEND,
+    #                     data="send",
+    #                     on_click=handle_menu_click,
+    #                 ),
+    #                 ft.PopupMenuItem(
+    #                     "Compo",
+    #                     icon=ft.Icons.IMAGE_OUTLINED,
+    #                     data="compo",
+    #                     on_click=handle_menu_click,
+    #                 ),
+    #                 ft.PopupMenuItem(
+    #                     "Quit",
+    #                     icon=ft.Icons.EXIT_TO_APP,
+    #                     data="quit",
+    #                     on_click=handle_menu_click,
+    #                 ),
+    #             ]
+    #         ),
+    #     ],
+    # )
 
     # 底部 NavigationBar
     page.navigation_bar = ft.NavigationBar(
