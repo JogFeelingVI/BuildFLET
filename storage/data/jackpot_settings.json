@@ -1,6 +1,6 @@
 {
     "randomData": {
-        "note": "setings json code save_to_json()",
+        "note": "save setings from preset buttons",
         "PA": {
             "enabled": true,
             "range_start": 1,
@@ -12,12 +12,6 @@
             "range_start": 1,
             "range_end": 16,
             "count": 1
-        },
-        "PC": {
-            "enabled": false,
-            "range_start": 1,
-            "range_end": 100,
-            "count": 5
         }
     }
 }

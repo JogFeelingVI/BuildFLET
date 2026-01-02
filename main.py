@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-01 14:36:16
+# @Last Modified time: 2026-01-02 02:51:22
 
-from Customs.setings import Selectable
+from Customs.setings import Selectable, get_seting_view
 from Customs.filter import get_filter_view
 import flet as ft
 import json
@@ -21,7 +21,6 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     # 设置移动端适配的内边距
     page.padding = ft.Padding.only(bottom=20)
-    page.ScrollMode = "hidden"
 
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
@@ -47,6 +46,7 @@ def main(page: ft.Page):
                 temp = Selectable().set_json(k, item)
                 select_pn.append(temp)
         except Exception as e:
+            print(f'read_from_json error: {e}')
             json_data = {}
 
         if select_pn.__len__() == 0:
@@ -67,7 +67,7 @@ def main(page: ft.Page):
         # snack_bar
         snack_bar = ft.SnackBar(
             content=ft.Text(
-                f"Settings have been saved successfully.",
+                "Settings have been saved successfully.",
                 style=ft.TextStyle(color="WHITE"),
             ),
             bgcolor="PINK",
@@ -76,32 +76,34 @@ def main(page: ft.Page):
         page.update()
 
     # Setting 页面
-    setting_view = ft.Column(
-        controls=[
-            ft.Text("Setings", size=25, weight=ft.FontWeight.BOLD),
-            # 彩票选择
-            *selectPx,
-            ft.Divider(height=5),
-            ft.Row(
-                controls=[
-                    ft.Button(
-                        "Save Steings",
-                        icon=ft.Icons.SAVE,
-                        icon_color=ft.Colors.WHITE,
-                        color=ft.Colors.WHITE,
-                        on_click=save_to_json,
-                        style=ft.ButtonStyle(
-                            bgcolor="PINK", shape=ft.RoundedRectangleBorder(radius=10)
-                        ),
-                    )
-                ],
-                alignment="END",
-            ),
-        ],
-        scroll=ft.ScrollMode.ADAPTIVE,
-        expand=True,
-        alignment=ft.MainAxisAlignment.START,
-    )
+    # setting_view = ft.Column(
+    #     controls=[
+    #         ft.Text("Setings", size=25, weight=ft.FontWeight.BOLD),
+    #         # 彩票选择
+    #         *selectPx,
+    #         ft.Divider(height=5),
+    #         ft.Row(
+    #             controls=[
+    #                 ft.Button(
+    #                     "Save Steings",
+    #                     icon=ft.Icons.SAVE,
+    #                     icon_color=ft.Colors.WHITE,
+    #                     color=ft.Colors.WHITE,
+    #                     on_click=save_to_json,
+    #                     style=ft.ButtonStyle(
+    #                         bgcolor="PINK", shape=ft.RoundedRectangleBorder(radius=10)
+    #                     ),
+    #                 )
+    #             ],
+    #             alignment="END",
+    #         ),
+    #     ],
+    #     scroll=ft.ScrollMode.HIDDEN,
+    #     expand=True,
+    #     alignment=ft.MainAxisAlignment.START,
+    # )
+
+    setting_view = get_seting_view(page)
 
     # Filter 页面
     # filter_view = ft.Column(
@@ -150,7 +152,7 @@ def main(page: ft.Page):
             ),
         ],
         expand=True,
-        scroll=ft.ScrollMode.ADAPTIVE,
+        scroll=ft.ScrollMode.HIDDEN,
     )
 
     # --- 2. 界面组件定义 ---

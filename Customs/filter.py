@@ -2,9 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-01 14:26:31
+# @Last Modified time: 2026-01-02 00:58:34
 
-import re
 import flet as ft
 import os
 import json
@@ -13,9 +12,11 @@ app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
+
 def get_filter_view(page: ft.Page):
     filters_list = []
     editing_index = -1
+    last_selected_target = None
 
     filter_items_column = ft.Column(spacing=10)
 
@@ -40,36 +41,36 @@ def get_filter_view(page: ft.Page):
     # --- 逻辑处理 ---
 
     def refresh_target_options():
+        """读取配置并刷新下拉列表，返回当前可用的标签列表"""
+        global jackpot_seting
+
+        enabled_tags = []
+
         if os.path.exists(jackpot_seting):
-            with open(jackpot_seting, "r") as f:
-                data = json.load(f)
-                # 3. 解析嵌套结构
-                # 目标是获取 PA, PB, PC 等 key
-                random_data = data.get("randomData", {})
-                print(f'{random_data=}')
-                
-                enabled_tags = []
-                for key, content in random_data.items():
-                    # 排除 'note' 字段，并且只添加 enabled 为 True 的项
-                    if isinstance(content, dict) and content.get("enabled") is True:
-                        enabled_tags.append(key)
-                # 4. 更新下拉菜单选项
-                target_dropdown.options = [ft.dropdown.Option(tag) for tag in enabled_tags]
-                
-                if not enabled_tags:
-                    target_dropdown.hint_text = "No activation option available."
-        page.update()
+            try:
+                with open(jackpot_seting, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    random_data = data.get("randomData", {})
+                    for key, content in random_data.items():
+                        if isinstance(content, dict) and content.get("enabled") is True:
+                            enabled_tags.append(key)
+            except Exception:
+                pass
+
+        # 更新下拉菜单选项
+        target_dropdown.options = [ft.dropdown.Option(tag) for tag in enabled_tags]
+        return enabled_tags
 
     def handle_apply(e):
-        nonlocal editing_index
-        # 注意：AutoComplete 的文本值通过 text_field 的 value 获取，
-        # 但在 Flet 中，直接访问 condition_input.value 即可
-        val = condition_input.value
+        nonlocal editing_index, last_selected_target
 
-        if not target_dropdown.value or not val:
+        if not target_dropdown.value or not condition_input.value:
             return
 
-        new_data = {"target": target_dropdown.value, "condition": val}
+        # 保存本次的选择，以便下次 Add 时默认选中
+        last_selected_target = target_dropdown.value
+
+        new_data = {"target": target_dropdown.value, "condition": condition_input.value}
 
         if editing_index == -1:
             filters_list.append(new_data)
@@ -77,21 +78,35 @@ def get_filter_view(page: ft.Page):
             filters_list[editing_index] = new_data
 
         dlg.open = False
+        print("Applied:", filters_list)
         render_filters()
         page.update()
 
     def open_dialog(index=-1):
-        nonlocal editing_index
+        nonlocal editing_index, last_selected_target
         editing_index = index
-        refresh_target_options()
+        available_tags = refresh_target_options()
 
-        if index != -1:
-            item = filters_list[index]
-            target_dropdown.value = item["target"]
-            condition_input.value = item["condition"]  # 回填 AutoComplete
+        if index == -1:
+            # --- 新增模式 (Add Filter) ---
+            # 优先级 1: 如果有上一次记录的选择，且该选择目前依然在启用列表中，则继续使用它
+            if last_selected_target in available_tags:
+                target_dropdown.value = last_selected_target
+            # 优先级 2: 否则，如果列表不为空，默认选择第一项
+            elif available_tags:
+                target_dropdown.value = available_tags[0]
+            else:
+                target_dropdown.value = None
+
+            condition_input.value = ""  # 新增时清空输入框
         else:
-            target_dropdown.value = None
-            condition_input.value = ""  # 重置 AutoComplete
+            # --- 编辑模式 (Long Press) ---
+            item = filters_list[index]
+            # 确保保存的值还在当前启用列表中，否则下拉框会显示空白
+            target_dropdown.value = (
+                item["target"] if item["target"] in available_tags else None
+            )
+            condition_input.value = item["condition"]
 
         dlg.open = True
         page.update()
@@ -156,12 +171,13 @@ def get_filter_view(page: ft.Page):
         controls=[
             ft.Text("Filter", size=25, weight=ft.FontWeight.BOLD),
             ft.Button(
-                "Add Filter", icon=ft.Icons.ADD, on_click=lambda _: open_dialog(-1)
+                "Add filtering rules",
+                icon=ft.Icons.ADD,
+                on_click=lambda _: open_dialog(-1),
             ),
             ft.Divider(),
-            ft.Column(
-                [filter_items_column], scroll=ft.ScrollMode.ADAPTIVE, expand=True
-            ),
+            ft.Column([filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True),
         ],
         expand=True,
+        scroll=ft.ScrollMode.HIDDEN,
     )
