@@ -179,7 +179,7 @@ class FilterPage:
 
         return ft.Column(
             controls=[
-                ft.Text("Filter", size=25, weight=ft.FontWeight.BOLD),
+                ft.Text("Filter", size=25, weight=ft.FontWeight.BOLD,color=Dracula_colors.COMMENT),
                 ft.Button(
                     "Add filtering rules",
                     icon=ft.Icons.ADD,

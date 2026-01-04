@@ -4,14 +4,14 @@
         "PA": {
             "enabled": true,
             "range_start": 1,
-            "range_end": 35,
-            "count": 5
+            "range_end": 33,
+            "count": 6
         },
         "PB": {
             "enabled": true,
             "range_start": 1,
-            "range_end": 12,
-            "count": 2
+            "range_end": 16,
+            "count": 1
         }
     }
 }

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 03:10:54
+# @Last Modified time: 2026-01-04 05:25:37
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -216,6 +216,7 @@ class SetingsPage:
     def render_filters(self):
         """渲染过滤器列表"""
         self.filter_items_column.controls.clear()
+        self.page.session.store.set('setings', self.apply_rule)
         for key, item in self.apply_rule.get("randomData", {}).items():
             if key == "note":
                 rd = randomData(seting=self.apply_rule["randomData"])
@@ -296,7 +297,7 @@ class SetingsPage:
                 ft.Divider(),
                 ft.Column(
                     self.filter_items_column,
-                    scroll=ft.ScrollMode.ADAPTIVE,
+                    scroll=ft.ScrollMode.HIDDEN,
                     expand=True,
                 ),
             ],

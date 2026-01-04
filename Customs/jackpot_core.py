@@ -48,9 +48,12 @@ class randomData:
 
         return result
 
-    def get_exp(self):
+    def get_exp(self, abc:dict=None):
         """获取格式化的随机数据字符串表示"""
-        pabc = self.get_pabc()
+        if abc is None:
+            pabc = self.get_pabc()
+        else:
+            pabc = abc
         exp_parts = []
         for key in self.targets:
             numbers = pabc.get(key)
@@ -58,3 +61,14 @@ class randomData:
                 numbers_str = [f"{x:02}" for x in numbers]
                 exp_parts.append(" ".join(numbers_str))
         return " + ".join(exp_parts)
+    
+    @staticmethod
+    def generate_secure_string(length=8):
+        # 定义候选字符集：大写字母 + 小写字母 + 数字
+        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+        
+        # 使用 SystemRandom 生成指定长度的随机字符串
+        # secrets.choice 比 random.choice 更安全，适合生成密码或令牌
+        secure_str = ''.join(secrets.choice(alphabet) for _ in range(length))
+        
+        return secure_str

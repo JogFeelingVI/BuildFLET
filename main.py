@@ -2,12 +2,12 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 03:11:01
+# @Last Modified time: 2026-01-04 07:25:30
 
 from Customs.DraculaTheme import Dracula_Theme, Dracula_colors
 from Customs.setings import SetingsPage
 from Customs.filter import FilterPage
-from Customs.data import DataPage
+from Customs.lottery import LotteryPage
 import flet as ft
 import json
 import os
@@ -33,18 +33,18 @@ def main(page: ft.Page):
         elif index == 1:
             content_area.content = filter_class.view
         elif index == 2:
-            content_area.content = data_class.view
+            content_area.content = lottery_class.view
         page.update()
 
     setting_class = SetingsPage(page)
 
     filter_class = FilterPage(page)
 
-    data_class = DataPage(page)
+    lottery_class = LotteryPage(page)
 
     # --- 2. 界面组件定义 ---
 
-    # 中间显示区域容器
+    # 中间显示区域容器 
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页
         expand=True,
@@ -71,7 +71,7 @@ def main(page: ft.Page):
                     ft.Icons.DATA_EXPLORATION_OUTLINED, color=Dracula_colors.PURPLE
                 ),
                 selected_icon=ft.Icons.DATA_EXPLORATION,
-                label="Data",
+                label="Lottery",
             ),
         ],
         on_change=on_navigation_change,
