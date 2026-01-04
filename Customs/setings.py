@@ -2,13 +2,16 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-03 11:29:35
+# @Last Modified time: 2026-01-04 03:10:54
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
+from .jackpot_core import randomData
 import flet as ft
 import json
 import os
+import re
+import random
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -16,23 +19,43 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 Lotter_Data = {
     "SSQ": {
-        "description": "中国福利彩票双色球",
+        "description": "🇨🇳福利彩票双色球",
         "SA": [1, 33],
         "SB": [1, 16],
         "SA_K": 6,
         "SB_K": 1,
     },
     "KL8": {
-        "description": "中国福利彩票快乐8",
+        "description": "🇨🇳福利彩票快乐8",
         "PA": [1, 80],
         "PA_K": 10,
     },
     "Lotter52": {
-        "description": "中国体育彩票大乐透",
+        "description": "🇨🇳体育彩票大乐透",
         "PA": [1, 35],
         "PB": [1, 12],
         "PA_K": 5,
         "PB_K": 2,
+    },
+    "Array3/5": {
+        "description": "🇨🇳体育彩票排列3/5",
+        "PA": [0, 9],
+        "PB": [0, 9],
+        "PC": [0, 9],
+        "PD": [0, 9],
+        "PE": [0, 9],
+        "PA_K": 1,
+        "PB_K": 1,
+        "PC_K": 1,
+        "PD_K": 1,
+        "PE_K": 1,
+    },
+    "🇺🇸Powerball": {
+        "description": "🇺🇸Powerball",
+        "PA": [1, 69],
+        "PB": [1, 26],
+        "PA_K": 5,
+        "PB_K": 1,
     },
 }
 
@@ -54,6 +77,7 @@ class SetingsPage:
             tight=True,
             spacing=10,
         )
+        self.apply_rule = {}
         self.filter_items_column = ft.Column(spacing=10)
         self.dlg = self.get_dlg()
         self.view = self.get_seting_view()
@@ -67,6 +91,7 @@ class SetingsPage:
             button_list.append(
                 ft.Button(
                     f"{k}",
+                    tooltip=ft.Tooltip(message=item.get("description", "")),
                     # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
                     on_click=lambda e, name=k, data=item: self.save_preset_to_file(
                         name, data
@@ -110,13 +135,15 @@ class SetingsPage:
             self.page.show_dialog(
                 get_snack_bar(f"Preset '{name}' has been applied and saved.")
             )
+        self.apply_rule = valid_json
+        self.render_filters()
 
     def get_Selection_line(self, Selection_name: str):
         name = f"P{Selection_name}"
         return ft.Row(
             controls=[
                 ft.TextField(
-                    label=name, expand=2, hint_text="Max val", data=f"{name}_Max"
+                    label=name, expand=2, hint_text="min,max", data=f"{name}_Max"
                 ),
                 ft.TextField(label="Count", expand=1, data=f"{name}_K"),
             ],
@@ -124,6 +151,16 @@ class SetingsPage:
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             data=name,
         )
+
+    def Processing_user_input(self, cdvalue: str):
+        """处理用户输入"""
+        if cdvalue in [None, ""]:
+            return None
+        mathch = re.findall(r"(\d+)", cdvalue)
+        if mathch:
+            val = [int(x) for x in mathch if x.isdigit()]
+            return val if len(val) == 2 else val[0]
+        return None
 
     def handle_apply(self):
         # 获取所有输入行的数据逻辑
@@ -138,13 +175,16 @@ class SetingsPage:
                     continue
                 _cd = _child.data
                 _cd_val = _child.value
-                try:
-                    _cd_val = int(_cd_val)
-                except ValueError:
+                _cd_val = self.Processing_user_input(_cd_val)
+                if _cd_val is None:
                     continue
                 if _cd.endswith("_Max"):
-                    Rows_data[tag]["range_start"] = 1
-                    Rows_data[tag]["range_end"] = _cd_val
+                    if isinstance(_cd_val, list) and len(_cd_val) == 2:
+                        Rows_data[tag]["range_start"] = _cd_val[0]
+                        Rows_data[tag]["range_end"] = _cd_val[1]
+                    elif isinstance(_cd_val, int):
+                        Rows_data[tag]["range_start"] = 1
+                        Rows_data[tag]["range_end"] = _cd_val
                 if _cd.endswith("_K"):
                     Rows_data[tag]["count"] = _cd_val
         Rows_data = {k: v for k, v in Rows_data.items() if v not in [None, {}]}
@@ -152,8 +192,9 @@ class SetingsPage:
         with open(jackpot_seting, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=4, ensure_ascii=False)
         self.page.show_dialog(get_snack_bar(f"Preset '{json_data}' ."))
-
+        self.apply_rule = json_data
         self.dlg.open = False
+        self.render_filters()
         self.page.update()
 
     def handle_add_click(self, e):
@@ -171,6 +212,43 @@ class SetingsPage:
         )
         # 【关键】刷新容器，让新行显示出来
         self.selection_container.update()
+
+    def render_filters(self):
+        """渲染过滤器列表"""
+        self.filter_items_column.controls.clear()
+        for key, item in self.apply_rule.get("randomData", {}).items():
+            if key == "note":
+                rd = randomData(seting=self.apply_rule["randomData"])
+                exp = rd.get_exp()
+                filter_control = ft.ListTile(
+                    leading=ft.Icon(ft.Icons.STAR, color=Dracula_colors.RED),
+                    title=ft.Text(
+                        f"🎉 This is an example.",
+                    ),
+                    subtitle=ft.Text(
+                        f"EXP: {exp}",
+                        color=Dracula_colors.COMMENT
+                    ),
+                )
+                self.filter_items_column.controls.append(filter_control)
+                continue
+            count_range = len(range(item["range_start"], item["range_end"] + 1))
+            count = item["count"]
+            filter_control = ft.ListTile(
+                leading=ft.Icon(ft.Icons.RULE, color=Dracula_colors.COMMENT),
+                title=ft.Text(
+                    f"Section [ {key} ] Settings",
+                    text_align=ft.TextAlign.LEFT,
+                    color=Dracula_colors.PURPLE,
+                ),
+                subtitle=ft.Text(
+                    f"Choose {count} numbers from {count_range}.",
+                    text_align=ft.TextAlign.LEFT,
+                    color=Dracula_colors.COMMENT,
+                ),
+            )
+            self.filter_items_column.controls.append(filter_control)
+        self.page.update()
 
     def get_dlg(self):
         dlg = ft.AlertDialog(
@@ -217,7 +295,7 @@ class SetingsPage:
                 ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 ft.Divider(),
                 ft.Column(
-                    [self.filter_items_column],
+                    self.filter_items_column,
                     scroll=ft.ScrollMode.ADAPTIVE,
                     expand=True,
                 ),

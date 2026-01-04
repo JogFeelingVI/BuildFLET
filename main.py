@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-03 12:05:09
+# @Last Modified time: 2026-01-04 03:11:01
 
 from Customs.DraculaTheme import Dracula_Theme, Dracula_colors
 from Customs.setings import SetingsPage
@@ -60,7 +60,9 @@ def main(page: ft.Page):
                 label="Setting",
             ),
             ft.NavigationBarDestination(
-                icon=ft.Icon(ft.Icons.FILTER_LIST_OUTLINED, color=Dracula_colors.PURPLE),
+                icon=ft.Icon(
+                    ft.Icons.FILTER_LIST_OUTLINED, color=Dracula_colors.PURPLE
+                ),
                 selected_icon=ft.Icons.FILTER_LIST,
                 label="Filter",
             ),
