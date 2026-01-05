@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 05:25:37
+# @Last Modified time: 2026-01-05 00:31:28
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -11,7 +11,6 @@ import flet as ft
 import json
 import os
 import re
-import random
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -75,7 +74,7 @@ class SetingsPage:
         self.selection_container = ft.Column(
             controls=[self.get_Selection_line("A"), self.add_button_row],
             tight=True,
-            spacing=10,
+            spacing=2,
         )
         self.apply_rule = {}
         self.filter_items_column = ft.Column(spacing=10)
@@ -216,7 +215,7 @@ class SetingsPage:
     def render_filters(self):
         """渲染过滤器列表"""
         self.filter_items_column.controls.clear()
-        self.page.session.store.set('setings', self.apply_rule)
+        self.page.session.store.set("settings", self.apply_rule)
         for key, item in self.apply_rule.get("randomData", {}).items():
             if key == "note":
                 rd = randomData(seting=self.apply_rule["randomData"])
@@ -224,12 +223,9 @@ class SetingsPage:
                 filter_control = ft.ListTile(
                     leading=ft.Icon(ft.Icons.STAR, color=Dracula_colors.RED),
                     title=ft.Text(
-                        f"🎉 This is an example.",
+                        f"🎉 This is an example.", color=Dracula_colors.COMMENT
                     ),
-                    subtitle=ft.Text(
-                        f"EXP: {exp}",
-                        color=Dracula_colors.COMMENT
-                    ),
+                    subtitle=ft.Text(f"EXP: {exp}", color=Dracula_colors.COMMENT),
                 )
                 self.filter_items_column.controls.append(filter_control)
                 continue
@@ -251,6 +247,10 @@ class SetingsPage:
             self.filter_items_column.controls.append(filter_control)
         self.page.update()
 
+    def close_dlg(self, e):
+        self.dlg.open = False
+        self.page.update()
+
     def get_dlg(self):
         dlg = ft.AlertDialog(
             title=ft.Text("add new game rules", color=Dracula_colors.COMMENT),
@@ -259,11 +259,7 @@ class SetingsPage:
                 width=300,  # 锁定宽度防止抖动
             ),
             actions=[
-                ft.TextButton(
-                    "Cancel",
-                    on_click=lambda _: setattr(dlg, "open", False)
-                    or self.page.update(),
-                ),
+                ft.TextButton("Cancel", on_click=lambda _: self.close_dlg()),
                 ft.Button(
                     "Apply",
                     bgcolor=Dracula_colors.RED,
@@ -277,9 +273,9 @@ class SetingsPage:
     def get_seting_view(self):
         self.page.overlay.append(self.dlg)
 
-        def open_dialog(index=-1):
+        async def open_dialog(index=-1):
             self.dlg.open = True
-            self.page.update()
+            await self.page.update()
 
         return ft.Column(
             controls=[

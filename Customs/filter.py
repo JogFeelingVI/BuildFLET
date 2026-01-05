@@ -2,9 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-03 11:58:15
+# @Last Modified time: 2026-01-04 13:59:42
 
-from calendar import c
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
 import flet as ft
@@ -25,7 +24,7 @@ class FilterPage:
         self.editing_index = -1
         self.last_selected_target = None
 
-        self.filter_items_column = ft.Column(spacing=10)
+        self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
         self.target_dropdown = ft.Dropdown(label="Target", width=400)
         self.condition_input = ft.AutoComplete(
@@ -35,6 +34,10 @@ class FilterPage:
         )
         self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
+
+    def close_dlg(self, e):
+        self.dlg.open = False
+        self.page.update()
 
     def get_dlg(self):
         dlg = ft.AlertDialog(
@@ -49,11 +52,7 @@ class FilterPage:
                 spacing=10,
             ),
             actions=[
-                ft.TextButton(
-                    "Cancel",
-                    on_click=lambda _: setattr(dlg, "open", False)
-                    or self.page.update(),
-                ),
+                ft.TextButton("Cancel", on_click=self.close_dlg),
                 ft.Button(
                     "Apply",
                     bgcolor=Dracula_colors.RED,
@@ -104,7 +103,6 @@ class FilterPage:
             self.filters_list[self.editing_index] = new_data
 
         self.dlg.open = False
-        print("Applied:", self.filters_list)
         self.render_filters()
         self.page.update()
 
@@ -151,7 +149,7 @@ class FilterPage:
                         ),
                         subtitle=ft.Text(
                             f"Condition: {item['condition']}",
-                            color=Dracula_colors.COMMENT,
+                            color=Dracula_colors.PURPLE,
                         ),
                         bgcolor=Dracula_colors.BACKGROUND,
                         on_long_press=lambda _, i=idx: self.open_dialog(i),
@@ -179,7 +177,12 @@ class FilterPage:
 
         return ft.Column(
             controls=[
-                ft.Text("Filter", size=25, weight=ft.FontWeight.BOLD,color=Dracula_colors.COMMENT),
+                ft.Text(
+                    "Filter",
+                    size=25,
+                    weight=ft.FontWeight.BOLD,
+                    color=Dracula_colors.COMMENT,
+                ),
                 ft.Button(
                     "Add filtering rules",
                     icon=ft.Icons.ADD,

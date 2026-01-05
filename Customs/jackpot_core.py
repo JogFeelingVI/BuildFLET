@@ -2,10 +2,29 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 03:11:36
+# @Last Modified time: 2026-01-05 02:24:06
 
 
 import secrets
+import itertools
+import re
+import inspect
+from typing import TypedDict, List, get_type_hints
+from xml.etree.ElementInclude import include
+
+
+class LotteryData(TypedDict, total=False):
+    # total=False 表示这些键不是每一个都必须同时出现
+    PA: List[int]
+    PB: List[int]
+    PC: List[int]
+    PD: List[int]
+    PE: List[int]
+    PF: List[int]
+    PG: List[int]
+    PH: List[int]
+    PI: List[int]
+    PJ: List[int]
 
 
 class randomData:
@@ -31,9 +50,9 @@ class randomData:
             return None
         return sorted(secrets.SystemRandom().sample(range(pmin, pmax + 1), plen))
 
-    def get_pabc(self):
+    def get_pabc(self) -> LotteryData:
         """
-        获取随机数据
+        {"PA":[01,02,03,04,05,06], "PB":[16]}
         :return: 返回随机数据
         """
         result = {}
@@ -48,7 +67,7 @@ class randomData:
 
         return result
 
-    def get_exp(self, abc:dict=None):
+    def get_exp(self, abc: dict = None) -> str:
         """获取格式化的随机数据字符串表示"""
         if abc is None:
             pabc = self.get_pabc()
@@ -61,14 +80,315 @@ class randomData:
                 numbers_str = [f"{x:02}" for x in numbers]
                 exp_parts.append(" ".join(numbers_str))
         return " + ".join(exp_parts)
-    
+
     @staticmethod
     def generate_secure_string(length=8):
         # 定义候选字符集：大写字母 + 小写字母 + 数字
-        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-        
+        alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
         # 使用 SystemRandom 生成指定长度的随机字符串
         # secrets.choice 比 random.choice 更安全，适合生成密码或令牌
-        secure_str = ''.join(secrets.choice(alphabet) for _ in range(length))
-        
+        secure_str = "".join(secrets.choice(alphabet) for _ in range(length))
+
         return secure_str
+
+
+class CalcUtils:
+    @staticmethod
+    def average(data_list: list[int]) -> int:
+        if all(isinstance(x, int) for x in data_list):
+            return sum(data_list) // len(data_list)
+        return 0
+
+    @staticmethod
+    def xiangsidu(data_list: list[int], refer):
+        if isinstance(refer, str):
+            refer_set = {int(x) for x in re.findall(r"(\d+)", refer)}
+        else:
+            refer_set = set(refer)  # 转集合加速查找
+
+        # 2. 统计特征 (避免双重计数)
+        cf_count = 0
+        xl_count = 0
+
+        for _d in data_list:
+            # 优先判断重复
+            if _d in refer_set:
+                cf_count += 1
+            # 如果不是重复，再判断相邻
+            elif (_d + 1 in refer_set) or (_d - 1 in refer_set):
+                xl_count += 1
+
+        # 3. 计算特征指纹
+        # 剩余个数
+        rest_count = len(data_list) - cf_count - xl_count
+
+        # 构造特征向量
+        features = (cf_count, xl_count, rest_count)
+
+        # 排序取最大的两个
+        _a, _b = sorted(features, reverse=True)[:2]
+        return _a * 10 + _b
+
+    @staticmethod
+    def lianhao(data_list: list[int]) -> int:
+        lhao = [x for x in data_list if x + 1 in data_list or x - 1 in data_list]
+        return len(lhao)
+
+    @staticmethod
+    def zs(max_val=18):
+        """
+        计算小于或等于 max_val 的所有质数，并将 1 也包含在内。
+
+        Args:
+            max_val (int): 要查找质数的上限（包含此值）。默认为 18。
+
+        Returns:
+            list: 包含 1 和所有小于或等于 max_val 的质数的列表，按升序排列。
+                如果 max_val < 1 返回空列表。
+        """
+        # --- 输入验证和边缘情况处理 ---
+        if not isinstance(max_val, int):
+            print("输入错误 max_val 必须是一个整数。")
+            return []
+        if max_val < 1:
+            # 因为要求包含 1，所以小于 1 的上限没有有效数字
+            return []
+        if max_val == 1:
+            return [1]  # 特殊情况：如果上限是 1，只返回 [1]
+
+        # --- Sieve of Eratosthenes 算法 ---
+        # 1. 创建一个布尔列表 `is_prime`，长度为 max_val + 1。
+        #    `is_prime[i]` 为 True 表示数字 `i` *可能*是质数。
+        #    初始化所有大于等于 2 的数为 True。
+        is_prime = [True] * (max_val + 1)
+        is_prime[0] = is_prime[1] = False  # 0 和 1 按标准定义不是质数
+
+        # 2. 从第一个质数 2 开始遍历
+        p = 2
+        # 优化：只需要检查到 sqrt(max_val)，因为如果 n 有一个大于 sqrt(n) 的因子，
+        # 它必定有一个小于 sqrt(n) 的因子，这个因子在之前就会被筛掉。
+        while p * p <= max_val:
+            # 如果 p 是质数（即 is_prime[p] 仍为 True）
+            if is_prime[p]:
+                # 将 p 的所有倍数（从 p*p 开始）标记为非质数
+                # 因为小于 p*p 的 p 的倍数（如 2*p, 3*p）应该已经被更小的质数筛掉了
+                for i in range(p * p, max_val + 1, p):
+                    is_prime[i] = False
+            p += 1  # 检查下一个数
+
+        # --- 构建结果列表 ---
+        # 3. 收集结果
+        primes_list = [1]  # 首先加入特殊要求的 1
+        for num in range(2, max_val + 1):
+            if is_prime[num]:
+                primes_list.append(num)
+
+        return primes_list
+
+    @staticmethod
+    def nwped(numbers: str):
+        """
+        优化后的数字处理函数
+        Supported formats:
+            "12,13,15"
+            "range 12,56" (12 to 55)
+            "<45" (0 to 44)
+            ">12" (13 to 5000)
+        Supported flags:
+            --j (Odd), --o (Even)
+            --z (Prime), --h (Composite)
+            --m312 (Mod 3 rem 1 or 2) -> General format --m[mod][rem1][rem2]...
+            --w13 (Ends with 1 or 3)
+        """
+        if not numbers:
+            return []
+
+        # 1. 预处理：分离 基础定义 和 参数Flag
+        # 查找第一个 -- 的位置
+        flag_match = re.search(r"(--[a-z0-9]+)", numbers)
+        flag_str = ""
+
+        if flag_match:
+            # 如果有flag，截取前半部分作为数字定义，后半部分作为flag
+            flag_start = numbers.find(flag_match.group(0))
+            base_str = numbers[:flag_start].strip()
+            flag_str = numbers[
+                flag_start:
+            ].strip()  # 这里假设只处理一个主flag，或者保留后续扩展
+        else:
+            base_str = numbers.strip()
+
+        number_ls = []
+
+        # 2. 解析基础数字 (Base Logic)
+        # 使用完整匹配 ^...$ 避免只匹配到头部
+        if base_str.startswith("range"):
+            # Matches: "range 12,56"
+            nums = re.findall(r"\d+", base_str)
+            if len(nums) >= 2:
+                number_ls = list(range(int(nums[0]), int(nums[1])))
+
+        elif re.match(r"^[<>]", base_str):
+            # Matches: ">12", "<45"
+            operator = base_str[0]
+            val = int(re.findall(r"\d+", base_str)[0])
+            if operator == ">":
+                number_ls = list(range(val, 2001))  # >12 从 13 开始
+            elif operator == "<":
+                number_ls = list(range(0, val + 1))  # <45 到 44 结束 (假设非负)
+
+        elif re.match(r"^[\d,]+$", base_str):
+            # Matches: "12,13,15"
+            number_ls = [int(x) for x in re.findall(r"\d+", base_str)]
+
+        else:
+            # 兜底：尝试直接提取所有数字
+            if not number_ls:
+                number_ls = [int(x) for x in re.findall(r"\d+", base_str)]
+
+        # 3. 解析并应用 Flag (Filter Logic)
+        if flag_str:
+            # 提取 flag 类型和参数
+            # 兼容 --j, --o, --z, --h, --m312, --w13
+            flag_type = flag_str[:3]  # --j, --m, --w
+            flag_params = flag_str[3:]  # 后续的数字
+
+            match flag_type:
+                case "--j":  # 奇数
+                    number_ls = [x for x in number_ls if x % 2 != 0]
+                case "--o":  # 偶数
+                    number_ls = [x for x in number_ls if x % 2 == 0]
+                case "--z":  # 质数
+                    if not number_ls:
+                        return []
+                    primes = CalcUtils.zs(max(number_ls) + 1)
+                    number_ls = [x for x in number_ls if x in primes]
+                case "--h":  # 合数 (非质数)
+                    if not number_ls:
+                        return []
+                    primes = CalcUtils.zs(max(number_ls) + 1)
+                    number_ls = [x for x in number_ls if x not in primes]
+                case _ if flag_type.startswith("--m"):  # 取模 --m312 (模3 余 1,2)
+                    # 这种格式其实很危险，建议 --m3,1,2，但为了兼容原逻辑：
+                    # 假设第一位是除数，后面是余数列表
+                    if len(flag_params) >= 2:
+                        mod_val = int(flag_params[0])  # 取 '3'
+                        remainders = [int(x) for x in flag_params[1:]]  # 取 ['1', '2']
+                        number_ls = [x for x in number_ls if x % mod_val in remainders]
+                case _ if flag_type.startswith("--w"):  # 尾数 --w13 (尾数 1,3)
+                    if flag_params:
+                        tails = [int(x) for x in flag_params]
+                        number_ls = [x for x in number_ls if x % 10 in tails]
+
+        return number_ls if len(number_ls) < 10 else set(number_ls)
+
+    @staticmethod
+    def ac(data_list: list) -> int:
+        """计算 N 的Ac 必须包含在【count】内部"""
+        diff_set = set()
+        for a, b in itertools.combinations(data_list, 2):
+            diff = abs(a - b)
+            diff_set.add(diff)
+        return len(diff_set) - len(data_list) + 1
+
+
+class filterFunc:
+    @staticmethod
+    def getFuncName():
+        methods_info = {}
+        # 获取 filterFunc 类中的所有成员
+        # 因为是静态方法，在类级别它们被视为 function
+        for name, func in inspect.getmembers(filterFunc, predicate=inspect.isfunction):
+            # 排除掉 getFuncName 本身和内置的 __ 方法
+            if name == "getFuncName" or name.startswith("__"):
+                continue
+
+            # 获取函数签名
+            sig = inspect.signature(func)
+
+            # 解析参数
+            params = {}
+            for param_name, param in sig.parameters.items():
+                # 获取类型注解的名称
+                if param.annotation is inspect.Parameter.empty:
+                    type_name = "any"
+                elif hasattr(param.annotation, "__name__"):
+                    type_name = param.annotation.__name__
+                else:
+                    # 处理像 LotteryData (TypedDict) 或 List[int] 这种复杂类型
+                    type_name = str(param.annotation).replace("typing.", "")
+
+                params[param_name] = type_name
+
+            # 解析返回值类型
+            if sig.return_annotation is inspect.Signature.empty:
+                return_type = "any"
+            elif hasattr(sig.return_annotation, "__name__"):
+                return_type = sig.return_annotation.__name__
+            else:
+                return_type = str(sig.return_annotation)
+
+            methods_info[name] = {"parameters": params, "return_type": return_type}
+
+        return methods_info
+
+    @staticmethod
+    def avg(pabc: LotteryData, args: str) -> bool:
+        avgValue = CalcUtils.average(pabc.values())
+        Number_for_args = CalcUtils.nwped(args)
+        if avgValue in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def sum(pabc: LotteryData, args: str) -> bool:
+        sumValue = sum(pabc.values())
+        Number_for_args = CalcUtils.nwped(args)
+        if sumValue in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def include(pabc: LotteryData, args: str, target: str) -> bool:
+        if target not in pabc.keys():
+            return False
+        targetValue = pabc[target]
+        Number_for_args = CalcUtils.nwped(args)
+        if targetValue in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def not_include(pabc: LotteryData, args: str, target: str) -> bool:
+        return not include(pabc, args, target)
+
+    @staticmethod
+    def bit(pabc: LotteryData, args: str, target: str, bit: int) -> bool:
+        if bit - 1 > pabc.values().__len__():
+            return False
+        if target not in pabc.keys():
+            return False
+        bitValue = pabc[target][bit - 1]
+        Number_for_args = CalcUtils.nwped(args)
+        if bitValue in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def not_bit(pabc: LotteryData, args: str, target: str, bit: int) -> bool:
+        return not bit(pabc, args, target, bit)
+
+    @staticmethod
+    def ac(pabc: LotteryData, args: str, targat: str = "") -> bool:
+        acValue = []
+        if targat == "":
+            acValue = [y for x in pabc.values() for y in x]
+        elif targat in pabc.keys() and pabc[targat].__len__() >= 2:
+            acValue = CalcUtils.ac(pabc[targat])
+            Number_for_args = CalcUtils.nwped(args)
+            if acValue in Number_for_args:
+                return True
+            return False
+        else:
+            return True

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 07:25:30
+# @Last Modified time: 2026-01-05 00:59:58
 
 from Customs.DraculaTheme import Dracula_Theme, Dracula_colors
 from Customs.setings import SetingsPage
@@ -44,7 +44,7 @@ def main(page: ft.Page):
 
     # --- 2. 界面组件定义 ---
 
-    # 中间显示区域容器 
+    # 中间显示区域容器
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页
         expand=True,
