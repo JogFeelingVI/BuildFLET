@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-06 07:27:32
+# @Last Modified time: 2026-01-06 13:58:32
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -28,8 +28,8 @@ class FilterPage:
 
         self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
-        self.target_dropdown = ft.Dropdown(label="Target", width=400,menu_width=160)
-        self.func_dropdown = ft.Dropdown(label="Func", width=400,menu_width=160)
+        self.target_dropdown = ft.DropdownM2(label="Target", dense=True)
+        self.func_dropdown = ft.DropdownM2(label="Func", dense=True)
         self.condition_input = ft.AutoComplete(
             # suggestions=suggestions,
             # placeholder="Enter or select filter criteria.",
@@ -45,15 +45,18 @@ class FilterPage:
     def get_dlg(self):
         dlg = ft.AlertDialog(
             title=ft.Text("Filter Settings", color=Dracula_colors.COMMENT),
-            content=ft.Column(
-                [
-                    self.func_dropdown,
-                    self.target_dropdown,
-                    ft.Text("Conditions:", size=12, color=ft.Colors.GREY_700),
-                    self.condition_input,  # 将 AutoComplete 放入对话框
-                ],
-                tight=True,
-                spacing=10,
+            content=ft.Container(
+                content=ft.Column(
+                    [
+                        self.func_dropdown,
+                        self.target_dropdown,
+                        ft.Text("Conditions:", size=12, color=Dracula_colors.COMMENT),
+                        self.condition_input,
+                    ],
+                    tight=True,
+                    spacing=10,
+                ),
+                width=300,  # 锁定宽度防止抖动
             ),
             actions=[
                 ft.TextButton("Cancel", on_click=self.close_dlg),
@@ -64,7 +67,6 @@ class FilterPage:
                     on_click=self.handle_apply,
                 ),
             ],
-            actions_alignment=ft.MainAxisAlignment.END,
         )
         return dlg
 
@@ -86,14 +88,15 @@ class FilterPage:
                 pass
 
         # 更新下拉菜单选项
-        self.target_dropdown.options = [ft.dropdown.Option(tag) for tag in enabled_tags]
+        self.target_dropdown.options = [ft.dropdownm2.Option(tag) for tag in enabled_tags]
         return enabled_tags
-    
+
     def refresh_func_options(self):
         self.funcs_dict = filterFunc.getFuncName()
-        self.func_dropdown.options = [ft.dropdown.Option(key) for key,_ in self.funcs_dict.items()]
+        self.func_dropdown.options = [
+            ft.dropdownm2.Option(key, opacity=0.3) for key, _ in self.funcs_dict.items()
+        ]
         return self.func_dropdown.options
-        
 
     def handle_apply(self, e):
         if not self.func_dropdown.value or not self.condition_input.value:

@@ -71,9 +71,14 @@ class SetingsPage:
             ],
             alignment=ft.MainAxisAlignment.END,
         )
-        self.note_text = ft.TextField(label="Note", hint_text="Rule Settings Instructions", expand=True)
+        self.note_text = ft.TextField(
+            label="Note", hint_text="Rule Settings Instructions")
         self.selection_container = ft.Column(
-            controls=[ft.Row(self.note_text),self.get_Selection_line("A"), self.add_button_row],
+            controls=[
+                ft.Row(self.note_text, tight=True),
+                self.get_Selection_line("A"),
+                self.add_button_row,
+            ],
             tight=True,
             spacing=10,
         )
@@ -164,7 +169,7 @@ class SetingsPage:
 
     def handle_apply(self):
         # 获取所有输入行的数据逻辑
-        Rows_data = {"note": self.note_text.value or 'setting game rule'}
+        Rows_data = {"note": self.note_text.value or "setting game rule"}
         for control in self.selection_container.controls:
             if not hasattr(control, "data"):
                 continue  # 只有输入行有 data 属性
@@ -190,7 +195,7 @@ class SetingsPage:
                         Rows_data[tag]["count"] = _cd_val
                     Rows_data[tag]["enabled"] = True
             except Exception:
-                self.page.show_dialog(get_snack_bar("Rule settings error.","error"))
+                self.page.show_dialog(get_snack_bar("Rule settings error.", "error"))
         Rows_data = {k: v for k, v in Rows_data.items() if v not in [None, {}]}
         json_data = {"randomData": Rows_data.copy()}
         with open(jackpot_seting, "w", encoding="utf-8") as f:
