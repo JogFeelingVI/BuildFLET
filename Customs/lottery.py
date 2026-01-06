@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-05 00:58:31
+# @Last Modified time: 2026-01-06 05:38:16
 
 from .jackpot_core import randomData
 from .SnackBar import get_snack_bar
@@ -76,13 +76,16 @@ class lottery_items(ft.Column):
             item = self.results.pop()
             self.controls.append(
                 ft.ListTile(
-                    leading=ft.Icon(ft.Icons.STAR, color=Dracula_colors.RED),
+                    leading=ft.Icon(
+                        ft.Icons.GENERATING_TOKENS, color=Dracula_colors.RED
+                    ),
                     title=ft.Text(
                         f"{randomData.generate_secure_string()}",
                         color=Dracula_colors.COMMENT,
+                        size=11,
                     ),
                     subtitle=ft.Text(
-                        f"Number: {item}",
+                        f"{item}",
                         weight="bold",
                         size=18,
                         color=Dracula_colors.PURPLE,
@@ -121,8 +124,13 @@ class LotteryPage:
         self.page.show_dialog(get_snack_bar(f"setting item count {data}"))
 
     def Get_Lottery_data(self, index: int):
-        settings = self.page.session.store.get("settings")
-        self.lottery_items_column.cilcked(settings["randomData"])
+        try:
+            settings = self.page.session.store.get("settings")
+            self.lottery_items_column.cilcked(settings["randomData"])
+        except Exception:
+            self.page.show_dialog(
+                get_snack_bar("Failed to retrieve settings data.", "error")
+            )
 
     def get_data_view(self):
         self.save_Lottery_item(5)

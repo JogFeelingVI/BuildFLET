@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-05 00:31:28
+# @Last Modified time: 2026-01-06 06:40:58
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -71,10 +71,11 @@ class SetingsPage:
             ],
             alignment=ft.MainAxisAlignment.END,
         )
+        self.note_text = ft.TextField(label="Note", hint_text="Rule Settings Instructions")
         self.selection_container = ft.Column(
-            controls=[self.get_Selection_line("A"), self.add_button_row],
+            controls=[ft.Row(self.note_text),self.get_Selection_line("A"), self.add_button_row],
             tight=True,
-            spacing=2,
+            spacing=10,
         )
         self.apply_rule = {}
         self.filter_items_column = ft.Column(spacing=10)
@@ -163,34 +164,38 @@ class SetingsPage:
 
     def handle_apply(self):
         # 获取所有输入行的数据逻辑
-        Rows_data = {"note": "game rules from settings page"}
+        Rows_data = {"note": self.note_text.value or 'setting game rule'}
         for control in self.selection_container.controls:
             if not hasattr(control, "data"):
                 continue  # 只有输入行有 data 属性
             tag = control.data  # 提取标签名 P...
             Rows_data[tag] = {}
-            for _child in control.controls:
-                if not isinstance(_child, ft.TextField):
-                    continue
-                _cd = _child.data
-                _cd_val = _child.value
-                _cd_val = self.Processing_user_input(_cd_val)
-                if _cd_val is None:
-                    continue
-                if _cd.endswith("_Max"):
-                    if isinstance(_cd_val, list) and len(_cd_val) == 2:
-                        Rows_data[tag]["range_start"] = _cd_val[0]
-                        Rows_data[tag]["range_end"] = _cd_val[1]
-                    elif isinstance(_cd_val, int):
-                        Rows_data[tag]["range_start"] = 1
-                        Rows_data[tag]["range_end"] = _cd_val
-                if _cd.endswith("_K"):
-                    Rows_data[tag]["count"] = _cd_val
+            try:
+                for _child in control.controls:
+                    if not isinstance(_child, ft.TextField):
+                        continue
+                    _cd = _child.data
+                    _cd_val = _child.value
+                    _cd_val = self.Processing_user_input(_cd_val)
+                    if _cd_val is None:
+                        continue
+                    if _cd.endswith("_Max"):
+                        if isinstance(_cd_val, list) and len(_cd_val) == 2:
+                            Rows_data[tag]["range_start"] = _cd_val[0]
+                            Rows_data[tag]["range_end"] = _cd_val[1]
+                        elif isinstance(_cd_val, int):
+                            Rows_data[tag]["range_start"] = 1
+                            Rows_data[tag]["range_end"] = _cd_val
+                    if _cd.endswith("_K"):
+                        Rows_data[tag]["count"] = _cd_val
+                    Rows_data[tag]["enabled"] = True
+            except Exception:
+                self.page.show_dialog(get_snack_bar("Rule settings error.","error"))
         Rows_data = {k: v for k, v in Rows_data.items() if v not in [None, {}]}
         json_data = {"randomData": Rows_data.copy()}
         with open(jackpot_seting, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=4, ensure_ascii=False)
-        self.page.show_dialog(get_snack_bar(f"Preset '{json_data}' ."))
+        self.page.show_dialog(get_snack_bar(f"Game rules have been set."))
         self.apply_rule = json_data
         self.dlg.open = False
         self.render_filters()
@@ -199,7 +204,7 @@ class SetingsPage:
     def handle_add_click(self, e):
         # 计算当前已有多少个输入行 (排除掉底部的 Add 按钮行)
         # 减 1 是因为最后一行是按钮行
-        current_count = len(self.selection_container.controls) - 1
+        current_count = len(self.selection_container.controls) - 2
         # 字母排序 A, B, C...
         new_name = chr(65 + current_count)  # 65 是 'A'
         # 创建新行
@@ -221,11 +226,13 @@ class SetingsPage:
                 rd = randomData(seting=self.apply_rule["randomData"])
                 exp = rd.get_exp()
                 filter_control = ft.ListTile(
-                    leading=ft.Icon(ft.Icons.STAR, color=Dracula_colors.RED),
+                    leading=ft.Icon(ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.RED),
                     title=ft.Text(
-                        f"🎉 This is an example.", color=Dracula_colors.COMMENT
+                        f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
                     ),
-                    subtitle=ft.Text(f"EXP: {exp}", color=Dracula_colors.COMMENT),
+                    subtitle=ft.Text(
+                        f"✨{exp}", color=Dracula_colors.COMMENT, weight="bold"
+                    ),
                 )
                 self.filter_items_column.controls.append(filter_control)
                 continue
@@ -247,7 +254,7 @@ class SetingsPage:
             self.filter_items_column.controls.append(filter_control)
         self.page.update()
 
-    def close_dlg(self, e):
+    def close_dlg(self):
         self.dlg.open = False
         self.page.update()
 
@@ -273,9 +280,9 @@ class SetingsPage:
     def get_seting_view(self):
         self.page.overlay.append(self.dlg)
 
-        async def open_dialog(index=-1):
+        def open_dialog():
             self.dlg.open = True
-            await self.page.update()
+            self.page.update()
 
         return ft.Column(
             controls=[
@@ -285,7 +292,7 @@ class SetingsPage:
                 ft.Button(
                     "Add game rules",
                     icon=ft.Icons.ADD,
-                    on_click=lambda _: open_dialog(-1),
+                    on_click=lambda _: open_dialog(),
                 ),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),

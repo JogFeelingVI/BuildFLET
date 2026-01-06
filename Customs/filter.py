@@ -2,8 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-04 13:59:42
+# @Last Modified time: 2026-01-06 07:27:32
 
+from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
 import flet as ft
@@ -13,6 +14,7 @@ import json
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
+jackpot_filers = os.path.join(app_data_path, "jackpot_filters.dict")
 
 
 class FilterPage:
@@ -27,6 +29,7 @@ class FilterPage:
         self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
         self.target_dropdown = ft.Dropdown(label="Target", width=400)
+        self.func_dropdown = ft.Dropdown(label="Func", width=400)
         self.condition_input = ft.AutoComplete(
             # suggestions=suggestions,
             # placeholder="Enter or select filter criteria.",
@@ -44,6 +47,7 @@ class FilterPage:
             title=ft.Text("Filter Settings", color=Dracula_colors.COMMENT),
             content=ft.Column(
                 [
+                    self.func_dropdown,
                     self.target_dropdown,
                     ft.Text("Conditions:", size=12, color=ft.Colors.GREY_700),
                     self.condition_input,  # 将 AutoComplete 放入对话框
@@ -68,7 +72,7 @@ class FilterPage:
         """读取配置并刷新下拉列表，返回当前可用的标签列表"""
         global jackpot_seting
 
-        enabled_tags = []
+        enabled_tags = ["all"]
 
         if os.path.exists(jackpot_seting):
             try:
@@ -84,15 +88,22 @@ class FilterPage:
         # 更新下拉菜单选项
         self.target_dropdown.options = [ft.dropdown.Option(tag) for tag in enabled_tags]
         return enabled_tags
+    
+    def refresh_func_options(self):
+        self.funcs_dict = filterFunc.getFuncName()
+        self.func_dropdown.options = [ft.dropdown.Option(key) for key,_ in self.funcs_dict.items()]
+        return self.func_dropdown.options
+        
 
     def handle_apply(self, e):
-        if not self.target_dropdown.value or not self.condition_input.value:
+        if not self.func_dropdown.value or not self.condition_input.value:
             return
 
         # 保存本次的选择，以便下次 Add 时默认选中
         self.last_selected_target = self.target_dropdown.value
 
         new_data = {
+            "func": self.func_dropdown.value,
             "target": self.target_dropdown.value,
             "condition": self.condition_input.value,
         }
@@ -104,11 +115,15 @@ class FilterPage:
 
         self.dlg.open = False
         self.render_filters()
+        with open(jackpot_filers, "w", encoding="utf-8") as f:
+            for item in self.filters_list:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
         self.page.update()
 
     def open_dialog(self, index=-1):
         self.editing_index = index
         available_tags = self.refresh_target_options()
+        available_func = self.refresh_func_options()
 
         if index == -1:
             # --- 新增模式 (Add Filter) ---
@@ -129,6 +144,9 @@ class FilterPage:
             self.target_dropdown.value = (
                 item["target"] if item["target"] in available_tags else None
             )
+            self.target_dropdown.value = (
+                item["func"] if item["func"] in available_func else None
+            )
             self.condition_input.value = item["condition"]
 
         self.dlg.open = True
@@ -144,7 +162,7 @@ class FilterPage:
                             ft.Icons.FILTER_ALT, color=Dracula_colors.COMMENT
                         ),
                         title=ft.Text(
-                            f"Target: {item['target']}",
+                            f"Target: {item['target']} Func: {item['func']}",
                             color=Dracula_colors.CURRENT_LINE,
                         ),
                         subtitle=ft.Text(

@@ -3,32 +3,14 @@
         "note": "save setings from preset buttons",
         "PA": {
             "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
+            "range_start": 1,
+            "range_end": 33,
+            "count": 6
         },
         "PB": {
             "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PC": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PD": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PE": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
+            "range_start": 1,
+            "range_end": 16,
             "count": 1
         }
     }

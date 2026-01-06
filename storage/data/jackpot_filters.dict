@@ -1,0 +1,2 @@
+{"func": "ac", "target": "all", "condition": "4,5,6"}
+{"func": "avg", "target": "all", "condition": "range 13,21 --w01234"}
