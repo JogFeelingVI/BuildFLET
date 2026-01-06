@@ -71,7 +71,7 @@ class SetingsPage:
             ],
             alignment=ft.MainAxisAlignment.END,
         )
-        self.note_text = ft.TextField(label="Note", hint_text="Rule Settings Instructions")
+        self.note_text = ft.TextField(label="Note", hint_text="Rule Settings Instructions", expand=True)
         self.selection_container = ft.Column(
             controls=[ft.Row(self.note_text),self.get_Selection_line("A"), self.add_button_row],
             tight=True,
