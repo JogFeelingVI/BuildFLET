@@ -28,8 +28,8 @@ class FilterPage:
 
         self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
-        self.target_dropdown = ft.Dropdown(label="Target", width=400)
-        self.func_dropdown = ft.Dropdown(label="Func", width=400)
+        self.target_dropdown = ft.Dropdown(label="Target", width=400,menu_width=160)
+        self.func_dropdown = ft.Dropdown(label="Func", width=400,menu_width=160)
         self.condition_input = ft.AutoComplete(
             # suggestions=suggestions,
             # placeholder="Enter or select filter criteria.",
