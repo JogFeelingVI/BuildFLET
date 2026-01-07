@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-06 05:38:16
+# @Last Modified time: 2026-01-07 06:31:18
 
-from .jackpot_core import randomData
+from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
 import flet as ft
@@ -17,17 +17,19 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
-def calculate_lottery(setings: dict, filters: dict):
+def calculate_lottery(setings: dict, filters: list):
     if setings:
         rd = randomData(seting=setings)
     else:
         return None
     result = rd.get_pabc()
     if filters:
-        pass
+        filter_jp = filter_for_pabc(filters=filters)
+        if filter_jp.handle(result) == False:
+            return None
+        return rd.get_exp(result)
     else:
-        pass
-    result = rd.get_exp(result)
+        result = rd.get_exp(result)
     return result
 
 
@@ -49,13 +51,14 @@ class lottery_items(ft.Column):
     def will_unmount(self):
         self.runing = False
 
-    def cilcked(self, setting: dict):
+    def cilcked(self, setting: dict, filters: list):
         if not setting and self.runing:
             return
         self.lottery_items_count = (
-            self.page.session.store.get("Lottery_item_count") or 10
+            self.page.session.store.get("Lottery_item_count") or 5
         )
         self.settings = setting
+        self.filters = filters
         self.page.run_task(self.update_progress)
 
     async def update_progress(self):
@@ -63,8 +66,15 @@ class lottery_items(ft.Column):
         self.controls.clear()
         self.controls.append(self.progress)
         count = self.lottery_items_count
+        none_count = 0
         while count:
-            self.results.append(calculate_lottery(setings=self.settings, filters=None))
+            if none_count >= 20:
+                self.page.show_dialog(get_snack_bar(f"The filtering rules are incorrect.","error"))
+                return None
+            temp = calculate_lottery(setings=self.settings, filters=self.filters)
+            if temp == None:
+                continue
+            self.results.append(temp)
             self.progress.value = (
                 self.lottery_items_count - count + 1
             ) / self.lottery_items_count
@@ -126,14 +136,14 @@ class LotteryPage:
     def Get_Lottery_data(self, index: int):
         try:
             settings = self.page.session.store.get("settings")
-            self.lottery_items_column.cilcked(settings["randomData"])
+            filters = self.page.session.store.get("filters")
+            self.lottery_items_column.cilcked(settings["randomData"], filters=filters)
         except Exception:
             self.page.show_dialog(
                 get_snack_bar("Failed to retrieve settings data.", "error")
             )
 
     def get_data_view(self):
-        self.save_Lottery_item(5)
         return ft.Column(
             controls=[
                 ft.Text(

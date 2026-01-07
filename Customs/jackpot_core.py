@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-05 02:24:06
+# @Last Modified time: 2026-01-07 07:02:45
 
 
 import secrets
@@ -334,15 +334,22 @@ class filterFunc:
         return methods_info
 
     @staticmethod
-    def avg(pabc: LotteryData, args: str) -> bool:
-        avgValue = CalcUtils.average(pabc.values())
+    def avg(pabc: LotteryData, args: str, target: str) -> bool:
+        if target == "all":
+            avgValue = CalcUtils.average([y for x in pabc.values() for y in x])
+        else:
+            avgValue = CalcUtils.average(pabc[target])
         Number_for_args = CalcUtils.nwped(args)
         if avgValue in Number_for_args:
             return True
         return False
 
     @staticmethod
-    def sum(pabc: LotteryData, args: str) -> bool:
+    def sum(pabc: LotteryData, args: str, target: str) -> bool:
+        if target == "all":
+            sumValue = sum([y for x in pabc.values() for y in x])
+        else:
+            sumValue = sum(pabc[target])
         sumValue = sum(pabc.values())
         Number_for_args = CalcUtils.nwped(args)
         if sumValue in Number_for_args:
@@ -353,9 +360,10 @@ class filterFunc:
     def include(pabc: LotteryData, args: str, target: str) -> bool:
         if target not in pabc.keys():
             return False
-        targetValue = pabc[target]
-        Number_for_args = CalcUtils.nwped(args)
-        if targetValue in Number_for_args:
+        targetValue = set(pabc[target])
+        Number_for_args = set(CalcUtils.nwped(args))
+        
+        if targetValue & Number_for_args:
             return True
         return False
 
@@ -364,26 +372,29 @@ class filterFunc:
         return not include(pabc, args, target)
 
     @staticmethod
-    def bit(pabc: LotteryData, args: str, target: str, bit: int) -> bool:
-        if bit - 1 > pabc.values().__len__():
-            return False
+    def bit(pabc: LotteryData, args: str, target: str) -> bool:
+        pattern = r"bit(\d+)\s+(.*)"
+        match = re.search(pattern, args)
+        if match:
+            bit = int(match.group(1))
+            ohter = match.group(2)
         if target not in pabc.keys():
             return False
         bitValue = pabc[target][bit - 1]
-        Number_for_args = CalcUtils.nwped(args)
+        Number_for_args = CalcUtils.nwped(ohter)
         if bitValue in Number_for_args:
             return True
         return False
 
     @staticmethod
-    def not_bit(pabc: LotteryData, args: str, target: str, bit: int) -> bool:
-        return not bit(pabc, args, target, bit)
+    def not_bit(pabc: LotteryData, args: str, target: str) -> bool:
+        return not bit(pabc, args, target)
 
     @staticmethod
     def ac(pabc: LotteryData, args: str, targat: str = "") -> bool:
         acValue = []
-        if targat == "":
-            acValue = [y for x in pabc.values() for y in x]
+        if targat in ["all"]:
+            acValue = pabc[0]
         elif targat in pabc.keys() and pabc[targat].__len__() >= 2:
             acValue = CalcUtils.ac(pabc[targat])
             Number_for_args = CalcUtils.nwped(args)
@@ -392,3 +403,56 @@ class filterFunc:
             return False
         else:
             return True
+
+
+class filter_for_pabc:
+    def __init__(self, filters: list):
+        self.filters = filters
+        self.filterFunc_data = filterFunc.getFuncName()
+
+    def __get_func(self, func: str):
+        temp = [getattr(filterFunc, func), self.filterFunc_data[func]]
+        return temp
+
+    def handle(self, pabc: dict):
+        """
+        pabc {PA:[...],PB:[...]}
+        filter = {
+            "func": _func,
+            "target": _target,
+            "condition": _condit,
+        }
+        """
+        flgs = []
+        for item in self.filters:
+            # 1. 获取函数对象 _f 和 它的参数描述 _p
+            # _p 的结构示例: {'parameters': {'pabc': 'LotteryData', 'args': 'str', 'target': 'str'}, ...}
+            _f, _p = self.__get_func(func=item["func"])
+
+            # 2. 动态构建参数字典
+            args_to_pass = {}
+
+            # n 是参数名 (如 'pabc'), t 是类型名称 (如 'LotteryData')
+            for n, t in _p["parameters"].items():
+                if n == "pabc":
+                    # 传递当前的开奖数据对象
+                    args_to_pass[n] = pabc
+                elif n == "args":
+                    # 传递过滤条件 (例如 "1-10")
+                    args_to_pass[n] = item.get("condition", "")
+                elif n == "target":
+                    # 传递目标位置 (例如 "PA")
+                    args_to_pass[n] = item.get("target", "")
+                else:
+                    # 处理其他可能的参数，或者给个 None 防止报错
+                    args_to_pass[n] = None
+            try:
+                # 3. 使用 ** 解包运行函数
+                return_code = _f(**args_to_pass)
+                flgs.append(return_code)
+            except Exception as e:
+                flgs.append(False)
+        print(f'{pabc} {flgs=}')
+        if False in flgs:
+            return False
+        return True

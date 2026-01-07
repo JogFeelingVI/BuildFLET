@@ -1,2 +1,3 @@
-{"func": "ac", "target": "all", "condition": "4,5,6"}
-{"func": "avg", "target": "all", "condition": "range 13,21 --w01234"}
+{"func": "avg", "target": "PA", "condition": "11,12,13,14,15,16"}
+{"func": "bit", "target": "PA", "condition": "bit2 range 10,25"}
+{"func": "sum", "target": "PA", "condition": "<67"}

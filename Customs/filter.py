@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-06 13:58:32
+# @Last Modified time: 2026-01-07 05:52:18
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -22,14 +22,24 @@ class FilterPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
-        self.filters_list = []
+        self.filters_list = [
+            {
+                "func": "avg",
+                "target": "PA",
+                "condition": "11,12,13,14,15,16",
+            }
+        ]
         self.editing_index = -1
         self.last_selected_target = None
 
         self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
-        self.target_dropdown = ft.DropdownM2(label="Target", dense=True)
-        self.func_dropdown = ft.DropdownM2(label="Func", dense=True)
+        self.pop_func = ft.PopupMenuButton(
+            content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
+        )
+        self.pop_target = ft.PopupMenuButton(
+            content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
+        )
         self.condition_input = ft.AutoComplete(
             # suggestions=suggestions,
             # placeholder="Enter or select filter criteria.",
@@ -48,8 +58,15 @@ class FilterPage:
             content=ft.Container(
                 content=ft.Column(
                     [
-                        self.func_dropdown,
-                        self.target_dropdown,
+                        ft.Row(
+                            controls=[
+                                ft.Text("Select Fun:"),
+                                self.pop_func,
+                                ft.Text("Select Target:"),
+                                self.pop_target,
+                            ],
+                            tight=True,
+                        ),
                         ft.Text("Conditions:", size=12, color=Dracula_colors.COMMENT),
                         self.condition_input,
                     ],
@@ -70,45 +87,68 @@ class FilterPage:
         )
         return dlg
 
+    def handle_func_click(self, name: str):
+        self.pop_func.content.value = name
+
+    def handle_target_click(self, name: str):
+        self.pop_target.content.value = name
+
     def refresh_target_options(self):
-        """读取配置并刷新下拉列表，返回当前可用的标签列表"""
-        global jackpot_seting
-
-        enabled_tags = ["all"]
-
-        if os.path.exists(jackpot_seting):
-            try:
-                with open(jackpot_seting, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    random_data = data.get("randomData", {})
-                    for key, content in random_data.items():
-                        if isinstance(content, dict) and content.get("enabled") is True:
-                            enabled_tags.append(key)
-            except Exception:
-                pass
-
-        # 更新下拉菜单选项
-        self.target_dropdown.options = [ft.dropdownm2.Option(tag) for tag in enabled_tags]
+        try:
+            global jackpot_seting
+            enabled_tags = ["all"]
+            if not os.path.exists(jackpot_seting):
+                return
+            with open(jackpot_seting, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                random_data = data.get("randomData", {})
+                for key, content in random_data.items():
+                    if isinstance(content, dict) and content.get("enabled") is True:
+                        enabled_tags.append(key)
+            if len(enabled_tags) == 1:
+                return
+            new_pop_items = []
+            for key in enabled_tags:
+                new_pop_items.append(
+                    ft.PopupMenuItem(
+                        content=f"{key}",
+                        on_click=lambda e, k=key: self.handle_target_click(k),
+                    )
+                )
+            self.pop_target.items = new_pop_items
+        except Exception:
+            self.page.show_dialog(
+                get_snack_bar("refresh target options error.", "error")
+            )
         return enabled_tags
 
     def refresh_func_options(self):
         self.funcs_dict = filterFunc.getFuncName()
-        self.func_dropdown.options = [
-            ft.dropdownm2.Option(key, opacity=0.3) for key, _ in self.funcs_dict.items()
-        ]
-        return self.func_dropdown.options
+        new_pop_items = []
+        for key, item in self.funcs_dict.items():
+            new_pop_items.append(
+                ft.PopupMenuItem(
+                    content=f"{key}",
+                    on_click=lambda e, k=key: self.handle_func_click(k),
+                )
+            )
+        self.pop_func.items = new_pop_items
+        return list(self.funcs_dict.keys())
 
     def handle_apply(self, e):
-        if not self.func_dropdown.value or not self.condition_input.value:
+        _func = self.pop_func.content.value
+        _target = self.pop_target.content.value
+        _condit = self.condition_input.value
+        if _func == "func" or _condit == "":
             return
 
         # 保存本次的选择，以便下次 Add 时默认选中
-        self.last_selected_target = self.target_dropdown.value
+        self.last_selected_target = _target
 
         new_data = {
-            "func": self.func_dropdown.value,
-            "target": self.target_dropdown.value,
-            "condition": self.condition_input.value,
+            "func": _func,
+            "target": _target,
+            "condition": _condit,
         }
 
         if self.editing_index == -1:
@@ -121,6 +161,7 @@ class FilterPage:
         with open(jackpot_filers, "w", encoding="utf-8") as f:
             for item in self.filters_list:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        self.page.session.store.set("filters", self.filters_list)
         self.page.update()
 
     def open_dialog(self, index=-1):
@@ -132,22 +173,22 @@ class FilterPage:
             # --- 新增模式 (Add Filter) ---
             # 优先级 1: 如果有上一次记录的选择，且该选择目前依然在启用列表中，则继续使用它
             if self.last_selected_target in available_tags:
-                self.target_dropdown.value = self.last_selected_target
+                self.pop_target.content.value = self.last_selected_target
             # 优先级 2: 否则，如果列表不为空，默认选择第一项
             elif available_tags:
-                self.target_dropdown.value = available_tags[0]
+                self.pop_target.content.value = available_tags[0]
             else:
-                self.target_dropdown.value = None
+                self.pop_target.content.value = "all"
 
             self.condition_input.value = ""  # 新增时清空输入框
         else:
             # --- 编辑模式 (Long Press) ---
             item = self.filters_list[index]
             # 确保保存的值还在当前启用列表中，否则下拉框会显示空白
-            self.target_dropdown.value = (
+            self.pop_target.content.value = (
                 item["target"] if item["target"] in available_tags else None
             )
-            self.target_dropdown.value = (
+            self.pop_func.content.value = (
                 item["func"] if item["func"] in available_func else None
             )
             self.condition_input.value = item["condition"]
@@ -166,7 +207,7 @@ class FilterPage:
                         ),
                         title=ft.Text(
                             f"Target: {item['target']} Func: {item['func']}",
-                            color=Dracula_colors.CURRENT_LINE,
+                            color=Dracula_colors.ORANGE,
                         ),
                         subtitle=ft.Text(
                             f"Condition: {item['condition']}",

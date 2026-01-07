@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-06 06:40:58
+# @Last Modified time: 2026-01-07 05:19:15
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -72,10 +72,11 @@ class SetingsPage:
             alignment=ft.MainAxisAlignment.END,
         )
         self.note_text = ft.TextField(
-            label="Note", hint_text="Rule Settings Instructions")
+            label="Note", hint_text="Rule Settings Instructions", dense=True
+        )
         self.selection_container = ft.Column(
             controls=[
-                ft.Row(self.note_text, tight=True),
+                self.note_text,
                 self.get_Selection_line("A"),
                 self.add_button_row,
             ],
@@ -236,12 +237,12 @@ class SetingsPage:
                         f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
                     ),
                     subtitle=ft.Text(
-                        f"✨{exp}", color=Dracula_colors.COMMENT, weight="bold"
+                        f"✨ {exp} ✨", color=Dracula_colors.COMMENT, weight="bold"
                     ),
                 )
                 self.filter_items_column.controls.append(filter_control)
                 continue
-            count_range = len(range(item["range_start"], item["range_end"] + 1))
+            count_range = f"{item['range_start']} ~ {item['range_end']}"
             count = item["count"]
             filter_control = ft.ListTile(
                 leading=ft.Icon(ft.Icons.RULE, color=Dracula_colors.COMMENT),
