@@ -1,1 +1,1 @@
-{"func": "Ac", "target": "PA", "condition": "6,7,8,9"}
+{"func": "hsSum", "target": "PA", "condition": ">30"}

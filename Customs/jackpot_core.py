@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-08 06:53:41
+# @Last Modified time: 2026-01-08 11:20:37
 
 
 from pickletools import read_uint1
@@ -150,7 +150,6 @@ class CalcUtils:
         """
         # --- 输入验证和边缘情况处理 ---
         if not isinstance(max_val, int):
-            print("输入错误 max_val 必须是一个整数。")
             return []
         if max_val < 1:
             # 因为要求包含 1，所以小于 1 的上限没有有效数字
@@ -492,6 +491,52 @@ class filterFunc:
     @staticmethod
     def not_any(pabc: LotteryData, args: str, target: str):
         if not filterFunc.any(pabc, args, target):
+            return True
+        return False
+    
+    @staticmethod
+    def jiSum(pabc: LotteryData, args: str, target: str):
+        if target == "all":
+            target = list(pabc.keys())[0]
+        jiList = [x for x in pabc[target] if x%2==1]
+        Number_for_args = CalcUtils.nwped(args)
+        if sum(jiList) in Number_for_args:
+            return True
+        return False
+    
+    @staticmethod
+    def ouSum(pabc: LotteryData, args: str, target: str):
+        if target == "all":
+            target = list(pabc.keys())[0]
+        ouList = [x for x in pabc[target] if x%2==0]
+        Number_for_args = CalcUtils.nwped(args)
+        if sum(ouList) in Number_for_args:
+            return True
+        return False
+    
+    @staticmethod
+    def zsSum(pabc: LotteryData, args: str, target: str):
+        if target == "all":
+            target = list(pabc.keys())[0]
+        
+        zsList = pabc[target]
+        zs = CalcUtils.zs(max(zsList))
+        zsList = [x for x in zsList if x in zs]
+        Number_for_args = CalcUtils.nwped(args)
+        if sum(zsList) in Number_for_args:
+            return True
+        return False
+    
+    @staticmethod
+    def hsSum(pabc: LotteryData, args: str, target: str):
+        if target == "all":
+            target = list(pabc.keys())[0]
+        
+        zsList = pabc[target]
+        zs = CalcUtils.zs(max(zsList))
+        hsList = [x for x in zsList if x not in zs]
+        Number_for_args = CalcUtils.nwped(args)
+        if sum(hsList) in Number_for_args:
             return True
         return False
 

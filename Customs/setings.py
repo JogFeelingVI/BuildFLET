@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-07 05:19:15
+# @Last Modified time: 2026-01-08 12:09:45
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -232,7 +232,7 @@ class SetingsPage:
                 rd = randomData(seting=self.apply_rule["randomData"])
                 exp = rd.get_exp()
                 filter_control = ft.ListTile(
-                    leading=ft.Icon(ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.RED),
+                    leading=ft.Icon(ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE),
                     title=ft.Text(
                         f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
                     ),
