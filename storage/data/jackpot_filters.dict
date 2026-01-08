@@ -1,17 +1,1 @@
-{"func": "Ac", "target": "all", "condition": "6,7,8,9,10"}
-{"func": "avg", "target": "PA", "condition": "13,14,15"}
-{"func": "bit", "target": "PA", "condition": "bit1 <11 --z"}
-{"func": "bit", "target": "PA", "condition": "bit2 <14"}
-{"func": "bit", "target": "PA", "condition": "bit3 <18"}
-{"func": "bit", "target": "PA", "condition": "bit4 <24"}
-{"func": "bit", "target": "PA", "condition": "bit5 <30"}
-{"func": "bit", "target": "PA", "condition": "bit6 >23"}
-{"func": "mod_x", "target": "PA", "condition": "mod8 <27"}
-{"func": "mod_x", "target": "PA", "condition": "mod7 >15"}
-{"func": "mod_x", "target": "PA", "condition": "mod5 >9"}
-{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,2 <20 --j"}
-{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,3 <24"}
-{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,5 <37"}
-{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,6 <40"}
-{"func": "diff_bit_xy", "target": "PA", "condition": "bit1,2 >1 --j"}
-{"func": "not_any", "target": "PA", "condition": "32,31,18,11,7"}
+{"func": "Ac", "target": "PA", "condition": "6,7,8,9"}

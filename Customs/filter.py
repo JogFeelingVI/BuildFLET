@@ -207,7 +207,7 @@ class FilterPage:
                             f"Condition: {item['condition']}",
                             color=Dracula_colors.PURPLE,
                         ),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        # bgcolor=Dracula_colors.CURRENT_LINE,
                         on_long_press=lambda _, i=idx: self.open_dialog(i),
                     ),
                     on_dismiss=lambda _, i=idx: self.remove_filter(i),

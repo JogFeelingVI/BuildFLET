@@ -395,10 +395,10 @@ class filterFunc:
     @staticmethod
     def Ac(pabc: LotteryData, args: str, target: str) -> bool:
         acValue = []
-        if target =='all':
+        if target == "all":
             target = list(pabc.keys())[0]
         acValue = CalcUtils.ac(pabc[target])
-        
+
         Number_for_args = CalcUtils.nwped(args)
         if acValue in Number_for_args:
             return True
