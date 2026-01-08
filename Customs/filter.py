@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-07 05:52:18
+# @Last Modified time: 2026-01-08 07:17:08
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -22,13 +22,7 @@ class FilterPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
-        self.filters_list = [
-            {
-                "func": "avg",
-                "target": "PA",
-                "condition": "11,12,13,14,15,16",
-            }
-        ]
+        self.filters_list = []
         self.editing_index = -1
         self.last_selected_target = None
 
@@ -62,7 +56,7 @@ class FilterPage:
                             controls=[
                                 ft.Text("Select Fun:"),
                                 self.pop_func,
-                                ft.Text("Select Target:"),
+                                ft.Text("Target:"),
                                 self.pop_target,
                             ],
                             tight=True,
@@ -137,7 +131,7 @@ class FilterPage:
 
     def handle_apply(self, e):
         _func = self.pop_func.content.value
-        _target = self.pop_target.content.value
+        _target = self.pop_target.content.value or "all"
         _condit = self.condition_input.value
         if _func == "func" or _condit == "":
             return
@@ -213,7 +207,7 @@ class FilterPage:
                             f"Condition: {item['condition']}",
                             color=Dracula_colors.PURPLE,
                         ),
-                        bgcolor=Dracula_colors.BACKGROUND,
+                        bgcolor=Dracula_colors.CURRENT_LINE,
                         on_long_press=lambda _, i=idx: self.open_dialog(i),
                     ),
                     on_dismiss=lambda _, i=idx: self.remove_filter(i),
@@ -232,6 +226,10 @@ class FilterPage:
     def remove_filter(self, index):
         self.filters_list.pop(index)
         self.render_filters()
+        with open(jackpot_filers, "w", encoding="utf-8") as f:
+            for item in self.filters_list:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        self.page.session.store.set("filters", self.filters_list)
         self.page.update()
 
     def get_filter_view(self):

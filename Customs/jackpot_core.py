@@ -2,9 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-07 07:02:45
+# @Last Modified time: 2026-01-08 06:53:41
 
 
+from pickletools import read_uint1
 import secrets
 import itertools
 import re
@@ -345,12 +346,11 @@ class filterFunc:
         return False
 
     @staticmethod
-    def sum(pabc: LotteryData, args: str, target: str) -> bool:
+    def Sum(pabc: LotteryData, args: str, target: str) -> bool:
         if target == "all":
-            sumValue = sum([y for x in pabc.values() for y in x])
-        else:
-            sumValue = sum(pabc[target])
-        sumValue = sum(pabc.values())
+            target = list(pabc.keys())[0]
+
+        sumValue = sum(pabc[target])
         Number_for_args = CalcUtils.nwped(args)
         if sumValue in Number_for_args:
             return True
@@ -358,51 +358,142 @@ class filterFunc:
 
     @staticmethod
     def include(pabc: LotteryData, args: str, target: str) -> bool:
-        if target not in pabc.keys():
-            return False
+        if target == "all":
+            target = list(pabc.keys())[0]
         targetValue = set(pabc[target])
         Number_for_args = set(CalcUtils.nwped(args))
-        
+
         if targetValue & Number_for_args:
             return True
         return False
 
     @staticmethod
     def not_include(pabc: LotteryData, args: str, target: str) -> bool:
-        return not include(pabc, args, target)
+        return not filterFunc.include(pabc, args, target)
 
     @staticmethod
     def bit(pabc: LotteryData, args: str, target: str) -> bool:
         pattern = r"bit(\d+)\s+(.*)"
         match = re.search(pattern, args)
-        if match:
-            bit = int(match.group(1))
-            ohter = match.group(2)
-        if target not in pabc.keys():
+        if target == "all":
+            target = list(pabc.keys())[0]
+        if not match:
             return False
-        bitValue = pabc[target][bit - 1]
-        Number_for_args = CalcUtils.nwped(ohter)
+
+        idx_y = int(match.group(1))  # '2'
+        other_part = match.group(2)  # '>13 --z'
+        bitValue = pabc[target][idx_y - 1]
+        Number_for_args = CalcUtils.nwped(other_part)
         if bitValue in Number_for_args:
             return True
         return False
 
     @staticmethod
     def not_bit(pabc: LotteryData, args: str, target: str) -> bool:
-        return not bit(pabc, args, target)
+        return not filterFunc.bit(pabc, args, target)
 
     @staticmethod
-    def ac(pabc: LotteryData, args: str, targat: str = "") -> bool:
+    def Ac(pabc: LotteryData, args: str, target: str) -> bool:
         acValue = []
-        if targat in ["all"]:
-            acValue = pabc[0]
-        elif targat in pabc.keys() and pabc[targat].__len__() >= 2:
-            acValue = CalcUtils.ac(pabc[targat])
-            Number_for_args = CalcUtils.nwped(args)
-            if acValue in Number_for_args:
-                return True
-            return False
-        else:
+        if target =='all':
+            target = list(pabc.keys())[0]
+        acValue = CalcUtils.ac(pabc[target])
+        
+        Number_for_args = CalcUtils.nwped(args)
+        if acValue in Number_for_args:
             return True
+        return False
+
+    @staticmethod
+    def sum_bit_xy(pabc: LotteryData, args: str, target: str):
+        """bit1,2 >13 --z"""
+        pattern = r"bit(\d+),(\d+)\s+(.*)"
+        match = re.search(pattern, args)
+        if not match:
+            return False
+
+        # 2. 修正字典键的获取
+        if target == "all":
+            target = list(pabc.keys())[0]
+        # 3. 从分组中安全获取值
+        idx_x = int(match.group(1))  # '1'
+        idx_y = int(match.group(2))  # '2'
+        other_part = match.group(3)  # '>13 --z'
+        bitx = pabc[target][idx_x - 1]
+        bity = pabc[target][idx_y - 1]
+        Number_for_args = CalcUtils.nwped(other_part)
+        if (bitx + bity) in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def diff_bit_xy(pabc: LotteryData, args: str, target: str):
+        """bit1,2 >13 --z"""
+        pattern = r"bit(\d+),(\d+)\s+(.*)"
+        match = re.search(pattern, args)  # 使用 search 更方便拿分组
+
+        if not match:
+            return False
+
+        # 2. 修正字典键的获取
+        if target == "all":
+            target = list(pabc.keys())[0]
+
+        # 3. 从分组中安全获取值
+        idx_x = int(match.group(1))  # '1'
+        idx_y = int(match.group(2))  # '2'
+        other_part = match.group(3)  # '>13 --z'
+
+        # 4. 获取具体号码（注意索引要 -1）
+        val_x = pabc[target][idx_x - 1]
+        val_y = pabc[target][idx_y - 1]
+
+        # 5. 计算逻辑
+        diff_value = abs(val_x - val_y)
+
+        # 假设 CalcUtils.nwped 处理字符串并返回一个列表/集合
+        Number_for_args = CalcUtils.nwped(other_part)
+
+        if diff_value in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def mod_x(pabc: LotteryData, args: str, target: str):
+        """mod2 >13 --z"""
+        pattern = r"mod(\d+)\s+(.*)"
+        match = re.search(pattern, args)
+
+        if target == "all":
+            target = list(pabc.keys())[0]
+
+        # 3. 从分组中安全获取值
+        idx_x = int(match.group(1))
+        other_part = match.group(2)
+
+        modx_sum = sum([x % idx_x for x in pabc[target]])
+        Number_for_args = CalcUtils.nwped(other_part)
+        if modx_sum in Number_for_args:
+            return True
+        return False
+
+    @staticmethod
+    def any(pabc: LotteryData, args: str, target: str):
+        if target == "all":
+            # 将 keys 转为 list 后再取第一个
+            pabcvalue = [y for x in pabc.values() for y in x]
+        else:
+            pabcvalue = [x for x in pabc[target]]
+        Number_for_args = CalcUtils.nwped(args)
+        if set(pabcvalue) & set(Number_for_args):
+            return True
+        return False
+
+    @staticmethod
+    def not_any(pabc: LotteryData, args: str, target: str):
+        if not filterFunc.any(pabc, args, target):
+            return True
+        return False
 
 
 class filter_for_pabc:
@@ -452,7 +543,6 @@ class filter_for_pabc:
                 flgs.append(return_code)
             except Exception as e:
                 flgs.append(False)
-        print(f'{pabc} {flgs=}')
         if False in flgs:
             return False
         return True

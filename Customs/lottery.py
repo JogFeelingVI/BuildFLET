@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-07 06:31:18
+# @Last Modified time: 2026-01-08 05:18:38
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -21,88 +21,75 @@ def calculate_lottery(setings: dict, filters: list):
     if setings:
         rd = randomData(seting=setings)
     else:
-        return None
+        return ("No Numbers", False)
     result = rd.get_pabc()
-    if filters:
-        filter_jp = filter_for_pabc(filters=filters)
-        if filter_jp.handle(result) == False:
-            return None
-        return rd.get_exp(result)
-    else:
-        result = rd.get_exp(result)
-    return result
+    if not filters:
+        return (rd.get_exp(result), True)
+    filter_jp = filter_for_pabc(filters=filters)
+    if filter_jp.handle(result) == False:
+        return [rd.get_exp(result), False]
+    return (rd.get_exp(result), True)
 
 
-class lottery_items(ft.Column):
+class listext_onlong(ft.ListTile):
     def __init__(self):
         super().__init__()
-        self.progress = ft.ProgressBar(
-            year_2023=True, color=Dracula_colors.PINK, value=0, visible=False
+        self.title = ft.Text(
+            f"{randomData.generate_secure_string()}",
+            color=Dracula_colors.COMMENT,
+            size=11,
         )
-        self.spacing = 2
-        self.controls.append(self.progress)
-        self.results = []
+        self.data = "No Number"
+        self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
+        self.subtitle = ft.Text(
+            f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
+        )
+        self.on_long_press = lambda _: self.get_data(1, True)
+        self.runing = True
+
+    def setting_args(self, setting: dict, filter: list):
+        self.setting = setting
+        self.filers = filter
 
     def did_mount(self):
-        # 此时 self.page 已经可用了
-        self.runing = True
-        self.update()
+        self.get_data(0)
 
     def will_unmount(self):
         self.runing = False
 
-    def cilcked(self, setting: dict, filters: list):
-        if not setting and self.runing:
-            return
-        self.lottery_items_count = (
-            self.page.session.store.get("Lottery_item_count") or 5
-        )
-        self.settings = setting
-        self.filters = filters
-        self.page.run_task(self.update_progress)
+    def get_data(self, state: int = 1, onoff=False):
+        if state == 0 and self.runing:
+            self.page.run_task(self.refresh)
+        if state == 1 and onoff:
+            self.page.run_task(self.refresh)
 
-    async def update_progress(self):
-        self.progress.visible = True
-        self.controls.clear()
-        self.controls.append(self.progress)
-        count = self.lottery_items_count
-        none_count = 0
-        while count:
-            if none_count >= 20:
-                self.page.show_dialog(get_snack_bar(f"The filtering rules are incorrect.","error"))
-                return None
-            temp = calculate_lottery(setings=self.settings, filters=self.filters)
-            if temp == None:
-                continue
-            self.results.append(temp)
-            self.progress.value = (
-                self.lottery_items_count - count + 1
-            ) / self.lottery_items_count
-            count -= 1
-            self.update()
-            await asyncio.sleep(0.1)
-        self.progress.visible = False
-        while self.results:
-            item = self.results.pop()
-            self.controls.append(
-                ft.ListTile(
-                    leading=ft.Icon(
-                        ft.Icons.GENERATING_TOKENS, color=Dracula_colors.RED
-                    ),
-                    title=ft.Text(
-                        f"{randomData.generate_secure_string()}",
-                        color=Dracula_colors.COMMENT,
-                        size=11,
-                    ),
-                    subtitle=ft.Text(
-                        f"{item}",
+    async def refresh(self):
+        isok = False
+        note_error = 0
+        while isok == False:
+            tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
+            if state:
+                self.data = tempd
+                self.subtitle = ft.Text(
+                    f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
+                )
+                isok = state
+            else:
+                if note_error >= 100:
+                    self.subtitle = ft.Text(
+                        "Filter settings are incorrect.",
                         weight="bold",
                         size=18,
-                        color=Dracula_colors.PURPLE,
-                    ),
+                        color=Dracula_colors.RED,
+                    )
+                    self.page.update()
+                    break
+                note_error += 1
+                self.data = tempd
+                self.subtitle = ft.Text(
+                    f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
                 )
-            )
-            self.update()
+            self.page.update()
             await asyncio.sleep(0.1)
 
 
@@ -110,7 +97,7 @@ class LotteryPage:
     def __init__(self, page: ft.Page):
         self.page = page
         self.buttons = self.set_Lotter_buttons()
-        self.lottery_items_column = lottery_items()
+        self.lottery_items_column = ft.Column(spacing=5)
         self.view = self.get_data_view()
 
     def set_Lotter_buttons(self):
@@ -137,7 +124,13 @@ class LotteryPage:
         try:
             settings = self.page.session.store.get("settings")
             filters = self.page.session.store.get("filters")
-            self.lottery_items_column.cilcked(settings["randomData"], filters=filters)
+            lic = self.page.session.store.get("Lottery_item_count") or 5
+            self.lottery_items_column.controls.clear()
+            for _ in range(lic):
+                listext = listext_onlong()
+                listext.setting_args(settings["randomData"], filters)
+                self.lottery_items_column.controls.append(listext)
+            # self.lottery_items_column.cilcked(settings["randomData"], filters=filters)
         except Exception:
             self.page.show_dialog(
                 get_snack_bar("Failed to retrieve settings data.", "error")
