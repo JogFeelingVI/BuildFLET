@@ -493,32 +493,32 @@ class filterFunc:
         if not filterFunc.any(pabc, args, target):
             return True
         return False
-    
+
     @staticmethod
     def jiSum(pabc: LotteryData, args: str, target: str):
         if target == "all":
             target = list(pabc.keys())[0]
-        jiList = [x for x in pabc[target] if x%2==1]
+        jiList = [x for x in pabc[target] if x % 2 == 1]
         Number_for_args = CalcUtils.nwped(args)
         if sum(jiList) in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def ouSum(pabc: LotteryData, args: str, target: str):
         if target == "all":
             target = list(pabc.keys())[0]
-        ouList = [x for x in pabc[target] if x%2==0]
+        ouList = [x for x in pabc[target] if x % 2 == 0]
         Number_for_args = CalcUtils.nwped(args)
         if sum(ouList) in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def zsSum(pabc: LotteryData, args: str, target: str):
         if target == "all":
             target = list(pabc.keys())[0]
-        
+
         zsList = pabc[target]
         zs = CalcUtils.zs(max(zsList))
         zsList = [x for x in zsList if x in zs]
@@ -526,12 +526,12 @@ class filterFunc:
         if sum(zsList) in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def hsSum(pabc: LotteryData, args: str, target: str):
         if target == "all":
             target = list(pabc.keys())[0]
-        
+
         zsList = pabc[target]
         zs = CalcUtils.zs(max(zsList))
         hsList = [x for x in zsList if x not in zs]

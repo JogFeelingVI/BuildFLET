@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-08 07:17:08
+# @Last Modified time: 2026-01-09 02:03:37
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -27,6 +27,8 @@ class FilterPage:
         self.last_selected_target = None
 
         self.filter_items_column = ft.Column(spacing=2)
+
+        self.buttons = self.show_save_as()
         # --- 1. 定义 Target 下拉列表 ---
         self.pop_func = ft.PopupMenuButton(
             content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
@@ -41,6 +43,56 @@ class FilterPage:
         )
         self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
+
+    def show_save_as(self):
+        # self.page.overlay.append(self.save_file_pick)
+        # self.page.update()
+        return [
+            ft.Button(
+                "Save As",
+                icon=ft.Icons.SAVE,
+                on_click=self.handle_save_file,
+                disabled=self.page.web,
+            ),
+            ft.Button(
+                "Open",
+                icon=ft.Icons.FILE_OPEN,
+                on_click=self.hadle_open_file,
+                disabled=self.page.web,
+            ),
+        ]
+
+    async def hadle_open_file(self, e: ft.Event[ft.Button]):
+        selsect_files = await ft.FilePicker().pick_files()
+        if not selsect_files:
+            return
+        filters_list = []
+        for file in selsect_files:
+            if not file.name.endswith("dict"):
+                continue
+
+            with open(file, "r", encoding="utf-8") as f:
+                for line in f:
+                    # 去掉行尾换行符并确保行不为空
+                    line = line.strip()
+                    if line:
+                        # 将每一行的 JSON 字符串转回字典对象
+                        item = json.loads(line)
+                        filters_list.append(item)
+        if not filters_list:
+            return
+        self.filters_list = filters_list
+        self.render_filters()
+        self.page.update()
+
+    async def handle_save_file(self, e: ft.Event[ft.Button]):
+        filename = await ft.FilePicker().save_file()
+        with open(filename, "w", encoding="utf-8") as f:
+            for item in self.filters_list:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        self.page.show_dialog(
+            get_snack_bar(f"{filename} filtesx.json saved successfully.")
+        )
 
     def close_dlg(self, e):
         self.dlg.open = False
@@ -248,6 +300,8 @@ class FilterPage:
                     icon=ft.Icons.ADD,
                     on_click=lambda _: self.open_dialog(-1),
                 ),
+                ft.Divider(),
+                ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 ft.Divider(),
                 ft.Column(
                     [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True

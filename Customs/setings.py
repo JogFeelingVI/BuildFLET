@@ -232,7 +232,9 @@ class SetingsPage:
                 rd = randomData(seting=self.apply_rule["randomData"])
                 exp = rd.get_exp()
                 filter_control = ft.ListTile(
-                    leading=ft.Icon(ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE),
+                    leading=ft.Icon(
+                        ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE
+                    ),
                     title=ft.Text(
                         f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
                     ),
