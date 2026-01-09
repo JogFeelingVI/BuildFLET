@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 02:58:50
+# @Last Modified time: 2026-01-09 08:04:52
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -12,7 +12,7 @@ import flet as ft
 import json
 import os
 
-# 获取系统标示
+# 获取系统标示 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")

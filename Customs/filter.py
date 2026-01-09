@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 02:58:39
+# @Last Modified time: 2026-01-09 08:06:33
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -17,6 +17,78 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 jackpot_filers = os.path.join(app_data_path, "jackpot_filters.dict")
 
 
+class UserdirButton(ft.TextButton):
+    def __init__(
+        self,
+    ):
+        super().__init__()
+        self.content = ft.Text(
+            "Filter",
+            size=25,
+            weight=ft.FontWeight.BOLD,
+            color=Dracula_colors.COMMENT,
+        )
+        self.on_long_press = self.handle_long_press
+        self.user_dir = "/codex/exp_3/src/storage/data"
+
+    def setting(self, save, load):
+        self.save_funx = save
+        self.load_funx = load
+
+    def did_mount(self):
+        self.ads = self.ad()
+        self.page.overlay.append(self.ads)
+        self.runing = True
+
+    def will_unmount(self):
+        self.runing = False
+
+    async def select_dir(self):
+        if self.page.web:
+            user_dir = "/codex/exp_3/src/storage/data"
+        else:
+            user_dir = await ft.FilePicker().get_directory_path(
+                dialog_title="Please select a directory?"
+            )
+        if user_dir:
+            self.page.session.store.set("user_dir", user_dir)
+            self.user_dir = user_dir
+        return user_dir
+
+    def handle_long_press(self):
+        if self.runing:
+            self.page.run_task(self.select_dir)
+            if not (user_dir := self.page.session.store.get("user_dir")):
+                return  # 用户既没缓存也没选择目录，直接退出
+            self.ads.open = True
+            self.page.update()
+            # print(f"chlick long press {user_dir}")
+
+    def ad(self):
+        return ft.AlertDialog(
+            title=ft.Text("Filter settings saved"),
+            content=ft.Text("Do you need to save or load jackpot_filters.dict?"),
+            actions=[
+                ft.TextButton("Save", on_click=self.handle_save),
+                ft.TextButton(
+                    "Load",
+                    on_click=self.handle_load,
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+    def handle_save(self):
+        self.ads.open = False
+        if self.save_funx:
+            self.save_funx(self.user_dir)
+
+    def handle_load(self):
+        self.ads.open = False
+        if self.load_funx:
+            self.load_funx(self.user_dir)
+
+
 class FilterPage:
     """筛选页面类"""
 
@@ -25,10 +97,7 @@ class FilterPage:
         self.filters_list = []
         self.editing_index = -1
         self.last_selected_target = None
-
         self.filter_items_column = ft.Column(spacing=2)
-
-        self.buttons = self.show_save_as()
         # --- 1. 定义 Target 下拉列表 ---
         self.pop_func = ft.PopupMenuButton(
             content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
@@ -43,61 +112,6 @@ class FilterPage:
         )
         self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
-
-    def show_save_as(self):
-        # self.page.overlay.append(self.save_file_pick)
-        # self.page.update()
-        return [
-            ft.Button(
-                "save",
-                icon=ft.Icons.SAVE,
-                on_click=self.handle_directory_save,
-                disabled=self.page.web,
-            ),
-            ft.Button(
-                "Open",
-                icon=ft.Icons.FILE_OPEN,
-                on_click=self.hadle_directory_open,
-                disabled=self.page.web,
-            ),
-        ]
-
-    async def hadle_directory_open(self, e: ft.Event[ft.Button]):
-        user_dirs = await ft.FilePicker().get_directory_path(
-            dialog_title="The directory where jackpot_filters.dict is located."
-        )
-        if not user_dirs:
-            self.page.show_dialog(get_snack_bar(f"Please select a directory."))
-        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
-        filters_list = []
-        if not os.path.isfile(file_path):
-            return
-
-        with open(file_path, "r", encoding="utf-8") as f:
-            for line in f:
-                # 去掉行尾换行符并确保行不为空
-                line = line.strip()
-                if line:
-                    # 将每一行的 JSON 字符串转回字典对象
-                    item = json.loads(line)
-                    filters_list.append(item)
-        if not filters_list:
-            return
-        self.filters_list = filters_list
-        self.render_filters()
-        self.page.update()
-
-    async def handle_directory_save(self, e: ft.Event[ft.Button]):
-        user_dirs = await ft.FilePicker().get_directory_path(
-            dialog_title="The directory where jackpot_filters.dict is located."
-        )
-        if not user_dirs:
-            self.page.show_dialog(get_snack_bar(f"Please select a directory."))
-        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
-        with open(file_path, "w", encoding="utf-8") as f:
-            for item in self.filters_list:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        self.page.show_dialog(get_snack_bar(f"{file_path} saved successfully."))
 
     def close_dlg(self, e):
         self.dlg.open = False
@@ -209,9 +223,6 @@ class FilterPage:
 
         self.dlg.open = False
         self.render_filters()
-        with open(jackpot_filers, "w", encoding="utf-8") as f:
-            for item in self.filters_list:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
         self.page.session.store.set("filters", self.filters_list)
         self.page.update()
 
@@ -283,30 +294,50 @@ class FilterPage:
     def remove_filter(self, index):
         self.filters_list.pop(index)
         self.render_filters()
-        with open(jackpot_filers, "w", encoding="utf-8") as f:
-            for item in self.filters_list:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
         self.page.session.store.set("filters", self.filters_list)
         self.page.update()
 
+    def save_file(self, user_dirs: str):
+        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
+        with open(file_path, "w", encoding="utf-8") as f:
+            for item in self.filters_list:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        self.page.show_dialog(get_snack_bar(f"{file_path} saved successfully."))
+
+    def load_file(self, user_dirs: str):
+        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
+        if not os.path.isfile(file_path):
+            return
+        filters_list = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                # 去掉行尾换行符并确保行不为空
+                line = line.strip()
+                if line:
+                    # 将每一行的 JSON 字符串转回字典对象
+                    item = json.loads(line)
+                    filters_list.append(item)
+        if not filters_list:
+            return
+        self.filters_list = filters_list
+        self.page.session.store.set("filters", self.filters_list)
+        self.render_filters()
+        self.page.update()
+
+   
     def get_filter_view(self):
         self.page.overlay.append(self.dlg)
+        user_dict_button = UserdirButton()
+        user_dict_button.setting(self.save_file, self.load_file)
 
         return ft.Column(
             controls=[
-                ft.Text(
-                    "Filter",
-                    size=25,
-                    weight=ft.FontWeight.BOLD,
-                    color=Dracula_colors.COMMENT,
-                ),
+                user_dict_button,
                 ft.Button(
                     "Add filtering rules",
                     icon=ft.Icons.ADD,
                     on_click=lambda _: self.open_dialog(-1),
                 ),
-                ft.Divider(),
-                ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 ft.Divider(),
                 ft.Column(
                     [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True
