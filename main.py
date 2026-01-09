@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 08:04:52
+# @Last Modified time: 2026-01-09 16:35:56
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -12,7 +12,7 @@ import flet as ft
 import json
 import os
 
-# 获取系统标示 
+# 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
@@ -21,7 +21,7 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 def main(page: ft.Page):
     page.title = "Jackpot App"
     # page.theme = Dracula_Theme
-    # 设置移动端适配的内边距
+    # 设置移动端适配的内边距  
     page.padding = ft.Padding.only(top=20)
 
     # --- 页面逻辑控制 ---

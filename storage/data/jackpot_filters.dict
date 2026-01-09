@@ -1,2 +1,2 @@
-{"func": "Ac", "target": "all", "condition": "6,7,8,9"}
-{"func": "Sum", "target": "all", "condition": ">36"}
+{"func": "Ac", "target": "PA", "condition": "6,7,8,9"}
+{"func": "Sum", "target": "PA", "condition": ">46"}

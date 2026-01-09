@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 08:06:33
+# @Last Modified time: 2026-01-09 14:56:25
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -28,8 +28,7 @@ class UserdirButton(ft.TextButton):
             weight=ft.FontWeight.BOLD,
             color=Dracula_colors.COMMENT,
         )
-        self.on_long_press = self.handle_long_press
-        self.user_dir = "/codex/exp_3/src/storage/data"
+        self.user_dir = app_data_path
 
     def setting(self, save, load):
         self.save_funx = save
@@ -39,30 +38,26 @@ class UserdirButton(ft.TextButton):
         self.ads = self.ad()
         self.page.overlay.append(self.ads)
         self.runing = True
+        self.on_long_press = self.handle_long_press
 
     def will_unmount(self):
         self.runing = False
 
     async def select_dir(self):
-        if self.page.web:
-            user_dir = "/codex/exp_3/src/storage/data"
-        else:
-            user_dir = await ft.FilePicker().get_directory_path(
-                dialog_title="Please select a directory?"
-            )
-        if user_dir:
-            self.page.session.store.set("user_dir", user_dir)
-            self.user_dir = user_dir
-        return user_dir
+        if not (user_dir := self.page.session.store.get("user_dir")):
+            if not self.page.web:
+                user_dir = await ft.StoragePaths().get_downloads_directory()
+                # user_dir = await ft.FilePicker().get_directory_path(
+                #     dialog_title="Please select a directory?"
+                # )
+                if user_dir:
+                    self.page.session.store.set("user_dir", user_dir)
+                    self.user_dir = user_dir
 
     def handle_long_press(self):
-        if self.runing:
-            self.page.run_task(self.select_dir)
-            if not (user_dir := self.page.session.store.get("user_dir")):
-                return  # 用户既没缓存也没选择目录，直接退出
-            self.ads.open = True
-            self.page.update()
-            # print(f"chlick long press {user_dir}")
+        self.page.run_task(self.select_dir)
+        self.ads.open = True
+        self.page.update()
 
     def ad(self):
         return ft.AlertDialog(
@@ -82,11 +77,13 @@ class UserdirButton(ft.TextButton):
         self.ads.open = False
         if self.save_funx:
             self.save_funx(self.user_dir)
+        self.page.update()
 
     def handle_load(self):
         self.ads.open = False
         if self.load_funx:
             self.load_funx(self.user_dir)
+        self.page.update()
 
 
 class FilterPage:
@@ -324,7 +321,6 @@ class FilterPage:
         self.render_filters()
         self.page.update()
 
-   
     def get_filter_view(self):
         self.page.overlay.append(self.dlg)
         user_dict_button = UserdirButton()

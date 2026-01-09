@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-08 12:09:45
+# @Last Modified time: 2026-01-09 16:37:13
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -227,39 +227,82 @@ class SetingsPage:
         """渲染过滤器列表"""
         self.filter_items_column.controls.clear()
         self.page.session.store.set("settings", self.apply_rule)
-        for key, item in self.apply_rule.get("randomData", {}).items():
+        randomDatax = self.apply_rule.get("randomData", {})
+        rd = randomData(seting=randomDatax)
+        exp = rd.get_exp()
+        textlist = []
+        for key, item in randomDatax.items():
             if key == "note":
-                rd = randomData(seting=self.apply_rule["randomData"])
-                exp = rd.get_exp()
-                filter_control = ft.ListTile(
-                    leading=ft.Icon(
-                        ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE
-                    ),
-                    title=ft.Text(
-                        f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
-                    ),
-                    subtitle=ft.Text(
-                        f"✨ {exp} ✨", color=Dracula_colors.COMMENT, weight="bold"
-                    ),
-                )
-                self.filter_items_column.controls.append(filter_control)
                 continue
-            count_range = f"{item['range_start']} ~ {item['range_end']}"
+            # print(f'{key} {item} ==-==')
+            count_range = f"{item['range_start']} - {item['range_end']}"
             count = item["count"]
-            filter_control = ft.ListTile(
-                leading=ft.Icon(ft.Icons.RULE, color=Dracula_colors.COMMENT),
-                title=ft.Text(
-                    f"Section [ {key} ] Settings",
-                    text_align=ft.TextAlign.LEFT,
+            textlist.append(
+                ft.Text(
+                    f"Section [ {key} ] Settings, Choose {count} numbers from {count_range}.",
+                    max_lines=2,
                     color=Dracula_colors.PURPLE,
-                ),
-                subtitle=ft.Text(
-                    f"Choose {count} numbers from {count_range}.",
-                    text_align=ft.TextAlign.LEFT,
-                    color=Dracula_colors.COMMENT,
-                ),
+                    size=15
+                )
             )
-            self.filter_items_column.controls.append(filter_control)
+        rule_mode_show = ft.Card(
+            # bgcolor=Dracula_colors.CURRENT_LINE,
+            content=ft.Container(
+                padding=10,
+                # expand=True,
+                opacity=0.65,
+                content=ft.Column(
+                    tight=True,
+                    controls=[
+                        ft.TextButton(
+                            content=ft.Text("🎉 This is an example. 🎉", size=18),
+                            icon=ft.Icon(
+                                ft.Icons.ASSIGNMENT_ADD,
+                                color=Dracula_colors.ORANGE,
+                                size=30,
+                            ),
+                        ),
+                        ft.TextButton(content=ft.Text(f"✨ {exp} ✨", size=15)),
+                        ft.Divider(),
+                        *textlist,
+                    ],
+                ),
+            ),
+        )
+        self.filter_items_column.controls.append(rule_mode_show)
+        # for key, item in self.apply_rule.get("randomData", {}).items():
+        #     if key == "note":
+        #         rd = randomData(seting=self.apply_rule["randomData"])
+        #         exp = rd.get_exp()
+        #         filter_control = ft.ListTile(
+        #             leading=ft.Icon(
+        #                 ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE
+        #             ),
+        #             title=ft.Text(
+        #                 f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
+        #             ),
+        #             subtitle=ft.Text(
+        #                 f"✨ {exp} ✨", color=Dracula_colors.COMMENT, weight="bold"
+        #             ),
+        #         )
+        #         self.filter_items_column.controls.append(filter_control)
+        #         continue
+        #     count_range = f"{item['range_start']} ~ {item['range_end']}"
+        #     count = item["count"]
+        #     filter_control = ft.ListTile(
+        #         leading=ft.Icon(ft.Icons.RULE, color=Dracula_colors.COMMENT),
+        #         title=ft.Text(
+        #             f"Section [ {key} ] Settings",
+        #             text_align=ft.TextAlign.LEFT,
+        #             color=Dracula_colors.PURPLE,
+        #         ),
+        #         subtitle=ft.Text(
+        #             f"Choose {count} numbers from {count_range}.",
+        #             text_align=ft.TextAlign.LEFT,
+        #             color=Dracula_colors.COMMENT,
+        #         ),
+        #     )
+        #     self.filter_items_column.controls.append(filter_control)
         self.page.update()
 
     def close_dlg(self):
