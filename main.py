@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 02:03:41
+# @Last Modified time: 2026-01-09 02:58:50
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -24,7 +24,7 @@ def main(page: ft.Page):
     # 设置移动端适配的内边距
     page.padding = ft.Padding.only(top=20)
 
-    # --- 页面逻辑控制 --- 
+    # --- 页面逻辑控制 ---
     def on_navigation_change(e):
         index = e.control.selected_index
         # 切换中间的内容区域

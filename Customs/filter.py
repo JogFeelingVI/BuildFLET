@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 02:03:37
+# @Last Modified time: 2026-01-09 02:58:39
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -49,50 +49,55 @@ class FilterPage:
         # self.page.update()
         return [
             ft.Button(
-                "Save As",
+                "save",
                 icon=ft.Icons.SAVE,
-                on_click=self.handle_save_file,
+                on_click=self.handle_directory_save,
                 disabled=self.page.web,
             ),
             ft.Button(
                 "Open",
                 icon=ft.Icons.FILE_OPEN,
-                on_click=self.hadle_open_file,
+                on_click=self.hadle_directory_open,
                 disabled=self.page.web,
             ),
         ]
 
-    async def hadle_open_file(self, e: ft.Event[ft.Button]):
-        selsect_files = await ft.FilePicker().pick_files()
-        if not selsect_files:
-            return
+    async def hadle_directory_open(self, e: ft.Event[ft.Button]):
+        user_dirs = await ft.FilePicker().get_directory_path(
+            dialog_title="The directory where jackpot_filters.dict is located."
+        )
+        if not user_dirs:
+            self.page.show_dialog(get_snack_bar(f"Please select a directory."))
+        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
         filters_list = []
-        for file in selsect_files:
-            if not file.name.endswith("dict"):
-                continue
+        if not os.path.isfile(file_path):
+            return
 
-            with open(file, "r", encoding="utf-8") as f:
-                for line in f:
-                    # 去掉行尾换行符并确保行不为空
-                    line = line.strip()
-                    if line:
-                        # 将每一行的 JSON 字符串转回字典对象
-                        item = json.loads(line)
-                        filters_list.append(item)
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                # 去掉行尾换行符并确保行不为空
+                line = line.strip()
+                if line:
+                    # 将每一行的 JSON 字符串转回字典对象
+                    item = json.loads(line)
+                    filters_list.append(item)
         if not filters_list:
             return
         self.filters_list = filters_list
         self.render_filters()
         self.page.update()
 
-    async def handle_save_file(self, e: ft.Event[ft.Button]):
-        filename = await ft.FilePicker().save_file()
-        with open(filename, "w", encoding="utf-8") as f:
+    async def handle_directory_save(self, e: ft.Event[ft.Button]):
+        user_dirs = await ft.FilePicker().get_directory_path(
+            dialog_title="The directory where jackpot_filters.dict is located."
+        )
+        if not user_dirs:
+            self.page.show_dialog(get_snack_bar(f"Please select a directory."))
+        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
+        with open(file_path, "w", encoding="utf-8") as f:
             for item in self.filters_list:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        self.page.show_dialog(
-            get_snack_bar(f"{filename} filtesx.json saved successfully.")
-        )
+        self.page.show_dialog(get_snack_bar(f"{file_path} saved successfully."))
 
     def close_dlg(self, e):
         self.dlg.open = False
