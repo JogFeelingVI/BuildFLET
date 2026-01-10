@@ -2,8 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 01:14:40
+# @Last Modified time: 2026-01-10 06:25:32
 
+from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
 from .jackpot_core import randomData
@@ -17,27 +18,27 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 Lotter_Data = {
-    "SSQ": {
-        "description": "🇨🇳福利彩票双色球",
+    "🔴双色球": {
+        "description": "🇨🇳百万富翁缔造者",
         "SA": [1, 33],
         "SB": [1, 16],
         "SA_K": 6,
         "SB_K": 1,
     },
-    "KL8": {
-        "description": "🇨🇳福利彩票快乐8",
+    "⚪快乐8": {
+        "description": "🇨🇳你的快乐就是他的快乐",
         "PA": [1, 80],
         "PA_K": 10,
     },
-    "Lotter52": {
-        "description": "🇨🇳体育彩票大乐透",
+    "✨超级大乐透": {
+        "description": "🇨🇳体育大乐透",
         "PA": [1, 35],
         "PB": [1, 12],
         "PA_K": 5,
         "PB_K": 2,
     },
-    "Array3/5": {
-        "description": "🇨🇳体育彩票排列3/5",
+    "🇨🇳排列3/5": {
+        "description": "🇨🇳体育排列3/5",
         "PA": [0, 9],
         "PB": [0, 9],
         "PC": [0, 9],
@@ -49,11 +50,35 @@ Lotter_Data = {
         "PD_K": 1,
         "PE_K": 1,
     },
+    "✨七星彩": {
+        "description": "🇨🇳体育七星彩",
+        "PA": [0, 9],
+        "PB": [0, 9],
+        "PC": [0, 9],
+        "PD": [0, 9],
+        "PE": [0, 9],
+        "PF": [0, 9],
+        "PG": [0, 14],
+        "PA_K": 1,
+        "PB_K": 1,
+        "PC_K": 1,
+        "PD_K": 1,
+        "PE_K": 1,
+        "PF_K": 1,
+        "PG_K": 1,
+    },
     "🇺🇸Powerball": {
-        "description": "🇺🇸Powerball",
+        "description": "🇺🇸USA Powerball",
         "PA": [1, 69],
         "PB": [1, 26],
         "PA_K": 5,
+        "PB_K": 1,
+    },
+    "🇹🇼威力彩": {
+        "description": "🇺🇸台湾省销售最好的彩票",
+        "PA": [1, 38],
+        "PB": [1, 8],
+        "PA_K": 6,
         "PB_K": 1,
     },
 }
@@ -70,6 +95,12 @@ class SetingsPage:
                 ft.Button("Add Row", icon=ft.Icons.ADD, on_click=self.handle_add_click)
             ],
             alignment=ft.MainAxisAlignment.END,
+        )
+        self.Fab = ft.FloatingActionButton(
+            icon=ft.Icons.ADD,
+            bgcolor=Dracula_colors.PURPLE,
+            on_click=lambda _: self.open_dialog(),
+            opacity=0.65,
         )
         self.note_text = ft.TextField(
             label="Note", hint_text="Rule Settings Instructions", dense=True
@@ -94,24 +125,26 @@ class SetingsPage:
         button_list = []
         # 注意：Lotter_Data 应该在函数外部定义或作为参数传入
         for k, item in Lotter_Data.items():
+            description = item.get("description", "")
             button_list.append(
                 ft.Button(
                     f"{k}",
-                    tooltip=ft.Tooltip(message=item.get("description", "")),
+                    tooltip=ft.Tooltip(message=description),
                     # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
-                    on_click=lambda e, name=k, data=item: self.save_preset_to_file(
-                        name, data
-                    ),
+                    on_click=lambda e,
+                    name=k,
+                    data=item,
+                    desc=description: self.save_preset_to_file(name, data, desc),
                 )
             )
         return button_list
 
-    def save_preset_to_file(self, name: str, preset_data: dict):
+    def save_preset_to_file(self, name: str, preset_data: dict, desc: str):
         """将处理后的预设数据写入 json 文件"""
         # 1. 构造符合你要求的嵌套格式
         valid_json = {
             "randomData": {
-                "note": "save setings from preset buttons",
+                "note": f"{desc}",
             }
         }
 
@@ -240,7 +273,7 @@ class SetingsPage:
 
             textlist.append(
                 ft.Text(
-                    f"Section [ {key} ] Settings, Choose {count} numbers from {count_range}.",
+                    f"⚠ Section [ {key} ].  Choose {count} number from {count_range}.",
                     max_lines=2,
                     color=Dracula_colors.PURPLE,
                     size=15,
@@ -249,25 +282,27 @@ class SetingsPage:
         rule_mode_show = ft.Card(
             # bgcolor=Dracula_colors.CURRENT_LINE,
             content=ft.Container(
-                padding=10,
+                padding=12,
                 # expand=True,
                 opacity=0.65,
                 content=ft.Column(
                     tight=True,
                     controls=[
-                        ft.TextButton(
-                            content=ft.Text("🎉 This is an example. 🎉", size=18),
-                            icon=ft.Icon(
-                                ft.Icons.ASSIGNMENT_ADD,
-                                color=Dracula_colors.ORANGE,
-                                size=30,
-                            ),
-                        ),
+                        # ft.TextButton(
+                        #     content=ft.Text("🎉 This is an example.", size=18),
+                        #     icon=ft.Icon(
+                        #         ft.Icons.ASSIGNMENT_ADD,
+                        #         color=Dracula_colors.ORANGE,
+                        #         size=30,
+                        #     ),
+                        # ),
+                        LotteryBalls(exp),
                         ft.Text(
-                            f"✨ {exp} ✨",
+                            f"🚩Note: {randomDatax['note']}",
                             size=15,
                             weight="bold",
                             color=Dracula_colors.ORANGE,
+                            max_lines=2,
                         ),
                         ft.Divider(),
                         *textlist,
@@ -276,39 +311,6 @@ class SetingsPage:
             ),
         )
         self.filter_items_column.controls.append(rule_mode_show)
-        # for key, item in self.apply_rule.get("randomData", {}).items():
-        #     if key == "note":
-        #         rd = randomData(seting=self.apply_rule["randomData"])
-        #         exp = rd.get_exp()
-        #         filter_control = ft.ListTile(
-        #             leading=ft.Icon(
-        #                 ft.Icons.ASSIGNMENT_ADD, color=Dracula_colors.ORANGE
-        #             ),
-        #             title=ft.Text(
-        #                 f"🎉 This is an example. 🎉", color=Dracula_colors.COMMENT
-        #             ),
-        #             subtitle=ft.Text(
-        #                 f"✨ {exp} ✨", color=Dracula_colors.COMMENT, weight="bold"
-        #             ),
-        #         )
-        #         self.filter_items_column.controls.append(filter_control)
-        #         continue
-        #     count_range = f"{item['range_start']} ~ {item['range_end']}"
-        #     count = item["count"]
-        #     filter_control = ft.ListTile(
-        #         leading=ft.Icon(ft.Icons.RULE, color=Dracula_colors.COMMENT),
-        #         title=ft.Text(
-        #             f"Section [ {key} ] Settings",
-        #             text_align=ft.TextAlign.LEFT,
-        #             color=Dracula_colors.PURPLE,
-        #         ),
-        #         subtitle=ft.Text(
-        #             f"Choose {count} numbers from {count_range}.",
-        #             text_align=ft.TextAlign.LEFT,
-        #             color=Dracula_colors.COMMENT,
-        #         ),
-        #     )
-        #     self.filter_items_column.controls.append(filter_control)
         self.page.update()
 
     def close_dlg(self):
@@ -334,22 +336,17 @@ class SetingsPage:
         )
         return dlg
 
+    def open_dialog(self):
+        self.dlg.open = True
+        self.page.update()
+
     def get_seting_view(self):
         self.page.overlay.append(self.dlg)
-
-        def open_dialog():
-            self.dlg.open = True
-            self.page.update()
 
         return ft.Column(
             controls=[
                 ft.Text(
                     "Setting", size=25, weight="bold", color=Dracula_colors.COMMENT
-                ),
-                ft.Button(
-                    "Add game rules",
-                    icon=ft.Icons.ADD,
-                    on_click=lambda _: open_dialog(),
                 ),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),

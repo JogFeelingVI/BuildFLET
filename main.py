@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 01:14:54
+# @Last Modified time: 2026-01-10 06:49:30
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -30,10 +30,13 @@ def main(page: ft.Page):
         # 切换中间的内容区域
         if index == 0:
             content_area.content = setting_class.view
+            page.floating_action_button = setting_class.Fab
         elif index == 1:
             content_area.content = filter_class.view
+            page.floating_action_button = filter_class.Fab
         elif index == 2:
             content_area.content = lottery_class.view
+            page.floating_action_button = lottery_class.Fab
         page.update()
 
     setting_class = SetingsPage(page)
@@ -43,13 +46,13 @@ def main(page: ft.Page):
     lottery_class = LotteryPage(page)
 
     # --- 2. 界面组件定义 ---
-
     # 中间显示区域容器
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页
         expand=True,
         padding=20,
     )
+    page.floating_action_button = setting_class.Fab
 
     # 底部 NavigationBar
     page.navigation_bar = ft.NavigationBar(

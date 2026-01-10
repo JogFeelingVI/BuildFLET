@@ -4,6 +4,7 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-08 05:18:38
 
+from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -39,11 +40,9 @@ class listext_onlong(ft.ListTile):
             color=Dracula_colors.COMMENT,
             size=11,
         )
-        self.data = "No Number"
+        self.data = "00 00 00"
         self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
-        self.subtitle = ft.Text(
-            f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
-        )
+        self.subtitle = LotteryBalls(self.data)
         self.on_long_press = lambda _: self.get_data(1, True)
         self.runing = True
 
@@ -70,9 +69,10 @@ class listext_onlong(ft.ListTile):
             tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
             if state:
                 self.data = tempd
-                self.subtitle = ft.Text(
-                    f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
-                )
+                # self.subtitle = ft.Text(
+                #     f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
+                # )
+                self.subtitle = LotteryBalls(self.data)
                 isok = state
             else:
                 if note_error >= 100:
@@ -86,9 +86,10 @@ class listext_onlong(ft.ListTile):
                     break
                 note_error += 1
                 self.data = tempd
-                self.subtitle = ft.Text(
-                    f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
-                )
+                # self.subtitle = ft.Text(
+                #     f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
+                # )
+                self.subtitle = LotteryBalls(self.data)
             self.page.update()
             await asyncio.sleep(0.1)
 
@@ -97,6 +98,12 @@ class LotteryPage:
     def __init__(self, page: ft.Page):
         self.page = page
         self.buttons = self.set_Lotter_buttons()
+        self.Fab = ft.FloatingActionButton(
+            icon=ft.Icons.MONEY,
+            bgcolor=Dracula_colors.ORANGE,
+            on_click=lambda _: self.Get_Lottery_data(-1),
+            opacity=0.65,
+        )
         self.lottery_items_column = ft.Column(spacing=5)
         self.view = self.get_data_view()
 
@@ -145,11 +152,11 @@ class LotteryPage:
                     weight=ft.FontWeight.BOLD,
                     color=Dracula_colors.COMMENT,
                 ),
-                ft.Button(
-                    "Get lottery results",
-                    icon=ft.Icons.SHOW_CHART,
-                    on_click=lambda _: self.Get_Lottery_data(-1),
-                ),
+                # ft.Button(
+                #     "Get lottery results",
+                #     icon=ft.Icons.SHOW_CHART,
+                #     on_click=lambda _: self.Get_Lottery_data(-1),
+                # ),
                 ft.Divider(),
                 ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 ft.Divider(),

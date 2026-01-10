@@ -107,6 +107,12 @@ class FilterPage:
         self.pop_func = ft.PopupMenuButton(
             content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
         )
+        self.Fab = ft.FloatingActionButton(
+            icon=ft.Icons.FILTER,
+            bgcolor=Dracula_colors.PINK,
+            on_click=lambda _: self.open_dialog(-1),
+            opacity=0.65,
+        )
         self.pop_target = ft.PopupMenuButton(
             content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
         )
@@ -337,11 +343,11 @@ class FilterPage:
         return ft.Column(
             controls=[
                 user_dict_button,
-                ft.Button(
-                    "Add filtering rules",
-                    icon=ft.Icons.ADD,
-                    on_click=lambda _: self.open_dialog(-1),
-                ),
+                # ft.Button(
+                #     "Add filtering rules",
+                #     icon=ft.Icons.ADD,
+                #     on_click=lambda _: self.open_dialog(-1),
+                # ),
                 ft.Divider(),
                 ft.Column(
                     [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True
