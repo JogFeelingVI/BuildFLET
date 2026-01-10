@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-10 06:05:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 06:35:09
+# @Last Modified time: 2026-01-10 07:47:04
 
 from .DraculaTheme import Dracula_colors
 import flet as ft
@@ -16,6 +16,7 @@ class LotteryBalls(ft.Row):
         self.vertical_alignment = ft.CrossAxisAlignment.CENTER
         self.spacing = 5  # 球与球之间的间距
         self.tight = True  # 紧凑布局
+        self.wrap = True
 
         # 初始化时构建界面
         self.build_balls()
