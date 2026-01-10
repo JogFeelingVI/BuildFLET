@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 14:56:25
+# @Last Modified time: 2026-01-10 01:10:25
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -44,15 +44,21 @@ class UserdirButton(ft.TextButton):
         self.runing = False
 
     async def select_dir(self):
-        if not (user_dir := self.page.session.store.get("user_dir")):
-            if not self.page.web:
-                user_dir = await ft.StoragePaths().get_downloads_directory()
-                # user_dir = await ft.FilePicker().get_directory_path(
-                #     dialog_title="Please select a directory?"
-                # )
-                if user_dir:
-                    self.page.session.store.set("user_dir", user_dir)
-                    self.user_dir = user_dir
+        stored_dir = await self.page.shared_preferences.get("user_dir")
+        if stored_dir:
+            self.user_dir = stored_dir
+            return self.user_dir
+
+        if not self.page.web:
+            picked_dir = await ft.FilePicker().get_directory_path(
+                dialog_title="Please select a directory?"
+            )
+            if picked_dir:
+                await self.page.shared_preferences.set("user_dir", picked_dir)
+                self.user_dir = picked_dir
+                return self.user_dir
+
+        return self.user_dir
 
     def handle_long_press(self):
         self.page.run_task(self.select_dir)
@@ -74,12 +80,14 @@ class UserdirButton(ft.TextButton):
         )
 
     def handle_save(self):
+        print(f"{self.user_dir=}")
         self.ads.open = False
         if self.save_funx:
             self.save_funx(self.user_dir)
         self.page.update()
 
     def handle_load(self):
+        print(f"{self.user_dir=}")
         self.ads.open = False
         if self.load_funx:
             self.load_funx(self.user_dir)

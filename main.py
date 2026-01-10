@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 16:35:56
+# @Last Modified time: 2026-01-10 01:14:54
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -21,7 +21,7 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 def main(page: ft.Page):
     page.title = "Jackpot App"
     # page.theme = Dracula_Theme
-    # 设置移动端适配的内边距  
+    # 设置移动端适配的内边距
     page.padding = ft.Padding.only(top=20)
 
     # --- 页面逻辑控制 ---

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-09 16:37:13
+# @Last Modified time: 2026-01-10 01:14:40
 
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -237,12 +237,13 @@ class SetingsPage:
             # print(f'{key} {item} ==-==')
             count_range = f"{item['range_start']} - {item['range_end']}"
             count = item["count"]
+
             textlist.append(
                 ft.Text(
                     f"Section [ {key} ] Settings, Choose {count} numbers from {count_range}.",
                     max_lines=2,
                     color=Dracula_colors.PURPLE,
-                    size=15
+                    size=15,
                 )
             )
         rule_mode_show = ft.Card(
@@ -262,7 +263,12 @@ class SetingsPage:
                                 size=30,
                             ),
                         ),
-                        ft.TextButton(content=ft.Text(f"✨ {exp} ✨", size=15)),
+                        ft.Text(
+                            f"✨ {exp} ✨",
+                            size=15,
+                            weight="bold",
+                            color=Dracula_colors.ORANGE,
+                        ),
                         ft.Divider(),
                         *textlist,
                     ],
