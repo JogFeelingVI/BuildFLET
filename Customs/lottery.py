@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-08 05:18:38
+# @Last Modified time: 2026-01-10 12:59:36
 
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
@@ -32,7 +32,7 @@ def calculate_lottery(setings: dict, filters: list):
     return (rd.get_exp(result), True)
 
 
-class listext_onlong(ft.ListTile):
+class listext_onlong(ft.Container):
     def __init__(self):
         super().__init__()
         # self.title = ft.Text(
@@ -40,11 +40,14 @@ class listext_onlong(ft.ListTile):
         #     color=Dracula_colors.COMMENT,
         #     size=11,
         # )
-        self.data = "00 00 00"
-        self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
-        self.subtitle = LotteryBalls(self.data,25)
+        self.data = "01 02 03 04 05 06 + 08"
+        self.content = LotteryBalls(self.data, 25)
+        self.padding = 10
+        # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
+        # self.subtitle = LotteryBalls(self.data,25)
         self.on_long_press = lambda _: self.get_data(1, True)
         self.runing = True
+        
 
     def setting_args(self, setting: dict, filter: list):
         self.setting = setting
@@ -69,27 +72,21 @@ class listext_onlong(ft.ListTile):
             tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
             if state:
                 self.data = tempd
-                # self.subtitle = ft.Text(
-                #     f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
-                # )
-                self.subtitle = LotteryBalls(self.data)
+                self.content = LotteryBalls(self.data, 25)
                 isok = state
             else:
                 if note_error >= 100:
-                    self.subtitle = ft.Text(
-                        "Filter settings are incorrect.",
+                    self.content = ft.Text(
+                        "Please try again later.",
                         weight="bold",
                         size=18,
-                        color=Dracula_colors.RED,
+                        color=Dracula_colors.CURRENT_LINE,
                     )
                     self.page.update()
                     break
                 note_error += 1
                 self.data = tempd
-                # self.subtitle = ft.Text(
-                #     f"{self.data}", weight="bold", size=18, color=Dracula_colors.PURPLE
-                # )
-                self.subtitle = LotteryBalls(self.data)
+                self.content = LotteryBalls(self.data, 25)
             self.page.update()
             await asyncio.sleep(0.1)
 

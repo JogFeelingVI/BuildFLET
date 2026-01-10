@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-10 06:05:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 07:47:04
+# @Last Modified time: 2026-01-10 12:56:08
 
 from .DraculaTheme import Dracula_colors
 import flet as ft
@@ -29,7 +29,7 @@ class LotteryBalls(ft.Row):
             main_part, special_part = number_split
             red_numbers = main_part.strip().split()
             blue_numbers = special_part.strip().split()
-        elif number_split.__len__() >=3:
+        elif number_split.__len__() >= 3:
             red_numbers = [x.strip() for x in number_split]
             blue_numbers = []
         else:
@@ -83,7 +83,7 @@ class LotteryBalls(ft.Row):
             shadow=ft.BoxShadow(
                 spread_radius=1,
                 blur_radius=4,
-                color=ft.Colors.BLACK26,
+                color="#42000000",
                 offset=ft.Offset(0, 2),
             ),
             gradient=ft.RadialGradient(
