@@ -100,7 +100,7 @@ class SetingsPage:
             icon=ft.Icons.ADD,
             bgcolor=Dracula_colors.PURPLE,
             on_click=lambda _: self.open_dialog(),
-            opacity=0.65,
+            # opacity=0.65,
         )
         self.note_text = ft.TextField(
             label="Note", hint_text="Rule Settings Instructions", dense=True
@@ -284,7 +284,7 @@ class SetingsPage:
             content=ft.Container(
                 padding=12,
                 # expand=True,
-                opacity=0.65,
+                # opacity=0.65,
                 content=ft.Column(
                     tight=True,
                     controls=[

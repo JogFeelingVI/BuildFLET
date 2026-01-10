@@ -35,14 +35,14 @@ def calculate_lottery(setings: dict, filters: list):
 class listext_onlong(ft.ListTile):
     def __init__(self):
         super().__init__()
-        self.title = ft.Text(
-            f"{randomData.generate_secure_string()}",
-            color=Dracula_colors.COMMENT,
-            size=11,
-        )
+        # self.title = ft.Text(
+        #     f"{randomData.generate_secure_string()}",
+        #     color=Dracula_colors.COMMENT,
+        #     size=11,
+        # )
         self.data = "00 00 00"
         self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
-        self.subtitle = LotteryBalls(self.data)
+        self.subtitle = LotteryBalls(self.data,25)
         self.on_long_press = lambda _: self.get_data(1, True)
         self.runing = True
 
@@ -102,7 +102,7 @@ class LotteryPage:
             icon=ft.Icons.MONEY,
             bgcolor=Dracula_colors.ORANGE,
             on_click=lambda _: self.Get_Lottery_data(-1),
-            opacity=0.65,
+            # opacity=0.65,
         )
         self.lottery_items_column = ft.Column(spacing=5)
         self.view = self.get_data_view()

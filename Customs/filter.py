@@ -111,7 +111,7 @@ class FilterPage:
             icon=ft.Icons.FILTER,
             bgcolor=Dracula_colors.PINK,
             on_click=lambda _: self.open_dialog(-1),
-            opacity=0.65,
+            # opacity=0.65,
         )
         self.pop_target = ft.PopupMenuButton(
             content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
@@ -276,7 +276,7 @@ class FilterPage:
                 ft.Dismissible(
                     content=ft.ListTile(
                         leading=ft.Icon(
-                            ft.Icons.FILTER_ALT, color=Dracula_colors.COMMENT
+                            ft.Icons.FILTER_ALT, color=Dracula_colors.ORANGE
                         ),
                         title=ft.Text(
                             f"Target: {item['target']} Func: {item['func']}",

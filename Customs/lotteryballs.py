@@ -41,12 +41,12 @@ class LotteryBalls(ft.Row):
             self.controls.append(self.create_ball(num, ft.Colors.RED))
 
         # 3. 如果有蓝球部分，添加一个 "+" 符号
-        if blue_numbers:
-            self.controls.append(
-                ft.Text(
-                    "+", color=ft.Colors.WHITE70, size=16, weight=ft.FontWeight.BOLD
-                )
-            )
+        # if blue_numbers:
+        #     self.controls.append(
+        #         ft.Text(
+        #             "+", color=ft.Colors.WHITE70, size=16, weight=ft.FontWeight.BOLD
+        #         )
+        #     )
 
         # 4. 生成蓝球 (后区)
         for num in blue_numbers:
