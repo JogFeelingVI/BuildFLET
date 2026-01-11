@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 01:10:25
+# @Last Modified time: 2026-01-11 03:09:07
 
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -80,18 +80,22 @@ class UserdirButton(ft.TextButton):
         )
 
     def handle_save(self):
-        print(f"{self.user_dir=}")
-        self.ads.open = False
-        if self.save_funx:
-            self.save_funx(self.user_dir)
-        self.page.update()
+        # print(f"{self.user_dir=}")
+        try:
+            if self.save_funx:
+                self.save_funx(self.user_dir)
+        finally:
+            self.ads.open = False
+            self.page.update()
 
     def handle_load(self):
-        print(f"{self.user_dir=}")
-        self.ads.open = False
-        if self.load_funx:
-            self.load_funx(self.user_dir)
-        self.page.update()
+        # print(f"{self.user_dir=}")
+        try:
+            if self.load_funx:
+                self.load_funx(self.user_dir)
+        finally:
+            self.ads.open = False
+            self.page.update()
 
 
 class FilterPage:

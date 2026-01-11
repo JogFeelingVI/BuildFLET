@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 12:59:36
+# @Last Modified time: 2026-01-11 03:05:05
 
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
@@ -32,7 +32,7 @@ def calculate_lottery(setings: dict, filters: list):
     return (rd.get_exp(result), True)
 
 
-class listext_onlong(ft.Container):
+class listext_onlong(ft.Card):
     def __init__(self):
         super().__init__()
         # self.title = ft.Text(
@@ -41,13 +41,54 @@ class listext_onlong(ft.Container):
         #     size=11,
         # )
         self.data = "01 02 03 04 05 06 + 08"
-        self.content = LotteryBalls(self.data, 28)
+        self.content = self.reContent(0)
         self.padding = 10
         # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
         # self.subtitle = LotteryBalls(self.data,25)
-        self.on_long_press = lambda _: self.get_data(1, True)
+        # self.on_long_press = lambda _: self.get_data(1, True)
         self.runing = True
-        
+        self.is_refreshing = False
+
+    def reContent(self, flg: int = 0):
+        """
+            返回 Container
+        Args:
+            flg (int, optional): _description_. Defaults to 0.
+            0 Initializing the computing core.
+            2 Please try again later.
+            1 LotteryBalls
+        Returns:
+            _type_: _description_
+        """
+        if flg == 1:
+            conten = LotteryBalls(self.data, 29)
+        elif flg == 2:
+            conten = ft.Row(
+                controls=[
+                    ft.Text(
+                        "Press and hold to try again.",
+                        weight="bold",
+                        size=18,
+                        color=Dracula_colors.PURPLE,
+                    )
+                ]
+            )
+        else:
+            conten = ft.Row(
+                controls=[
+                    ft.Text(
+                        "Initializing the computing core.",
+                        weight="bold",
+                        size=18,
+                        color=Dracula_colors.CURRENT_LINE,
+                    )
+                ]
+            )
+        return ft.Container(
+            padding=10,
+            content=conten,
+            on_long_press=lambda _: self.get_data(1, True),
+        )
 
     def setting_args(self, setting: dict, filter: list):
         self.setting = setting
@@ -60,6 +101,8 @@ class listext_onlong(ft.Container):
         self.runing = False
 
     def get_data(self, state: int = 1, onoff=False):
+        if self.is_refreshing:
+            return
         if state == 0 and self.runing:
             self.page.run_task(self.refresh)
         if state == 1 and onoff:
@@ -68,27 +111,26 @@ class listext_onlong(ft.Container):
     async def refresh(self):
         isok = False
         note_error = 0
-        while isok == False:
-            tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
-            if state:
-                self.data = tempd
-                self.content = LotteryBalls(self.data, 28)
-                isok = state
-            else:
-                if note_error >= 100:
-                    self.content = ft.Text(
-                        "Please try again later.",
-                        weight="bold",
-                        size=18,
-                        color=Dracula_colors.CURRENT_LINE,
-                    )
-                    self.page.update()
-                    break
-                note_error += 1
-                self.data = tempd
-                self.content = LotteryBalls(self.data, 28)
-            self.page.update()
-            await asyncio.sleep(0.1)
+        self.is_refreshing = True
+        try:
+            while isok == False:
+                tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
+                if state:
+                    self.data = tempd
+                    self.content = self.reContent(1)
+                    isok = state
+                else:
+                    if note_error >= 100:
+                        self.content = self.reContent(2)
+                        self.page.update()
+                        break
+                    note_error += 1
+                    self.data = tempd
+                    self.content = self.reContent(1)
+                self.update()
+                await asyncio.sleep(0.1)
+        finally:
+            self.is_refreshing=False
 
 
 class LotteryPage:
@@ -101,7 +143,7 @@ class LotteryPage:
             on_click=lambda _: self.Get_Lottery_data(-1),
             # opacity=0.65,
         )
-        self.lottery_items_column = ft.Column(spacing=5)
+        self.lottery_items_column = ft.Column(spacing=1,scroll=ft.ScrollMode.HIDDEN,expand=True)
         self.view = self.get_data_view()
 
     def set_Lotter_buttons(self):
@@ -157,11 +199,12 @@ class LotteryPage:
                 ft.Divider(),
                 ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 ft.Divider(),
-                ft.Column(
-                    self.lottery_items_column,
-                    scroll=ft.ScrollMode.HIDDEN,
-                    expand=True,
-                ),
+                # ft.Column(
+                #     self.lottery_items_column,
+                #     scroll=ft.ScrollMode.HIDDEN,
+                #     expand=True,
+                # ),
+                self.lottery_items_column,
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,

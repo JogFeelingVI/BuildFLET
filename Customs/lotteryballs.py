@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-10 06:05:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 00:24:55
+# @Last Modified time: 2026-01-11 03:15:44
 
 from sys import maxsize
 from .DraculaTheme import Dracula_colors
@@ -16,7 +16,7 @@ class LotteryBalls(ft.Row):
         self.ball_size = ball_size
         self.vertical_alignment = ft.CrossAxisAlignment.CENTER
         self.spacing = 5  # 球与球之间的间距
-        self.tight = True  # 紧凑布局
+        # self.tight = True  # 紧凑布局
         self.wrap = True
 
         # 初始化时构建界面

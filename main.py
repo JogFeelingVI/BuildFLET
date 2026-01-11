@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 00:30:36
+# @Last Modified time: 2026-01-11 03:17:25
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -50,7 +50,7 @@ def main(page: ft.Page):
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页
         expand=True,
-        padding=20,
+        padding=5,
     )
     page.floating_action_button = setting_class.Fab
 
