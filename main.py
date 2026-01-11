@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-10 13:03:10
+# @Last Modified time: 2026-01-11 00:30:36
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage

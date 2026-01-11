@@ -41,7 +41,7 @@ class listext_onlong(ft.Container):
         #     size=11,
         # )
         self.data = "01 02 03 04 05 06 + 08"
-        self.content = LotteryBalls(self.data, 25)
+        self.content = LotteryBalls(self.data, 28)
         self.padding = 10
         # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
         # self.subtitle = LotteryBalls(self.data,25)
@@ -72,7 +72,7 @@ class listext_onlong(ft.Container):
             tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
             if state:
                 self.data = tempd
-                self.content = LotteryBalls(self.data, 25)
+                self.content = LotteryBalls(self.data, 28)
                 isok = state
             else:
                 if note_error >= 100:
@@ -86,7 +86,7 @@ class listext_onlong(ft.Container):
                     break
                 note_error += 1
                 self.data = tempd
-                self.content = LotteryBalls(self.data, 25)
+                self.content = LotteryBalls(self.data, 28)
             self.page.update()
             await asyncio.sleep(0.1)
 
