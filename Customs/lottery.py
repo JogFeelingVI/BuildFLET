@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 03:05:05
+# @Last Modified time: 2026-01-11 05:10:05
 
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
@@ -71,7 +71,8 @@ class listext_onlong(ft.Card):
                         size=18,
                         color=Dracula_colors.PURPLE,
                     )
-                ]
+                ],
+                tight=True,
             )
         else:
             conten = ft.Row(
@@ -82,7 +83,8 @@ class listext_onlong(ft.Card):
                         size=18,
                         color=Dracula_colors.CURRENT_LINE,
                     )
-                ]
+                ],
+                tight=True,
             )
         return ft.Container(
             padding=10,
