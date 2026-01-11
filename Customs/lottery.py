@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 05:10:05
+# @Last Modified time: 2026-01-11 12:13:25
 
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
@@ -72,7 +72,8 @@ class listext_onlong(ft.Card):
                         color=Dracula_colors.PURPLE,
                     )
                 ],
-                tight=True,
+                expand=True,
+                align=ft.Alignment.CENTER,
             )
         else:
             conten = ft.Row(
@@ -84,7 +85,8 @@ class listext_onlong(ft.Card):
                         color=Dracula_colors.CURRENT_LINE,
                     )
                 ],
-                tight=True,
+                expand=True,
+                align=ft.Alignment.CENTER,
             )
         return ft.Container(
             padding=10,
@@ -116,7 +118,9 @@ class listext_onlong(ft.Card):
         self.is_refreshing = True
         try:
             while isok == False:
-                tempd, state = calculate_lottery(setings=self.setting, filters=self.filers)
+                tempd, state = calculate_lottery(
+                    setings=self.setting, filters=self.filers
+                )
                 if state:
                     self.data = tempd
                     self.content = self.reContent(1)
@@ -132,7 +136,7 @@ class listext_onlong(ft.Card):
                 self.update()
                 await asyncio.sleep(0.1)
         finally:
-            self.is_refreshing=False
+            self.is_refreshing = False
 
 
 class LotteryPage:
@@ -145,7 +149,9 @@ class LotteryPage:
             on_click=lambda _: self.Get_Lottery_data(-1),
             # opacity=0.65,
         )
-        self.lottery_items_column = ft.Column(spacing=1,scroll=ft.ScrollMode.HIDDEN,expand=True)
+        self.lottery_items_column = ft.Column(
+            spacing=1, scroll=ft.ScrollMode.HIDDEN, expand=True
+        )
         self.view = self.get_data_view()
 
     def set_Lotter_buttons(self):

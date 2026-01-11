@@ -16,7 +16,8 @@ class LotteryBalls(ft.Row):
         self.ball_size = ball_size
         self.vertical_alignment = ft.CrossAxisAlignment.CENTER
         self.spacing = 5  # 球与球之间的间距
-        self.tight = True  # 紧凑布局
+        self.expand = True
+        self.align = ft.Alignment.CENTER
         self.wrap = True
 
         # 初始化时构建界面

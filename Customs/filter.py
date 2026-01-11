@@ -2,14 +2,16 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 03:09:07
+# @Last Modified time: 2026-01-11 14:57:28
 
+from .suggestions import AI_gen_sugguest, combination_rule
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
 import flet as ft
 import os
 import json
+import asyncio
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -98,6 +100,35 @@ class UserdirButton(ft.TextButton):
             self.page.update()
 
 
+class AI_Auto_input(ft.AutoComplete):
+    def __init__(self):
+        super().__init__()
+        self.on_change = self.on_change_input
+
+    def did_mount(self):
+        self.runing = True
+        return super().did_mount()
+
+    def will_unmount(self):
+        self.runing = False
+        return super().will_unmount()
+
+    def on_change_input(self, e):
+        # print(f"uset input: {self.value}")
+        self.page.run_task(self.ai_sugguest_set)
+
+    async def ai_sugguest_set(self):
+        asyncio.sleep(0.3)
+        if not self.runing:
+            return
+        if not self.value:
+            self.suggestions = []
+            self.update()
+            return
+        self.suggestions = AI_gen_sugguest(self.value)
+        self.update()
+
+
 class FilterPage:
     """筛选页面类"""
 
@@ -120,11 +151,7 @@ class FilterPage:
         self.pop_target = ft.PopupMenuButton(
             content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
         )
-        self.condition_input = ft.AutoComplete(
-            # suggestions=suggestions,
-            # placeholder="Enter or select filter criteria.",
-            on_select=lambda e: print(f"Selected: {e.selection}"),
-        )
+        self.condition_input = AI_Auto_input()
         self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
 
