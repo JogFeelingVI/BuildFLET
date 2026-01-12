@@ -118,6 +118,7 @@ class AI_Auto_input(ft.TextField):
     def __init__(self):
         super().__init__()
         self.border = ft.InputBorder.UNDERLINE
+        self.expand=True
         self.on_change = self.on_change_input
 
     def did_mount(self):
@@ -153,6 +154,7 @@ class tary(ft.Row):
             show_selected_icon=False,
             allow_empty_selection=False,
             selected=["list"],
+            padding=3,
             segments=[
                 ft.Segment(
                     value="list",
@@ -185,7 +187,7 @@ class tary(ft.Row):
             ft.Column(
                 controls=[
                     ft.Row(
-                        controls=[ft.Text("*", color=Dracula_colors.RED), self._haed]
+                        controls=[self._haed]
                     ),
                     ft.Row(
                         controls=[ft.Text("zhe shi tary input.")],
@@ -264,8 +266,7 @@ class FilterPage:
                                     "Conditions:", size=12, color=Dracula_colors.COMMENT
                                 ),
                                 ft.Switch(
-                                    height=18,
-                                    label="Tary",
+                                    height=20,
                                     value=False,
                                     on_change=self.tary_change,
                                 ),
