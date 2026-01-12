@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 02:07:17
+# @Last Modified time: 2026-01-12 08:57:32
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -79,7 +79,6 @@ class UserdirButton(ft.TextButton):
         self.page.run_task(self.select_dir)
         self.ads.open = True
         self.page.update()
-        
 
     def ad(self):
         return ft.AlertDialog(
@@ -92,7 +91,7 @@ class UserdirButton(ft.TextButton):
                     on_click=self.handle_load,
                 ),
             ],
-            on_dismiss=lambda _:self.animate_filter(0),
+            on_dismiss=lambda _: self.animate_filter(0),
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
@@ -115,9 +114,10 @@ class UserdirButton(ft.TextButton):
             self.page.update()
 
 
-class AI_Auto_input(ft.AutoComplete):
+class AI_Auto_input(ft.TextField):
     def __init__(self):
         super().__init__()
+        self.border = ft.InputBorder.UNDERLINE
         self.on_change = self.on_change_input
 
     def did_mount(self):
@@ -130,9 +130,11 @@ class AI_Auto_input(ft.AutoComplete):
 
     def on_change_input(self, e):
         # print(f"uset input: {self.value}")
+        return
         self.page.run_task(self.ai_sugguest_set)
 
     async def ai_sugguest_set(self):
+        """已经废弃不可食用"""
         await asyncio.sleep(0.3)
         if not self.runing:
             return
@@ -142,6 +144,61 @@ class AI_Auto_input(ft.AutoComplete):
             return
         self.suggestions = AI_gen_sugguest_re(self.value)
         self.update()
+
+
+class tary(ft.Row):
+    def __init__(self):
+        super().__init__()
+        self._haed = ft.SegmentedButton(
+            show_selected_icon=False,
+            allow_empty_selection=False,
+            selected=["list"],
+            segments=[
+                ft.Segment(
+                    value="list",
+                    label=ft.Text("list"),
+                ),
+                ft.Segment(
+                    value="bitN",
+                    label=ft.Text("bitN"),
+                ),
+                ft.Segment(
+                    value="bitX,Y",
+                    label=ft.Text("bitX,Y"),
+                ),
+                ft.Segment(
+                    value="modN",
+                    label=ft.Text("modN"),
+                ),
+            ],
+            style=ft.ButtonStyle(
+                bgcolor={
+                    ft.ControlState.DEFAULT: Dracula_colors.CURRENT_LINE,
+                    ft.ControlState.HOVERED: Dracula_colors.COMMENT,
+                    ft.ControlState.SELECTED: Dracula_colors.RED,
+                },
+            ),
+        )
+        # she zhi
+        self.visible = False
+        self.controls = [
+            ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[ft.Text("*", color=Dracula_colors.RED), self._haed]
+                    ),
+                    ft.Row(
+                        controls=[ft.Text("zhe shi tary input.")],
+                        tight=True,
+                        align=ft.Alignment.CENTER_LEFT,
+                    ),
+                ],
+                tight=True,
+                align=ft.Alignment.CENTER_LEFT,
+            ),
+        ]
+        self.tight = True
+        self.align = ft.Alignment.CENTER_LEFT
 
 
 class FilterPage:
@@ -166,13 +223,25 @@ class FilterPage:
         self.pop_target = ft.PopupMenuButton(
             content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
         )
+        self.tary_row = tary()
         self.condition_input = AI_Auto_input()
+        self.input_row = ft.Row(
+            controls=[
+                self.condition_input,
+            ],
+            align=ft.Alignment.CENTER_LEFT,
+            tight=True,
+        )
         self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
 
     def close_dlg(self, e):
         self.dlg.open = False
         self.page.update()
+
+    def tary_change(self, e):
+        self.tary_row.visible = e.data
+        self.condition_input.disabled = e.data
 
     def get_dlg(self):
         dlg = ft.AlertDialog(
@@ -189,8 +258,23 @@ class FilterPage:
                             ],
                             tight=True,
                         ),
-                        ft.Text("Conditions:", size=12, color=Dracula_colors.COMMENT),
-                        self.condition_input,
+                        ft.Row(
+                            controls=[
+                                ft.Text(
+                                    "Conditions:", size=12, color=Dracula_colors.COMMENT
+                                ),
+                                ft.Switch(
+                                    height=18,
+                                    label="Tary",
+                                    value=False,
+                                    on_change=self.tary_change,
+                                ),
+                            ],
+                            align=ft.Alignment.CENTER_LEFT,
+                            tight=True,
+                        ),
+                        self.tary_row,
+                        self.input_row,
                     ],
                     tight=True,
                     spacing=10,

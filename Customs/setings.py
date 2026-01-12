@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 01:52:55
+# @Last Modified time: 2026-01-12 07:46:53
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -288,15 +288,7 @@ class SetingsPage:
                 content=ft.Column(
                     tight=True,
                     controls=[
-                        # ft.TextButton(
-                        #     content=ft.Text("🎉 This is an example.", size=18),
-                        #     icon=ft.Icon(
-                        #         ft.Icons.ASSIGNMENT_ADD,
-                        #         color=Dracula_colors.ORANGE,
-                        #         size=30,
-                        #     ),
-                        # ),
-                        LotteryBalls(exp),
+                        LotteryBalls(exp, align="LE"),
                         ft.Text(
                             f"🚩Note: {randomDatax['note']}",
                             size=15,

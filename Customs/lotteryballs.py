@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-10 06:05:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 03:15:44
+# @Last Modified time: 2026-01-12 07:47:11
 
 from sys import maxsize
 from .DraculaTheme import Dracula_colors
@@ -10,14 +10,20 @@ import flet as ft
 
 
 class LotteryBalls(ft.Row):
-    def __init__(self, numbers_str: str, ball_size=32):
+    def __init__(self, numbers_str: str, ball_size=32, align="CE"):
         super().__init__()
         self.numbers_str = numbers_str
         self.ball_size = ball_size
         self.vertical_alignment = ft.CrossAxisAlignment.CENTER
         self.spacing = 5  # 球与球之间的间距
         self.expand = True
-        self.align = ft.Alignment.CENTER
+        match align:
+            case "CE":
+                self.align = ft.Alignment.CENTER
+            case "LE":
+                self.align = ft.Alignment.CENTER_LEFT
+            case _:
+                self.align = ft.Alignment.CENTER
         self.wrap = True
 
         # 初始化时构建界面
