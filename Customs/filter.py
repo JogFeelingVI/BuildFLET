@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 14:57:28
+# @Last Modified time: 2026-01-12 02:07:17
 
-from .suggestions import AI_gen_sugguest, combination_rule
+from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -24,13 +24,25 @@ class UserdirButton(ft.TextButton):
         self,
     ):
         super().__init__()
-        self.content = ft.Text(
+        self.showtext = ft.Text(
             "Filter",
             size=25,
             weight=ft.FontWeight.BOLD,
             color=Dracula_colors.COMMENT,
         )
+        self.content = ft.Container(
+            content=self.showtext,
+            # 设置缩放动画：200毫秒，减速曲线
+            animate=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT),
+        )
         self.user_dir = app_data_path
+
+    def animate_filter(self, flg: int = 1):
+        # 动画逻辑：例如点击后放大并改变颜色
+        color = Dracula_colors.PINK if flg == 1 else Dracula_colors.COMMENT
+        self.showtext.color = color  # 改变颜色
+        self.page.update()
+        # print(f"animate is runing.{self.content.scale} {flg=}")
 
     def setting(self, save, load):
         self.save_funx = save
@@ -40,7 +52,7 @@ class UserdirButton(ft.TextButton):
         self.ads = self.ad()
         self.page.overlay.append(self.ads)
         self.runing = True
-        self.on_long_press = self.handle_long_press
+        self.content.on_long_press = self.handle_long_press
 
     def will_unmount(self):
         self.runing = False
@@ -63,9 +75,11 @@ class UserdirButton(ft.TextButton):
         return self.user_dir
 
     def handle_long_press(self):
+        self.animate_filter(1)
         self.page.run_task(self.select_dir)
         self.ads.open = True
         self.page.update()
+        
 
     def ad(self):
         return ft.AlertDialog(
@@ -78,6 +92,7 @@ class UserdirButton(ft.TextButton):
                     on_click=self.handle_load,
                 ),
             ],
+            on_dismiss=lambda _:self.animate_filter(0),
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
@@ -118,14 +133,14 @@ class AI_Auto_input(ft.AutoComplete):
         self.page.run_task(self.ai_sugguest_set)
 
     async def ai_sugguest_set(self):
-        asyncio.sleep(0.3)
+        await asyncio.sleep(0.3)
         if not self.runing:
             return
         if not self.value:
             self.suggestions = []
             self.update()
             return
-        self.suggestions = AI_gen_sugguest(self.value)
+        self.suggestions = AI_gen_sugguest_re(self.value)
         self.update()
 
 

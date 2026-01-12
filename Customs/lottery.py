@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-11 12:13:25
+# @Last Modified time: 2026-01-12 01:08:35
 
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
@@ -35,11 +35,6 @@ def calculate_lottery(setings: dict, filters: list):
 class listext_onlong(ft.Card):
     def __init__(self):
         super().__init__()
-        # self.title = ft.Text(
-        #     f"{randomData.generate_secure_string()}",
-        #     color=Dracula_colors.COMMENT,
-        #     size=11,
-        # )
         self.data = "01 02 03 04 05 06 + 08"
         self.content = self.reContent(0)
         self.padding = 10
@@ -66,31 +61,36 @@ class listext_onlong(ft.Card):
             conten = ft.Row(
                 controls=[
                     ft.Text(
-                        "Press and hold to try again.",
+                        "😡Press and hold to try again.",
                         weight="bold",
                         size=18,
                         color=Dracula_colors.PURPLE,
                     )
                 ],
                 expand=True,
+                alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 align=ft.Alignment.CENTER,
             )
         else:
             conten = ft.Row(
                 controls=[
                     ft.Text(
-                        "Initializing the computing core.",
+                        "😅Initializing the computing core.",
                         weight="bold",
                         size=18,
                         color=Dracula_colors.CURRENT_LINE,
                     )
                 ],
                 expand=True,
+                alignment=ft.MainAxisAlignment.CENTER,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 align=ft.Alignment.CENTER,
             )
         return ft.Container(
             padding=10,
             content=conten,
+            animate_scale=ft.Animation(300, ft.AnimationCurve.DECELERATE),
             on_long_press=lambda _: self.get_data(1, True),
         )
 
@@ -105,17 +105,21 @@ class listext_onlong(ft.Card):
         self.runing = False
 
     def get_data(self, state: int = 1, onoff=False):
+        # print(f'{self.content.scale=} {state=} {onoff=}')
         if self.is_refreshing:
             return
         if state == 0 and self.runing:
             self.page.run_task(self.refresh)
         if state == 1 and onoff:
+            self.content.scale = ft.Scale(1.2)
+            self.content.update()
             self.page.run_task(self.refresh)
 
     async def refresh(self):
         isok = False
         note_error = 0
         self.is_refreshing = True
+        await asyncio.sleep(0.3)
         try:
             while isok == False:
                 tempd, state = calculate_lottery(
