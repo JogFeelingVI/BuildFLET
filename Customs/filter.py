@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 08:57:32
+# @Last Modified time: 2026-01-12 15:11:43
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -118,7 +118,7 @@ class AI_Auto_input(ft.TextField):
     def __init__(self):
         super().__init__()
         self.border = ft.InputBorder.UNDERLINE
-        self.expand=True
+        self.expand = True
         self.on_change = self.on_change_input
 
     def did_mount(self):
@@ -150,47 +150,40 @@ class AI_Auto_input(ft.TextField):
 class tary(ft.Row):
     def __init__(self):
         super().__init__()
-        self._haed = ft.SegmentedButton(
-            show_selected_icon=False,
-            allow_empty_selection=False,
-            selected=["list"],
-            padding=3,
-            segments=[
-                ft.Segment(
-                    value="list",
-                    label=ft.Text("list"),
-                ),
-                ft.Segment(
-                    value="bitN",
-                    label=ft.Text("bitN"),
-                ),
-                ft.Segment(
-                    value="bitX,Y",
-                    label=ft.Text("bitX,Y"),
-                ),
-                ft.Segment(
-                    value="modN",
-                    label=ft.Text("modN"),
-                ),
+        self.command = ''
+        self.com_args = {0:1,1:1}
+        self.showcommand = ft.Text(value="wait...",color=Dracula_colors.COMMENT,size=12)
+        self.uc_haed = ft.CupertinoSlidingSegmentedButton(
+            thumb_color=Dracula_colors.PURPLE,
+            selected_index=0,
+            controls=[
+                ft.Text("null"),
+                ft.Text("bitX"),
+                ft.Text("bitX,Y"),
+                ft.Text("modX"),
             ],
-            style=ft.ButtonStyle(
-                bgcolor={
-                    ft.ControlState.DEFAULT: Dracula_colors.CURRENT_LINE,
-                    ft.ControlState.HOVERED: Dracula_colors.COMMENT,
-                    ft.ControlState.SELECTED: Dracula_colors.RED,
-                },
-            ),
+            on_change=lambda _: self.uc_haed_change(),
         )
+        self.uc_opet = ft.CupertinoSlidingSegmentedButton(
+            thumb_color=Dracula_colors.PURPLE,
+            selected_index=0,
+            controls=[ft.Text(">"), ft.Text("<"), ft.Text("range")],
+            on_change=lambda _: self.uc_haed_change(),
+        )
+        self.uc_haed_row = ft.Row(tight=True,align=ft.Alignment.CENTER_LEFT, spacing=5)
         # she zhi
         self.visible = False
         self.controls = [
             ft.Column(
                 controls=[
                     ft.Row(
-                        controls=[self._haed]
+                        controls=[self.uc_haed],
+                        tight=True,
+                        align=ft.Alignment.CENTER_LEFT,
                     ),
+                    self.uc_haed_row,
                     ft.Row(
-                        controls=[ft.Text("zhe shi tary input.")],
+                        controls=[self.showcommand],
                         tight=True,
                         align=ft.Alignment.CENTER_LEFT,
                     ),
@@ -201,6 +194,110 @@ class tary(ft.Row):
         ]
         self.tight = True
         self.align = ft.Alignment.CENTER_LEFT
+
+    def did_mount(self):
+        self.uc_haed_change()
+        return super().did_mount()
+    
+    def buil_command(self):
+        match self.command:
+            case "bitX":
+                self.showcommand.value =f'bit{self.com_args[0]}'
+            case "bitX,Y":
+                self.showcommand.value =f'bit{self.com_args[0]},{self.com_args[1]}'
+            case "modX":
+                self.showcommand.value =f'mod{self.com_args[0]}'
+            case _:
+                self.showcommand.value =f'mod{self.com_args[0]}'
+                
+
+    def loop_number_click(self,e,command,com_args):
+        value = e.control.data
+        value += 1
+        if value > 20:
+            value = 1
+        e.control.data = value
+        e.control.content = f"{e.control.data}"
+        self.command = command
+        self.com_args[com_args] = value
+        self.buil_command()
+
+   
+    def loop_number_long(self,e,command,com_args):
+        value = e.control.data
+        value -= 2
+        if value < 1:
+            value = 20
+        e.control.data = value
+        e.control.content = f"{e.control.data}"
+        self.command = command
+        self.com_args[com_args] = value
+        self.buil_command()
+        
+    def reload_command(self):
+        self.command = ''
+        self.com_args = {0:1,1:1}
+        self.showcommand.value = "wait..."
+        
+
+    def uc_haed_change(self):
+        select_index = self.uc_haed.selected_index
+        flg_text = self.uc_haed.controls[select_index].value
+        match flg_text:
+            case "null":
+                self.uc_haed_row.visible = False
+            case "bitX":
+                new_row = [
+                    ft.Text("bit"),
+                    ft.Button(
+                        content="1",
+                        data=1,
+                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        on_click=lambda e,c=f"bitX",ca=0:self.loop_number_click(e,c,ca),
+                        on_long_press=lambda e,c="bitX",ca=0:self.loop_number_long(e,c,ca),
+                    ),
+                ]
+                self.uc_haed_row.controls = new_row
+                self.uc_haed_row.visible = True
+            case "bitX,Y":
+                new_row = [
+                    ft.Text("bit"),
+                    ft.Button(
+                        content="1",
+                        data=1,
+                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        on_click=lambda e,c="bitX,Y",ca=0:self.loop_number_click(e,c,ca),
+                        on_long_press=lambda e,c="bitX,Y",ca=0:self.loop_number_long(e,c,ca),
+                    ),
+                    ft.Button(
+                        content="1",
+                        data=1,
+                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        on_click=lambda e,c="bitX,Y",ca=1:self.loop_number_click(e,c,ca),
+                        on_long_press=lambda e,c="bitX,Y",ca=1:self.loop_number_long(e,c,ca),
+                    ),
+                ]
+                self.uc_haed_row.controls = new_row
+                self.uc_haed_row.visible = True
+            case "modX":
+                new_row = [
+                    ft.Text("mod"),
+                    ft.Button(
+                        content="1",
+                        data=1,
+                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        on_click=lambda e,c="modX",ca=0:self.loop_number_click(e,c,ca),
+                        on_long_press=lambda e,c="modX",ca=0:self.loop_number_long(e,c,ca),
+                    ),
+                ]
+                self.uc_haed_row.controls = new_row
+                self.uc_haed_row.visible = True
+        self.reload_command()
+        self.update()
 
 
 class FilterPage:
@@ -244,6 +341,7 @@ class FilterPage:
     def tary_change(self, e):
         self.tary_row.visible = e.data
         self.condition_input.disabled = e.data
+        self.condition_input.visible = not e.data
 
     def get_dlg(self):
         dlg = ft.AlertDialog(
