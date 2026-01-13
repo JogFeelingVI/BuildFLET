@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-13 13:40:44
+# @Last Modified time: 2026-01-13 15:16:12
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -206,6 +206,33 @@ class CuperSlider_name(ft.Container):
         )
 
 
+class select_fang(ft.Container):
+    def __init__(self, name: str = "1", size=32, on_select=None):
+        super().__init__()
+        self.block_size = size
+        self.content = ft.Text(str(name), size=self.block_size * 0.55)
+        self.width = self.block_size
+        self.height = self.block_size
+        self.border_radius = 5
+        self.alignment = ft.Alignment.CENTER
+        self.animate =ft.Animation(300, ft.AnimationCurve.DECELERATE) # 颜色切换动画
+        self.bgcolor = Dracula_colors.CURRENT_LINE
+        self.on_click = self.handle_click
+        self.name = name
+        self.selected = False
+        self.on_select_callback = on_select
+
+    def handle_click(self, e):
+        self.selected = not self.selected
+        self.bgcolor = (
+            Dracula_colors.PURPLE if self.selected else Dracula_colors.CURRENT_LINE
+        )
+        self.update()
+
+        if self.on_select_callback:
+            self.on_select_callback(e)
+
+
 class tary(ft.Row):
     def __init__(self):
         super().__init__()
@@ -220,7 +247,7 @@ class tary(ft.Row):
             value="wait...", color=Dracula_colors.COMMENT, size=12
         )
         self.uc_haed = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.PINK,
+            thumb_color=Dracula_colors.RED,
             selected_index=0,
             controls=[
                 ft.Text("null", size=self.gui_size_font),
@@ -231,7 +258,7 @@ class tary(ft.Row):
             on_change=lambda _: self.uc_haed_change(),
         )
         self.uc_opet = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.PINK,
+            thumb_color=Dracula_colors.RED,
             selected_index=0,
             controls=[
                 ft.Text(">", size=self.gui_size_font),
@@ -241,7 +268,7 @@ class tary(ft.Row):
             on_change=lambda _: self.uc_opet_change(),
         )
         self.uc_weic = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.PINK,
+            thumb_color=Dracula_colors.RED,
             selected_index=0,
             controls=[
                 ft.Text("#", size=self.gui_size_font),
@@ -339,12 +366,12 @@ class tary(ft.Row):
                 command_weic = "--o"
             case "--m3":
                 if self.weic_args:
-                    command_weic = f"--m3{''.join(map(str,self.weic_args))}"
+                    command_weic = f"--m3{''.join(map(str, self.weic_args))}"
                 else:
                     command_weic = "--m3"
             case "--w":
                 if self.weic_args:
-                    command_weic = f"--w{''.join(map(str,self.weic_args))}"
+                    command_weic = f"--w{''.join(map(str, self.weic_args))}"
                 else:
                     command_weic = "--w"
             case _:
@@ -386,7 +413,7 @@ class tary(ft.Row):
                 new_row = [
                     ft.Text("bit"),
                     bbutten(
-                        ball_size=20,
+                        ball_size=25,
                         WH=1.35,
                         bgcolor=Dracula_colors.RED,
                         onclick=lambda e, c=f"bitX", ca=0: self.loop_number_click(
@@ -401,7 +428,7 @@ class tary(ft.Row):
                 new_row = [
                     ft.Text("bit"),
                     bbutten(
-                        ball_size=20,
+                        ball_size=25,
                         WH=1.35,
                         bgcolor=Dracula_colors.RED,
                         onclick=lambda e, c=f"bitX,Y", ca=0: self.loop_number_click(
@@ -412,7 +439,7 @@ class tary(ft.Row):
                         ),
                     ),
                     bbutten(
-                        ball_size=20,
+                        ball_size=25,
                         WH=1.35,
                         bgcolor=Dracula_colors.COMMENT,
                         onclick=lambda e, c=f"bitX,Y", ca=1: self.loop_number_click(
@@ -427,7 +454,7 @@ class tary(ft.Row):
                 new_row = [
                     ft.Text("mod"),
                     bbutten(
-                        ball_size=20,
+                        ball_size=25,
                         WH=1.35,
                         bgcolor=Dracula_colors.RED,
                         onclick=lambda e, c=f"modX", ca=0: self.loop_number_click(
@@ -490,10 +517,11 @@ class tary(ft.Row):
         self.opet_command = flg_text
         self.buil_command()
         self.update()
-        
-    def chip_select(self,e):
-        label_value = e.control.label.value
-        isSelect =e.control.selected
+
+    def chip_select(self, e):
+        label_value = e.control.name
+        isSelect = e.control.selected
+        size = e.control.block_size
         if isSelect:
             if label_value not in self.weic_args:
                 self.weic_args.append(label_value)
@@ -501,7 +529,7 @@ class tary(ft.Row):
             if label_value in self.weic_args:
                 self.weic_args.remove(label_value)
         self.buil_command()
-        print(f'{label_value} is select {isSelect} {self.weic_args}')
+        print(f"{label_value} is select {isSelect} {self.weic_args} {size=}")
 
     def uc_weic_change(self):
         select_index = self.uc_weic.selected_index
@@ -519,33 +547,13 @@ class tary(ft.Row):
             case "M3":
                 self.weic_comd = "--m3"
                 new_row = [
-                    ft.Chip(
-                        label=ft.Text(i, size=self.gui_size_font),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        autofocus=True,
-                        padding=ft.Padding.all(0),
-                        label_padding=ft.Padding.all(2),
-                        selected_color=Dracula_colors.COMMENT,
-                        show_checkmark=False,
-                        on_select=self.chip_select,
-                        visual_density=ft.VisualDensity.COMPACT
-                    )
+                    select_fang(name=i, size=25, on_select=self.chip_select)
                     for i in [0, 1, 2]
                 ]
             case "W":
                 self.weic_comd = "--w"
                 new_row = [
-                    ft.Chip(
-                        label=ft.Text(i, size=self.gui_size_font),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        autofocus=True,
-                        padding=ft.Padding.all(0),
-                        label_padding=ft.Padding.all(2),
-                        selected_color=Dracula_colors.COMMENT,
-                        show_checkmark=False,
-                        on_select=self.chip_select,
-                        visual_density=ft.VisualDensity.COMPACT,
-                    )
+                    select_fang(name=i, size=25, on_select=self.chip_select)
                     for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
                 ]
             case _:
@@ -597,7 +605,7 @@ class FilterPage:
         self.page.update()
 
     def tary_change(self, e):
-        self.page.session.store.set("tary",e.data)
+        self.page.session.store.set("tary", e.data)
         self.tary_row.visible = e.data
         self.condition_input.disabled = e.data
         self.condition_input.visible = not e.data
@@ -625,7 +633,7 @@ class FilterPage:
                                 ),
                                 ft.Switch(
                                     value=tary_value,
-                                    height=20,
+                                    height=25,
                                     on_change=self.tary_change,
                                 ),
                             ],
@@ -703,7 +711,11 @@ class FilterPage:
         tary_value = self.page.session.store.get("tary") or False
         _func = self.pop_func.content.value
         _target = self.pop_target.content.value or "all"
-        _condit = self.condition_input.value if not tary_value else self.tary_row.showcommand.value
+        _condit = (
+            self.condition_input.value
+            if not tary_value
+            else self.tary_row.showcommand.value
+        )
         if _func == "func" or _condit == "":
             return
 
