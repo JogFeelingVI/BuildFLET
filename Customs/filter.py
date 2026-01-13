@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-13 15:16:12
+# @Last Modified time: 2026-01-13 23:04:48
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -190,7 +190,7 @@ class CuperSlider_name(ft.Container):
         super().__init__()
         self.data = 9
         self.expand = True
-        self.padding = ft.Padding.only(left=10)
+        self.padding = ft.Padding.all(0)
         # self.showvale = ft.Text(">0", expand=1,text_align=ft.TextAlign.RIGHT)
         self.slider = ft.CupertinoSlider(
             thumb_color=Dracula_colors.PURPLE,
