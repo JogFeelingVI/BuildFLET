@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-13 08:59:09
+# @Last Modified time: 2026-01-13 12:47:38
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -215,6 +215,7 @@ class tary(ft.Row):
         self.opet_args = {0: 1, 1: 1}
         self.weic_comd = ""
         self.weic_args = []
+        self.gui_size_font = 10
         self.showcommand = ft.Text(
             value="wait...", color=Dracula_colors.COMMENT, size=12
         )
@@ -222,36 +223,46 @@ class tary(ft.Row):
             thumb_color=Dracula_colors.PINK,
             selected_index=0,
             controls=[
-                ft.Text("null"),
-                ft.Text("bitX"),
-                ft.Text("bitX,Y"),
-                ft.Text("modX"),
+                ft.Text("null", size=self.gui_size_font),
+                ft.Text("bitX", size=self.gui_size_font),
+                ft.Text("bitX,Y", size=self.gui_size_font),
+                ft.Text("modX", size=self.gui_size_font),
             ],
             on_change=lambda _: self.uc_haed_change(),
         )
         self.uc_opet = ft.CupertinoSlidingSegmentedButton(
             thumb_color=Dracula_colors.PINK,
             selected_index=0,
-            controls=[ft.Text(">"), ft.Text("<"), ft.Text("range")],
+            controls=[
+                ft.Text(">", size=self.gui_size_font),
+                ft.Text("<", size=self.gui_size_font),
+                ft.Text("range", size=self.gui_size_font),
+            ],
             on_change=lambda _: self.uc_opet_change(),
         )
         self.uc_weic = ft.CupertinoSlidingSegmentedButton(
             thumb_color=Dracula_colors.PINK,
             selected_index=0,
             controls=[
-                ft.Text("#"),
-                ft.Text("Z"),
-                ft.Text("H"),
-                ft.Text("J"),
-                ft.Text("O"),
-                ft.Text("M3"),
-                ft.Text("W"),
+                ft.Text("#", size=self.gui_size_font),
+                ft.Text("Z", size=self.gui_size_font),
+                ft.Text("H", size=self.gui_size_font),
+                ft.Text("J", size=self.gui_size_font),
+                ft.Text("O", size=self.gui_size_font),
+                ft.Text("M3", size=self.gui_size_font),
+                ft.Text("W", size=self.gui_size_font),
             ],
             on_change=lambda _: self.uc_weic_change(),
         )
-        self.uc_haed_row = ft.Row(expand=True, spacing=5)
-        self.uc_opet_row = ft.Row(expand=True, spacing=5)
-        self.uc_weic_row = ft.Row(expand=True, spacing=5)
+        self.uc_haed_row = ft.Row(
+            expand=True, spacing=5, alignment=ft.MainAxisAlignment.START
+        )
+        self.uc_opet_row = ft.Row(
+            expand=True, spacing=5, alignment=ft.MainAxisAlignment.START
+        )
+        self.uc_weic_row = ft.Row(
+            expand=True, spacing=5, alignment=ft.MainAxisAlignment.START
+        )
         # she zhi
         self.visible = False
         self.controls = [
@@ -327,9 +338,15 @@ class tary(ft.Row):
             case "--o":
                 command_weic = "--o"
             case "--m3":
-                command_weic = "--m3"
+                if self.weic_args:
+                    command_weic = f"--m3{''.join(map(str,self.weic_args))}"
+                else:
+                    command_weic = "--m3"
             case "--w":
-                command_weic = "--w"
+                if self.weic_args:
+                    command_weic = f"--w{''.join(map(str,self.weic_args))}"
+                else:
+                    command_weic = "--w"
             case _:
                 command_weic = ""
 
@@ -473,11 +490,22 @@ class tary(ft.Row):
         self.opet_command = flg_text
         self.buil_command()
         self.update()
+        
+    def chip_select(self,e):
+        label_value = e.control.label.value
+        isSelect =e.control.selected
+        if isSelect:
+            if label_value not in self.weic_args:
+                self.weic_args.append(label_value)
+        else:
+            if label_value in self.weic_args:
+                self.weic_args.remove(label_value)
+        self.buil_command()
+        print(f'{label_value} is select {isSelect} {self.weic_args}')
 
     def uc_weic_change(self):
         select_index = self.uc_weic.selected_index
         flg_text = self.uc_weic.controls[select_index].value
-        print(f"flg_text {flg_text}")
         new_row = []
         match flg_text:
             case "Z":
@@ -492,12 +520,13 @@ class tary(ft.Row):
                 self.weic_comd = "--m3"
                 new_row = [
                     ft.Chip(
-                        label=ft.Text(i),
+                        label=ft.Text(i, size=self.gui_size_font),
                         bgcolor=Dracula_colors.CURRENT_LINE,
                         autofocus=True,
-                        padding=2,
-                        selected_color=Dracula_colors.GREEN
-                        # on_select=handle_amenity_selection,
+                        padding=1,
+                        selected_color=Dracula_colors.COMMENT,
+                        show_checkmark=False,
+                        on_select=self.chip_select,
                     )
                     for i in [0, 1, 2]
                 ]
@@ -505,12 +534,13 @@ class tary(ft.Row):
                 self.weic_comd = "--w"
                 new_row = [
                     ft.Chip(
-                        label=ft.Text(i),
+                        label=ft.Text(i, size=self.gui_size_font),
                         bgcolor=Dracula_colors.CURRENT_LINE,
                         autofocus=True,
-                        padding=2,
-                        selected_color=Dracula_colors.GREEN
-                        # on_select=handle_amenity_selection,
+                        padding=1,
+                        selected_color=Dracula_colors.COMMENT,
+                        show_checkmark=False,
+                        on_select=self.chip_select,
                     )
                     for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
                 ]
@@ -518,6 +548,7 @@ class tary(ft.Row):
                 self.weic_comd = ""
         self.uc_weic_row.controls = new_row
         self.uc_opet_row.visible = True
+        self.weic_args = []
         self.buil_command()
         self.update()
         print(f"run uc_weic_change done.")
@@ -562,11 +593,13 @@ class FilterPage:
         self.page.update()
 
     def tary_change(self, e):
+        self.page.session.store.set("tary",e.data)
         self.tary_row.visible = e.data
         self.condition_input.disabled = e.data
         self.condition_input.visible = not e.data
 
     def get_dlg(self):
+        tary_value = self.page.session.store.get("tary") or False
         dlg = ft.AlertDialog(
             title=ft.Text("Filter Settings", color=Dracula_colors.COMMENT),
             content=ft.Container(
@@ -587,8 +620,8 @@ class FilterPage:
                                     "Conditions:", size=12, color=Dracula_colors.COMMENT
                                 ),
                                 ft.Switch(
+                                    value=tary_value,
                                     height=20,
-                                    value=False,
                                     on_change=self.tary_change,
                                 ),
                             ],
@@ -663,9 +696,10 @@ class FilterPage:
         return list(self.funcs_dict.keys())
 
     def handle_apply(self, e):
+        tary_value = self.page.session.store.get("tary") or False
         _func = self.pop_func.content.value
         _target = self.pop_target.content.value or "all"
-        _condit = self.condition_input.value
+        _condit = self.condition_input.value if not tary_value else self.tary_row.showcommand.value
         if _func == "func" or _condit == "":
             return
 
@@ -794,11 +828,6 @@ class FilterPage:
         return ft.Column(
             controls=[
                 user_dict_button,
-                # ft.Button(
-                #     "Add filtering rules",
-                #     icon=ft.Icons.ADD,
-                #     on_click=lambda _: self.open_dialog(-1),
-                # ),
                 ft.Divider(),
                 ft.Column(
                     [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True

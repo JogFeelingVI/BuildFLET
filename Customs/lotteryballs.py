@@ -4,7 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-12 07:47:11
 
-from sys import maxsize
 from .DraculaTheme import Dracula_colors
 import flet as ft
 
