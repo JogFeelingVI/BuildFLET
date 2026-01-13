@@ -4,9 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-13 08:59:09
 
-from ctypes import alignment
-from annotated_types import T
-from fastapi.background import P
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
