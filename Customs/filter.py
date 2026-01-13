@@ -553,7 +553,7 @@ class tary(ft.Row):
             case "W":
                 self.weic_comd = "--w"
                 new_row = [
-                    select_fang(name=i, size=25, on_select=self.chip_select)
+                    select_fang(name=i, size=20, on_select=self.chip_select)
                     for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
                 ]
             case _:
