@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 07:46:53
+# @Last Modified time: 2026-01-13 01:22:51
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -103,11 +103,17 @@ class SetingsPage:
             # opacity=0.65,
         )
         self.note_text = ft.TextField(
-            label="Note", hint_text="Rule Settings Instructions", dense=True
+            label="Note",
+            hint_text="Rule Settings Instructions",
+            expand=1,
+            border=ft.InputBorder.UNDERLINE,
         )
         self.selection_container = ft.Column(
             controls=[
-                self.note_text,
+                ft.Row(
+                    controls=[self.note_text],
+                    tight=True,
+                ),
                 self.get_Selection_line("A"),
                 self.add_button_row,
             ],
@@ -182,9 +188,18 @@ class SetingsPage:
         return ft.Row(
             controls=[
                 ft.TextField(
-                    label=name, expand=2, hint_text="min,max", data=f"{name}_Max"
+                    label=name,
+                    expand=2,
+                    hint_text="min,max",
+                    data=f"{name}_Max",
+                    border=ft.InputBorder.UNDERLINE,
                 ),
-                ft.TextField(label="Count", expand=1, data=f"{name}_K"),
+                ft.TextField(
+                    label="Count",
+                    expand=1,
+                    data=f"{name}_K",
+                    border=ft.InputBorder.UNDERLINE,
+                ),
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -314,7 +329,7 @@ class SetingsPage:
             title=ft.Text("add new game rules", color=Dracula_colors.COMMENT),
             content=ft.Container(
                 content=self.selection_container,
-                width=300,  # 锁定宽度防止抖动
+                width=350,  # 锁定宽度防止抖动
             ),
             actions=[
                 ft.TextButton("Cancel", on_click=lambda _: self.close_dlg()),

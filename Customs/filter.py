@@ -2,8 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 15:11:43
+# @Last Modified time: 2026-01-13 08:59:09
 
+from ctypes import alignment
+from annotated_types import T
+from fastapi.background import P
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -147,14 +150,79 @@ class AI_Auto_input(ft.TextField):
         self.update()
 
 
+class bbutten(ft.Container):
+    """圆形按钮"""
+
+    def __init__(
+        self,
+        ball_size: int = 32,
+        WH: float = 0.0,
+        bgcolor=Dracula_colors.RED,
+        onclick=None,
+        onlongpress=None,
+    ):
+        super().__init__()
+        self.data = 1
+        self.text = f"{self.data}"
+        self.ball_size = ball_size
+        self.content = ft.Text(
+            value=self.text,
+            color=Dracula_colors.FOREGROUND,  # 金色数字 (Gold)
+            size=self.ball_size * 0.45,
+            weight=ft.FontWeight.BOLD,
+        )
+        self.width = self.ball_size * WH if WH > 0 else self.ball_size
+        self.height = self.ball_size
+        self.bgcolor = bgcolor
+        self.border_radius = self.ball_size / 2
+        self.alignment = ft.Alignment.CENTER
+        self.shadow = ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=4,
+            color="#42000000",
+            offset=ft.Offset(0, 2),
+        )
+        self.on_click = onclick
+        self.on_long_press = onlongpress
+
+
+class CuperSlider_name(ft.Container):
+    """Text slider gs"""
+
+    def __init__(self, vmin=1, vmax=160, changeend=None):
+        super().__init__()
+        self.data = 9
+        self.expand = True
+        self.padding = ft.Padding.only(left=10)
+        # self.showvale = ft.Text(">0", expand=1,text_align=ft.TextAlign.RIGHT)
+        self.slider = ft.CupertinoSlider(
+            thumb_color=Dracula_colors.PURPLE,
+            min=vmin,
+            max=vmax,
+            expand=True,
+            on_change_end=changeend,
+        )
+        self.content = ft.Row(
+            controls=[self.slider],
+            expand=1,
+            # align=ft.Alignment.CENTER_LEFT,
+        )
+
+
 class tary(ft.Row):
     def __init__(self):
         super().__init__()
-        self.command = ''
-        self.com_args = {0:1,1:1}
-        self.showcommand = ft.Text(value="wait...",color=Dracula_colors.COMMENT,size=12)
+        self.command = ""
+        self.com_args = {0: 1, 1: 1}
+        self.opet_command = ""
+        self.opet_args = {0: 1, 1: 1}
+        self.weic_comd = ""
+        self.weic_args = []
+        self.showcommand = ft.Text(
+            value="wait...", color=Dracula_colors.COMMENT, size=12
+        )
         self.uc_haed = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.PURPLE,
+            thumb_color=Dracula_colors.PINK,
             selected_index=0,
             controls=[
                 ft.Text("null"),
@@ -165,139 +233,297 @@ class tary(ft.Row):
             on_change=lambda _: self.uc_haed_change(),
         )
         self.uc_opet = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.PURPLE,
+            thumb_color=Dracula_colors.PINK,
             selected_index=0,
             controls=[ft.Text(">"), ft.Text("<"), ft.Text("range")],
-            on_change=lambda _: self.uc_haed_change(),
+            on_change=lambda _: self.uc_opet_change(),
         )
-        self.uc_haed_row = ft.Row(tight=True,align=ft.Alignment.CENTER_LEFT, spacing=5)
+        self.uc_weic = ft.CupertinoSlidingSegmentedButton(
+            thumb_color=Dracula_colors.PINK,
+            selected_index=0,
+            controls=[
+                ft.Text("#"),
+                ft.Text("Z"),
+                ft.Text("H"),
+                ft.Text("J"),
+                ft.Text("O"),
+                ft.Text("M3"),
+                ft.Text("W"),
+            ],
+            on_change=lambda _: self.uc_weic_change(),
+        )
+        self.uc_haed_row = ft.Row(expand=True, spacing=5)
+        self.uc_opet_row = ft.Row(expand=True, spacing=5)
+        self.uc_weic_row = ft.Row(expand=True, spacing=5)
         # she zhi
         self.visible = False
         self.controls = [
+            #
             ft.Column(
+                spacing=5,
                 controls=[
+                    ft.Divider(),
                     ft.Row(
                         controls=[self.uc_haed],
-                        tight=True,
-                        align=ft.Alignment.CENTER_LEFT,
+                        expand=True,
                     ),
                     self.uc_haed_row,
                     ft.Row(
-                        controls=[self.showcommand],
-                        tight=True,
-                        align=ft.Alignment.CENTER_LEFT,
+                        controls=[self.uc_opet],
+                        expand=True,
                     ),
+                    self.uc_opet_row,
+                    ft.Row(
+                        controls=[self.uc_weic],
+                        expand=True,
+                    ),
+                    self.uc_weic_row,
+                    ft.Row(
+                        controls=[self.showcommand],
+                        expand=True,
+                    ),
+                    ft.Divider(),
                 ],
-                tight=True,
-                align=ft.Alignment.CENTER_LEFT,
+                expand=True,
             ),
         ]
-        self.tight = True
-        self.align = ft.Alignment.CENTER_LEFT
+        # self.tight = True
 
     def did_mount(self):
         self.uc_haed_change()
+        self.uc_opet_change()
+        self.uc_weic_change()
         return super().did_mount()
-    
+
     def buil_command(self):
+        """格式化命令行"""
+        command = ""
         match self.command:
             case "bitX":
-                self.showcommand.value =f'bit{self.com_args[0]}'
+                command = f"bit{self.com_args[0]}"
             case "bitX,Y":
-                self.showcommand.value =f'bit{self.com_args[0]},{self.com_args[1]}'
+                command = f"bit{self.com_args[0]},{self.com_args[1]}"
             case "modX":
-                self.showcommand.value =f'mod{self.com_args[0]}'
+                command = f"mod{self.com_args[0]}"
             case _:
-                self.showcommand.value =f'mod{self.com_args[0]}'
-                
+                pass
 
-    def loop_number_click(self,e,command,com_args):
+        command_opet = ""
+        match self.opet_command:
+            case ">":
+                command_opet = f">{self.opet_args[0]}"
+            case "<":
+                command_opet = f"<{self.opet_args[0]}"
+            case "range":
+                command_opet = f"range {self.opet_args[0]},{self.opet_args[1]}"
+            case _:
+                pass
+
+        command_weic = ""
+        match self.weic_comd:
+            case "--z":
+                command_weic = "--z"
+            case "--h":
+                command_weic = "--h"
+            case "--j":
+                command_weic = "--j"
+            case "--o":
+                command_weic = "--o"
+            case "--m3":
+                command_weic = "--m3"
+            case "--w":
+                command_weic = "--w"
+            case _:
+                command_weic = ""
+
+        all_command = [command, command_opet, command_weic]
+        self.showcommand.value = " ".join(all_command)
+
+    def loop_number_click(self, e, command, com_args):
         value = e.control.data
         value += 1
         if value > 20:
             value = 1
         e.control.data = value
-        e.control.content = f"{e.control.data}"
+        e.control.content.value = f"{e.control.data}"
         self.command = command
         self.com_args[com_args] = value
         self.buil_command()
 
-   
-    def loop_number_long(self,e,command,com_args):
+    def loop_number_long(self, e, command, com_args):
         value = e.control.data
         value -= 2
         if value < 1:
             value = 20
         e.control.data = value
-        e.control.content = f"{e.control.data}"
+        e.control.content.value = f"{e.control.data}"
         self.command = command
         self.com_args[com_args] = value
         self.buil_command()
-        
-    def reload_command(self):
-        self.command = ''
-        self.com_args = {0:1,1:1}
-        self.showcommand.value = "wait..."
-        
 
     def uc_haed_change(self):
         select_index = self.uc_haed.selected_index
         flg_text = self.uc_haed.controls[select_index].value
+        new_row = []
         match flg_text:
             case "null":
                 self.uc_haed_row.visible = False
             case "bitX":
                 new_row = [
                     ft.Text("bit"),
-                    ft.Button(
-                        content="1",
-                        data=1,
-                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        on_click=lambda e,c=f"bitX",ca=0:self.loop_number_click(e,c,ca),
-                        on_long_press=lambda e,c="bitX",ca=0:self.loop_number_long(e,c,ca),
+                    bbutten(
+                        ball_size=20,
+                        WH=1.35,
+                        bgcolor=Dracula_colors.RED,
+                        onclick=lambda e, c=f"bitX", ca=0: self.loop_number_click(
+                            e, c, ca
+                        ),
+                        onlongpress=lambda e, c="bitX", ca=0: self.loop_number_long(
+                            e, c, ca
+                        ),
                     ),
                 ]
-                self.uc_haed_row.controls = new_row
-                self.uc_haed_row.visible = True
             case "bitX,Y":
                 new_row = [
                     ft.Text("bit"),
-                    ft.Button(
-                        content="1",
-                        data=1,
-                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        on_click=lambda e,c="bitX,Y",ca=0:self.loop_number_click(e,c,ca),
-                        on_long_press=lambda e,c="bitX,Y",ca=0:self.loop_number_long(e,c,ca),
+                    bbutten(
+                        ball_size=20,
+                        WH=1.35,
+                        bgcolor=Dracula_colors.RED,
+                        onclick=lambda e, c=f"bitX,Y", ca=0: self.loop_number_click(
+                            e, c, ca
+                        ),
+                        onlongpress=lambda e, c="bitX,Y", ca=0: self.loop_number_long(
+                            e, c, ca
+                        ),
                     ),
-                    ft.Button(
-                        content="1",
-                        data=1,
-                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        on_click=lambda e,c="bitX,Y",ca=1:self.loop_number_click(e,c,ca),
-                        on_long_press=lambda e,c="bitX,Y",ca=1:self.loop_number_long(e,c,ca),
+                    bbutten(
+                        ball_size=20,
+                        WH=1.35,
+                        bgcolor=Dracula_colors.COMMENT,
+                        onclick=lambda e, c=f"bitX,Y", ca=1: self.loop_number_click(
+                            e, c, ca
+                        ),
+                        onlongpress=lambda e, c="bitX,Y", ca=1: self.loop_number_long(
+                            e, c, ca
+                        ),
                     ),
                 ]
-                self.uc_haed_row.controls = new_row
-                self.uc_haed_row.visible = True
             case "modX":
                 new_row = [
                     ft.Text("mod"),
-                    ft.Button(
-                        content="1",
-                        data=1,
-                        style=ft.ButtonStyle(shape=ft.CircleBorder(), padding=5),
-                        bgcolor=Dracula_colors.CURRENT_LINE,
-                        on_click=lambda e,c="modX",ca=0:self.loop_number_click(e,c,ca),
-                        on_long_press=lambda e,c="modX",ca=0:self.loop_number_long(e,c,ca),
+                    bbutten(
+                        ball_size=20,
+                        WH=1.35,
+                        bgcolor=Dracula_colors.RED,
+                        onclick=lambda e, c=f"modX", ca=0: self.loop_number_click(
+                            e, c, ca
+                        ),
+                        onlongpress=lambda e, c="modX", ca=0: self.loop_number_long(
+                            e, c, ca
+                        ),
                     ),
                 ]
-                self.uc_haed_row.controls = new_row
-                self.uc_haed_row.visible = True
-        self.reload_command()
+        self.uc_haed_row.controls = new_row
+        self.uc_haed_row.visible = True
+        self.command = flg_text
+        self.buil_command()
         self.update()
+
+    def select_opt_change(self, e, opet, i):
+        value = int(e.control.value)
+        self.opet_command = opet
+        self.opet_args[i] = value
+        self.buil_command()
+        # print(f"select opt {e.control.value}")
+
+    def uc_opet_change(self):
+        select_index = self.uc_opet.selected_index
+        flg_text = self.uc_opet.controls[select_index].value
+        new_row = []
+        match flg_text:
+            case ">":
+                new_row = [
+                    CuperSlider_name(
+                        changeend=lambda e, op=">", i=0: self.select_opt_change(
+                            e, op, i
+                        )
+                    ),
+                ]
+            case "<":
+                new_row = [
+                    CuperSlider_name(
+                        changeend=lambda e, op=">", i=0: self.select_opt_change(
+                            e, op, i
+                        )
+                    ),
+                ]
+            case "range":
+                new_row = [
+                    CuperSlider_name(
+                        changeend=lambda e, op="range", i=0: self.select_opt_change(
+                            e, op, i
+                        )
+                    ),
+                    CuperSlider_name(
+                        changeend=lambda e, op="range", i=1: self.select_opt_change(
+                            e, op, i
+                        )
+                    ),
+                ]
+        self.uc_opet_row.controls = new_row
+        self.uc_opet_row.visible = True
+        self.opet_command = flg_text
+        self.buil_command()
+        self.update()
+
+    def uc_weic_change(self):
+        select_index = self.uc_weic.selected_index
+        flg_text = self.uc_weic.controls[select_index].value
+        print(f"flg_text {flg_text}")
+        new_row = []
+        match flg_text:
+            case "Z":
+                self.weic_comd = "--z"
+            case "H":
+                self.weic_comd = "--h"
+            case "J":
+                self.weic_comd = "--j"
+            case "O":
+                self.weic_comd = "--o"
+            case "M3":
+                self.weic_comd = "--m3"
+                new_row = [
+                    ft.Chip(
+                        label=ft.Text(i),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        autofocus=True,
+                        padding=2,
+                        selected_color=Dracula_colors.GREEN
+                        # on_select=handle_amenity_selection,
+                    )
+                    for i in [0, 1, 2]
+                ]
+            case "W":
+                self.weic_comd = "--w"
+                new_row = [
+                    ft.Chip(
+                        label=ft.Text(i),
+                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        autofocus=True,
+                        padding=2,
+                        selected_color=Dracula_colors.GREEN
+                        # on_select=handle_amenity_selection,
+                    )
+                    for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                ]
+            case _:
+                self.weic_comd = ""
+        self.uc_weic_row.controls = new_row
+        self.uc_opet_row.visible = True
+        self.buil_command()
+        self.update()
+        print(f"run uc_weic_change done.")
 
 
 class FilterPage:
@@ -348,7 +574,7 @@ class FilterPage:
             title=ft.Text("Filter Settings", color=Dracula_colors.COMMENT),
             content=ft.Container(
                 content=ft.Column(
-                    [
+                    controls=[
                         ft.Row(
                             controls=[
                                 ft.Text("Select Fun:"),
@@ -376,9 +602,8 @@ class FilterPage:
                         self.input_row,
                     ],
                     tight=True,
-                    spacing=10,
                 ),
-                width=300,  # 锁定宽度防止抖动
+                width=350,
             ),
             actions=[
                 ft.TextButton("Cancel", on_click=self.close_dlg),
