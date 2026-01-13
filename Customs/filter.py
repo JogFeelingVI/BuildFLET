@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-13 12:47:38
+# @Last Modified time: 2026-01-13 13:40:44
 
 from .suggestions import AI_gen_sugguest_re
 from .jackpot_core import filterFunc
@@ -523,10 +523,12 @@ class tary(ft.Row):
                         label=ft.Text(i, size=self.gui_size_font),
                         bgcolor=Dracula_colors.CURRENT_LINE,
                         autofocus=True,
-                        padding=1,
+                        padding=ft.Padding.all(0),
+                        label_padding=ft.Padding.all(2),
                         selected_color=Dracula_colors.COMMENT,
                         show_checkmark=False,
                         on_select=self.chip_select,
+                        visual_density=ft.VisualDensity.COMPACT
                     )
                     for i in [0, 1, 2]
                 ]
@@ -537,17 +539,19 @@ class tary(ft.Row):
                         label=ft.Text(i, size=self.gui_size_font),
                         bgcolor=Dracula_colors.CURRENT_LINE,
                         autofocus=True,
-                        padding=1,
+                        padding=ft.Padding.all(0),
+                        label_padding=ft.Padding.all(2),
                         selected_color=Dracula_colors.COMMENT,
                         show_checkmark=False,
                         on_select=self.chip_select,
+                        visual_density=ft.VisualDensity.COMPACT,
                     )
                     for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
                 ]
             case _:
                 self.weic_comd = ""
         self.uc_weic_row.controls = new_row
-        self.uc_opet_row.visible = True
+        self.uc_weic_row.visible = True
         self.weic_args = []
         self.buil_command()
         self.update()
