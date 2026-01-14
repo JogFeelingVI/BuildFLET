@@ -2,9 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-14 02:58:15
-
-from .suggestions import AI_gen_sugguest_re
+# @Last Modified time: 2026-01-14 07:14:36
+from .ColorTokenizer import Tokenizer
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
@@ -137,14 +136,14 @@ class AI_Auto_input(ft.TextField):
     async def ai_sugguest_set(self):
         """已经废弃不可食用"""
         await asyncio.sleep(0.3)
-        if not self.runing:
-            return
-        if not self.value:
-            self.suggestions = []
-            self.update()
-            return
-        self.suggestions = AI_gen_sugguest_re(self.value)
-        self.update()
+        # if not self.runing:
+        #     return
+        # if not self.value:
+        #     self.suggestions = []
+        #     self.update()
+        #     return
+        # self.suggestions = AI_gen_sugguest_re(self.value)
+        # self.update()
 
 
 class Decrement_Button(ft.Container):
@@ -154,8 +153,8 @@ class Decrement_Button(ft.Container):
         self,
         ball_size: int = 32,
         WH: float = 0.0,
-        Start_Value = 1,
-        Loop_Value = 20,
+        Start_Value=1,
+        Loop_Value=20,
         bgcolor=Dracula_colors.RED,
         onClickOutside=None,
         onLongPressOutside=None,
@@ -187,27 +186,27 @@ class Decrement_Button(ft.Container):
         self.onLongPressOutside_callback = onLongPressOutside
         self.on_click = self.handle_click
         self.on_long_press = self.handle_long_press
-        
-    def handle_click(self,e):
+
+    def handle_click(self, e):
         value = self.data
         value += 1
         if value > self.Loop_Value:
             value = 1
         self.data = value
         self.content.value = f"{self.data}"
-        print(f'{self.data=} {self.content.value=}')
+        print(f"{self.data=} {self.content.value=}")
         self.update()
         if self.onClickOutside_callback:
             self.onClickOutside_callback(e)
-    
-    def handle_long_press(self,e):
+
+    def handle_long_press(self, e):
         value = self.data
         value -= 2
         if value < self.Start_Value:
             value = self.Loop_Value
         self.data = value
         self.content.value = f"{self.data}"
-        print(f'{self.data=} {self.content.value=}')
+        print(f"{self.data=} {self.content.value=}")
         self.update()
         if self.onLongPressOutside_callback:
             self.onLongPressOutside_callback(e)
@@ -245,7 +244,7 @@ class select_fang(ft.Container):
         self.height = self.block_size
         self.border_radius = 5
         self.alignment = ft.Alignment.CENTER
-        self.animate =ft.Animation(300, ft.AnimationCurve.DECELERATE) # 颜色切换动画
+        self.animate = ft.Animation(300, ft.AnimationCurve.DECELERATE)  # 颜色切换动画
         self.bgcolor = Dracula_colors.CURRENT_LINE
         self.on_click = self.handle_click
         self.name = name
@@ -436,14 +435,14 @@ class tary(ft.Row):
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.CURRENT_LINE,
-                        onClickOutside=lambda e, c=f"bitX", ca=0: self.loop_number_click(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="bitX", ca=0: self.loop_number_long(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"bitX",
+                        ca=0: self.loop_number_click(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="bitX",
+                        ca=0: self.loop_number_long(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=20
+                        Loop_Value=20,
                     ),
                 ]
             case "bitX,Y":
@@ -453,27 +452,27 @@ class tary(ft.Row):
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.CURRENT_LINE,
-                        onClickOutside=lambda e, c=f"bitX,Y", ca=0: self.loop_number_click(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="bitX,Y", ca=0: self.loop_number_long(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"bitX,Y",
+                        ca=0: self.loop_number_click(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="bitX,Y",
+                        ca=0: self.loop_number_long(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=20
+                        Loop_Value=20,
                     ),
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.COMMENT,
-                        onClickOutside=lambda e, c=f"bitX,Y", ca=1: self.loop_number_click(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="bitX,Y", ca=1: self.loop_number_long(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"bitX,Y",
+                        ca=1: self.loop_number_click(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="bitX,Y",
+                        ca=1: self.loop_number_long(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=20
+                        Loop_Value=20,
                     ),
                 ]
             case "modX":
@@ -483,14 +482,14 @@ class tary(ft.Row):
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.CURRENT_LINE,
-                        onClickOutside=lambda e, c=f"modX", ca=0: self.loop_number_click(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="modX", ca=0: self.loop_number_long(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"modX",
+                        ca=0: self.loop_number_click(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="modX",
+                        ca=0: self.loop_number_long(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=20
+                        Loop_Value=20,
                     ),
                 ]
         self.uc_haed_row.controls = new_row
@@ -521,11 +520,11 @@ class tary(ft.Row):
                         onClickOutside=lambda e, c=f">", ca=0: self.select_opt_change(
                             e, c, ca
                         ),
-                        onLongPressOutside=lambda e, c=">", ca=0: self.select_opt_change(
-                            e, c, ca
-                        ),
+                        onLongPressOutside=lambda e,
+                        c=">",
+                        ca=0: self.select_opt_change(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=160
+                        Loop_Value=160,
                     ),
                 ]
             case "<":
@@ -537,50 +536,40 @@ class tary(ft.Row):
                         onClickOutside=lambda e, c=f"<", ca=0: self.select_opt_change(
                             e, c, ca
                         ),
-                        onLongPressOutside=lambda e, c="<", ca=0: self.select_opt_change(
-                            e, c, ca
-                        ),
+                        onLongPressOutside=lambda e,
+                        c="<",
+                        ca=0: self.select_opt_change(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=160
+                        Loop_Value=160,
                     ),
                 ]
             case "range":
                 new_row = [
-                    # CuperSlider_name(
-                    #     changeend=lambda e, op="range", i=0: self.select_opt_change(
-                    #         e, op, i
-                    #     )
-                    # ),
-                    # CuperSlider_name(
-                    #     changeend=lambda e, op="range", i=1: self.select_opt_change(
-                    #         e, op, i
-                    #     )
-                    # ),
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.CURRENT_LINE,
-                        onClickOutside=lambda e, c=f"range", ca=0: self.select_opt_change(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="range", ca=0: self.select_opt_change(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"range",
+                        ca=0: self.select_opt_change(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="range",
+                        ca=0: self.select_opt_change(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=160
+                        Loop_Value=160,
                     ),
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
                         bgcolor=Dracula_colors.COMMENT,
-                        onClickOutside=lambda e, c=f"range", ca=1: self.select_opt_change(
-                            e, c, ca
-                        ),
-                        onLongPressOutside=lambda e, c="range", ca=1: self.select_opt_change(
-                            e, c, ca
-                        ),
+                        onClickOutside=lambda e,
+                        c=f"range",
+                        ca=1: self.select_opt_change(e, c, ca),
+                        onLongPressOutside=lambda e,
+                        c="range",
+                        ca=1: self.select_opt_change(e, c, ca),
                         Start_Value=1,
-                        Loop_Value=160
+                        Loop_Value=160,
                     ),
                 ]
         self.uc_opet_row.controls = new_row
@@ -842,6 +831,22 @@ class FilterPage:
         self.page.update()
 
     def render_filters(self):
+        token = Tokenizer()
+        def tokenspan(text:str):
+            segments = token.Segment(text)
+            spans = [ft.TextSpan(
+                        "Condition: ", 
+                        style=ft.TextStyle(color=ft.Colors.WHITE)
+                    )]
+            for text, color in segments:
+                spans.append(
+                    ft.TextSpan(
+                        text, 
+                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE)
+                    )
+                )
+            return spans
+            
         self.filter_items_column.controls.clear()
         for idx, item in enumerate(self.filters_list):
             self.filter_items_column.controls.append(
@@ -854,10 +859,14 @@ class FilterPage:
                             f"Target: {item['target']} Func: {item['func']}",
                             color=Dracula_colors.ORANGE,
                         ),
+                        #! 添加文字渲染器
                         subtitle=ft.Text(
-                            f"Condition: {item['condition']}",
-                            color=Dracula_colors.PURPLE,
+                            spans=tokenspan(item['condition'])
                         ),
+                        # subtitle=ft.Text(
+                        #     f"Condition: {item['condition']}",
+                        #     color=Dracula_colors.PURPLE,
+                        # ),
                         # bgcolor=Dracula_colors.CURRENT_LINE,
                         on_long_press=lambda _, i=idx: self.open_dialog(i),
                     ),
