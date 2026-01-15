@@ -2,13 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-15 06:10:20
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 09:03:57
+# @Last Modified time: 2026-01-15 13:19:27
 
-from time import sleep
 from .DraculaTheme import Dracula_colors
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
 import flet as ft
+import json
 import asyncio
 
 
@@ -45,26 +45,40 @@ class dism(ft.Dismissible):
             # on_dismiss=self.handle_dismiss,
             key=randomData.generate_secure_string(8),
         )
-    
-    async def handle_confirm_dismiss(self,e: ft.DismissibleDismissEvent):
-        """False 取消删除 """
-        await e.control.confirm_dismiss(False)  
+
+    async def handle_confirm_dismiss(self, e: ft.DismissibleDismissEvent):
+        """False 取消删除"""
+        await e.control.confirm_dismiss(False)
         if e.direction == ft.DismissDirection.END_TO_START:  # right-to-left slide
             # save current dismissible to dialog's data, for confirmation in
             # handle_dialog_action_click
             self.MarkData("handle_confirm_dismiss")
-    
-    def handle_dismiss(self,e):
+        elif e.direction == ft.DismissDirection.START_TO_END:
+            #await self.page.shared_preferences.set("user_dir", picked_dir)
+            jsondata:list = await self.page.shared_preferences.get("save_data_list")
+            if not jsondata:
+                save_list = []
+            else:
+                save_list = json.loads(jsondata)
+            save_list.append(e.control.data)
+            await self.page.shared_preferences.set("save_data_list", json.dumps(save_list))
+            # print(f"{save_list=} data = {e.control.data}")
+        if self.badge_update:
+            self.badge_update(len(save_list))
+            
+
+    def handle_dismiss(self, e):
         # 暂时不使用
-        print(f'dismiss {e}')
+        print(f"dismiss {e}")
         self.update()
 
-    def setting_args(self, setting: dict, filter: list):
+    def setting_args(self, setting: dict, filter: list, badge_update=None):
         self.setting = setting
         self.filers = filter
+        self.badge_update = badge_update
 
     def did_mount(self):
-        if not self.running :
+        if not self.running:
             self.MarkData("did mount")
             self.running = True
         return super().did_mount()
@@ -91,7 +105,7 @@ class dism(ft.Dismissible):
     def MarkData(self, name):
         if self.is_refreshing:
             return
-        print(f'markdata is running. {name}')
+        # print(f"markdata is running. {name}")
         self.page.run_task(self.refresh)
 
     def __content(self, flg):
@@ -143,12 +157,13 @@ class dism(ft.Dismissible):
             alignment=ft.Alignment.CENTER_LEFT,
         )
 
-            
     async def refresh(self):
+        # print('refresh is now running.')
         self.is_refreshing = True
         count = 0
         max_retries = 100
-        
+        await asyncio.sleep(0.3)
+
         # 初始化界面为加载中状态（可选）
         # self.content = self.__content(正在加载的索引)
         # self.update()
@@ -158,9 +173,7 @@ class dism(ft.Dismissible):
                 # 1. 使用 to_thread 运行耗时计算，防止界面卡死
                 # 假设 calculate_lottery 是普通的同步函数
                 tempd, state = await asyncio.to_thread(
-                    calculate_lottery, 
-                    setings=self.setting, 
-                    filters=self.filers
+                    calculate_lottery, setings=self.setting, filters=self.filers
                 )
 
                 if state:
@@ -168,20 +181,20 @@ class dism(ft.Dismissible):
                     self.data = tempd
                     self.content = self.__content(1)
                     self.update()
-                    break # 成功后直接跳出循环
+                    break  # 成功后直接跳出循环
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待
                     self.data = tempd
                     self.content = self.__content(1)
                     self.update()
-                    await asyncio.sleep(0.3) # 给 CPU 喘息时间，也让 UI 有机会渲染
-                
+                    await asyncio.sleep(0.3)  # 给 CPU 喘息时间，也让 UI 有机会渲染
+
                 count += 1
-                
+
                 # 2. 超时处理
                 if count >= max_retries:
                     print("count is max_retries, work stoping.")
-                    self.content = self.__content(2) # 显示错误/超时界面
+                    self.content = self.__content(2)  # 显示错误/超时界面
                     self.update()
                     break
 
@@ -191,7 +204,7 @@ class dism(ft.Dismissible):
             self.update()
         finally:
             self.is_refreshing = False
-            self.update() # 确保最后刷新状态被重置
+            self.update()  # 确保最后刷新状态被重置
 
 
 #! old

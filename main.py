@@ -2,14 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 08:59:28
+# @Last Modified time: 2026-01-15 13:29:02
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
 from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
 import flet as ft
-import json
 import os
 
 # 获取系统标示
@@ -71,10 +70,10 @@ def main(page: ft.Page):
             ),
             ft.NavigationBarDestination(
                 icon=ft.Icon(
-                    ft.Icons.DATA_EXPLORATION_OUTLINED, color=Dracula_colors.PURPLE
+                    ft.Icons.DATA_EXPLORATION_OUTLINED, color=Dracula_colors.PURPLE,
                 ),
                 selected_icon=ft.Icons.DATA_EXPLORATION,
-                label="Lottery",
+                label="Lotter",
             ),
         ],
         on_change=on_navigation_change,

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-14 09:23:18
+# @Last Modified time: 2026-01-15 12:22:15
 from .ColorTokenizer import Tokenizer
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -640,7 +640,7 @@ class FilterPage:
             content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
         )
         self.Fab = ft.FloatingActionButton(
-            icon=ft.Icons.FILTER,
+            icon=ft.Icons.FILTER_LIST,
             bgcolor=Dracula_colors.PINK,
             on_click=lambda _: self.open_dialog(-1),
             # opacity=0.65,
@@ -854,7 +854,7 @@ class FilterPage:
                 ft.Dismissible(
                     content=ft.ListTile(
                         leading=ft.Icon(
-                            ft.Icons.FILTER_ALT, color=Dracula_colors.ORANGE
+                            ft.Icons.FILTER_LIST, color=Dracula_colors.ORANGE
                         ),
                         title=ft.Text(
                             f"Target: {item['target']} Func: {item['func']}",
