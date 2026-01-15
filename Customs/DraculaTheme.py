@@ -19,5 +19,3 @@ class Dracula_colors:
     ORANGE = "#ffb86c"
     RED = "#ff5555"
     YELLOW = "#f1fa8c"
-
-

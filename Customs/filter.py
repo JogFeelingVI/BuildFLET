@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-14 07:14:36
+# @Last Modified time: 2026-01-14 09:23:18
 from .ColorTokenizer import Tokenizer
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -623,7 +623,7 @@ class tary(ft.Row):
         self.weic_args = []
         self.buil_command()
         self.update()
-        print(f"run uc_weic_change done.")
+        # print(f"run uc_weic_change done.")
 
 
 class FilterPage:
@@ -739,6 +739,7 @@ class FilterPage:
                         enabled_tags.append(key)
             if len(enabled_tags) == 1:
                 return
+            #!在这里修改
             new_pop_items = []
             for key in enabled_tags:
                 new_pop_items.append(
@@ -832,21 +833,21 @@ class FilterPage:
 
     def render_filters(self):
         token = Tokenizer()
-        def tokenspan(text:str):
+
+        def tokenspan(text: str):
             segments = token.Segment(text)
-            spans = [ft.TextSpan(
-                        "Condition: ", 
-                        style=ft.TextStyle(color=ft.Colors.WHITE)
-                    )]
+            spans = [
+                ft.TextSpan("Condition: ", style=ft.TextStyle(color=ft.Colors.WHITE))
+            ]
             for text, color in segments:
                 spans.append(
                     ft.TextSpan(
-                        text, 
-                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE)
+                        text,
+                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
                     )
                 )
             return spans
-            
+
         self.filter_items_column.controls.clear()
         for idx, item in enumerate(self.filters_list):
             self.filter_items_column.controls.append(
@@ -860,9 +861,7 @@ class FilterPage:
                             color=Dracula_colors.ORANGE,
                         ),
                         #! 添加文字渲染器
-                        subtitle=ft.Text(
-                            spans=tokenspan(item['condition'])
-                        ),
+                        subtitle=ft.Text(spans=tokenspan(item["condition"])),
                         # subtitle=ft.Text(
                         #     f"Condition: {item['condition']}",
                         #     color=Dracula_colors.PURPLE,

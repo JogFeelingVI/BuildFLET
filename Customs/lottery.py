@@ -2,145 +2,18 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 01:08:35
+# @Last Modified time: 2026-01-15 06:02:47
 
-from .lotteryballs import LotteryBalls
-from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import Dracula_colors
+from .dismiss import dism, listext_onlong
 import flet as ft
 import json
 import os
-import asyncio
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-
-
-def calculate_lottery(setings: dict, filters: list):
-    if setings:
-        rd = randomData(seting=setings)
-    else:
-        return ("No Numbers", False)
-    result = rd.get_pabc()
-    if not filters:
-        return (rd.get_exp(result), True)
-    filter_jp = filter_for_pabc(filters=filters)
-    if filter_jp.handle(result) == False:
-        return [rd.get_exp(result), False]
-    return (rd.get_exp(result), True)
-
-
-class listext_onlong(ft.Card):
-    def __init__(self):
-        super().__init__()
-        self.data = "01 02 03 04 05 06 + 08"
-        self.content = self.reContent(0)
-        self.padding = 10
-        # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
-        # self.subtitle = LotteryBalls(self.data,25)
-        # self.on_long_press = lambda _: self.get_data(1, True)
-        self.runing = True
-        self.is_refreshing = False
-
-    def reContent(self, flg: int = 0):
-        """
-            返回 Container
-        Args:
-            flg (int, optional): _description_. Defaults to 0.
-            0 Initializing the computing core.
-            2 Please try again later.
-            1 LotteryBalls
-        Returns:
-            _type_: _description_
-        """
-        if flg == 1:
-            conten = LotteryBalls(self.data, 29)
-        elif flg == 2:
-            conten = ft.Row(
-                controls=[
-                    ft.Text(
-                        "😡Press and hold to try again.",
-                        weight="bold",
-                        size=18,
-                        color=Dracula_colors.PURPLE,
-                    )
-                ],
-                expand=True,
-                alignment=ft.MainAxisAlignment.CENTER,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                align=ft.Alignment.CENTER,
-            )
-        else:
-            conten = ft.Row(
-                controls=[
-                    ft.Text(
-                        "😅Initializing the computing core.",
-                        weight="bold",
-                        size=18,
-                        color=Dracula_colors.CURRENT_LINE,
-                    )
-                ],
-                expand=True,
-                alignment=ft.MainAxisAlignment.CENTER,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                align=ft.Alignment.CENTER,
-            )
-        return ft.Container(
-            padding=10,
-            content=conten,
-            animate_scale=ft.Animation(300, ft.AnimationCurve.DECELERATE),
-            on_long_press=lambda _: self.get_data(1, True),
-        )
-
-    def setting_args(self, setting: dict, filter: list):
-        self.setting = setting
-        self.filers = filter
-
-    def did_mount(self):
-        self.get_data(0)
-
-    def will_unmount(self):
-        self.runing = False
-
-    def get_data(self, state: int = 1, onoff=False):
-        # print(f'{self.content.scale=} {state=} {onoff=}')
-        if self.is_refreshing:
-            return
-        if state == 0 and self.runing:
-            self.page.run_task(self.refresh)
-        if state == 1 and onoff:
-            self.content.scale = ft.Scale(1.2)
-            self.content.update()
-            self.page.run_task(self.refresh)
-
-    async def refresh(self):
-        isok = False
-        note_error = 0
-        self.is_refreshing = True
-        await asyncio.sleep(0.3)
-        try:
-            while isok == False:
-                tempd, state = calculate_lottery(
-                    setings=self.setting, filters=self.filers
-                )
-                if state:
-                    self.data = tempd
-                    self.content = self.reContent(1)
-                    isok = state
-                else:
-                    if note_error >= 100:
-                        self.content = self.reContent(2)
-                        self.page.update()
-                        break
-                    note_error += 1
-                    self.data = tempd
-                    self.content = self.reContent(1)
-                self.update()
-                await asyncio.sleep(0.1)
-        finally:
-            self.is_refreshing = False
 
 
 class LotteryPage:
@@ -179,17 +52,20 @@ class LotteryPage:
         self.page.show_dialog(get_snack_bar(f"setting item count {data}"))
 
     def Get_Lottery_data(self, index: int):
+        # print(f'Get_Lottery_data is runing {index=}')
         try:
             settings = self.page.session.store.get("settings")
             filters = self.page.session.store.get("filters")
             lic = self.page.session.store.get("Lottery_item_count") or 5
             self.lottery_items_column.controls.clear()
             for _ in range(lic):
-                listext = listext_onlong()
+                # listext = listext_onlong()
+                listext = dism()
                 listext.setting_args(settings["randomData"], filters)
                 self.lottery_items_column.controls.append(listext)
             # self.lottery_items_column.cilcked(settings["randomData"], filters=filters)
-        except Exception:
+        except Exception as e:
+            print(f"debug : {e}")
             self.page.show_dialog(
                 get_snack_bar("Failed to retrieve settings data.", "error")
             )
