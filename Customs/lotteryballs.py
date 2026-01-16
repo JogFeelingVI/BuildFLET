@@ -9,13 +9,18 @@ import flet as ft
 
 
 class LotteryBalls(ft.Row):
+    """_summary_
+
+    Args:
+        align (str): CE or LE
+    """
     def __init__(self, numbers_str: str, ball_size=32, align="CE"):
         super().__init__()
         self.numbers_str = numbers_str
         self.ball_size = ball_size
         self.vertical_alignment = ft.CrossAxisAlignment.CENTER
         self.spacing = 5  # 球与球之间的间距
-        self.expand = True
+        # self.expand = True
         match align:
             case "CE":
                 self.align = ft.Alignment.CENTER

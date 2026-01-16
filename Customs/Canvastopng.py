@@ -7,26 +7,25 @@
 import flet as ft
 import flet.canvas as cv
 
+
 class CanvasTextListRecorder(ft.Stack):
-    def __init__(self, text_list, width=400, height=500, line_height=40, bg_color=ft.colors.BLACK):
+    def __init__(
+        self, text_list, width=400, height=500, line_height=40, bg_color=ft.colors.BLACK
+    ):
         super().__init__()
         self.text_list = text_list
         self.canvas_width = width
         self.canvas_height = height
         self.line_height = line_height
         self.bg_color = bg_color
-        
+
         # 构建 Canvas 形状
-        self.shapes = [
-            cv.Rect(0, 0, width, height, paint=ft.Paint(color=bg_color))
-        ]
+        self.shapes = [cv.Rect(0, 0, width, height, paint=ft.Paint(color=bg_color))]
         self._build_text_shapes()
 
         # 初始化核心组件
         self.canvas = cv.Canvas(
-            width=self.canvas_width,
-            height=self.canvas_height,
-            shapes=self.shapes
+            width=self.canvas_width, height=self.canvas_height, shapes=self.shapes
         )
         self.screenshot = ft.Screenshot(content=self.canvas)
         self.controls = [self.screenshot]
@@ -44,8 +43,8 @@ class CanvasTextListRecorder(ft.Stack):
                     style=ft.TextStyle(
                         size=16,
                         color=ft.colors.WHITE,
-                        font_family="Consolas" # 2026年常用等宽字体
-                    )
+                        font_family="Consolas",  # 2026年常用等宽字体
+                    ),
                 )
             )
 
@@ -59,5 +58,3 @@ class CanvasTextListRecorder(ft.Stack):
         except Exception as e:
             print(f"导出失败: {e}")
             return False
-
-

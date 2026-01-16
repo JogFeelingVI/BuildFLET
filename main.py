@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 13:29:02
+# @Last Modified time: 2026-01-16 03:09:19
 
 from Customs.DraculaTheme import Dracula_colors
 from Customs.setings import SetingsPage
@@ -10,6 +10,8 @@ from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
 import flet as ft
 import os
+import json
+import asyncio
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
@@ -17,11 +19,23 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
-def main(page: ft.Page):
+async def main(page: ft.Page):
     page.title = "Jackpot App"
     # page.theme = Dracula_Theme
     # 设置移动端适配的内边距
     page.padding = ft.Padding.only(top=20)
+
+    raw_json = await page.shared_preferences.get("save_data_list")
+    save_data = json.loads(raw_json) if raw_json else []
+    initial_count = len(save_data)
+
+    # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
+    lottery_icon = ft.Icon(
+        ft.Icons.DATA_EXPLORATION_OUTLINED,
+        color=Dracula_colors.PURPLE,
+        # 初始赋值：如果大于 0 就显示，否则 None
+        badge=str(initial_count) if initial_count > 0 else None,
+    )
 
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
@@ -44,6 +58,8 @@ def main(page: ft.Page):
 
     lottery_class = LotteryPage(page)
 
+    # 延迟1秒
+    await asyncio.sleep(1.5)
     # --- 2. 界面组件定义 ---
     # 中间显示区域容器
     content_area = ft.Container(
@@ -69,9 +85,7 @@ def main(page: ft.Page):
                 label="Filter",
             ),
             ft.NavigationBarDestination(
-                icon=ft.Icon(
-                    ft.Icons.DATA_EXPLORATION_OUTLINED, color=Dracula_colors.PURPLE,
-                ),
+                icon=lottery_icon,
                 selected_icon=ft.Icons.DATA_EXPLORATION,
                 label="Lotter",
             ),

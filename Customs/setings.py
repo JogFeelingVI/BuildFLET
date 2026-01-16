@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-13 01:22:51
+# @Last Modified time: 2026-01-16 01:21:40
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -97,7 +97,7 @@ class SetingsPage:
             alignment=ft.MainAxisAlignment.END,
         )
         self.Fab = ft.FloatingActionButton(
-            icon=ft.Icons.ADD,
+            icon=ft.Icons.RULE,
             bgcolor=Dracula_colors.PURPLE,
             on_click=lambda _: self.open_dialog(),
             # opacity=0.65,

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-15 06:10:20
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 13:19:27
+# @Last Modified time: 2026-01-15 22:47:02
 
 from .DraculaTheme import Dracula_colors
 from .lotteryballs import LotteryBalls
@@ -51,21 +51,21 @@ class dism(ft.Dismissible):
         await e.control.confirm_dismiss(False)
         if e.direction == ft.DismissDirection.END_TO_START:  # right-to-left slide
             # save current dismissible to dialog's data, for confirmation in
-            # handle_dialog_action_click
+            # reloading
             self.MarkData("handle_confirm_dismiss")
         elif e.direction == ft.DismissDirection.START_TO_END:
-            #await self.page.shared_preferences.set("user_dir", picked_dir)
-            jsondata:list = await self.page.shared_preferences.get("save_data_list")
-            if not jsondata:
-                save_list = []
-            else:
-                save_list = json.loads(jsondata)
-            save_list.append(e.control.data)
-            await self.page.shared_preferences.set("save_data_list", json.dumps(save_list))
-            # print(f"{save_list=} data = {e.control.data}")
-        if self.badge_update:
-            self.badge_update(len(save_list))
-            
+            # save data
+            raw_json = await self.page.shared_preferences.get("save_data_list")
+            save_list = json.loads(raw_json) if raw_json else []
+            if e.control.data not in set(save_list):
+                save_list.append(e.control.data)
+                await self.page.shared_preferences.set(
+                    "save_data_list", json.dumps(save_list)
+                )
+
+            # 执行外部程序，实现联动
+            if self.badge_update:
+                self.badge_update(len(save_list))
 
     def handle_dismiss(self, e):
         # 暂时不使用
