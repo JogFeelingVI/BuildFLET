@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 12:22:15
+# @Last Modified time: 2026-01-16 10:48:07
 from .ColorTokenizer import Tokenizer
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -396,13 +396,11 @@ class tary(ft.Row):
             case "--m3":
                 if self.weic_args:
                     command_weic = f"--m3{''.join(map(str, self.weic_args))}"
-                else:
-                    command_weic = "--m3"
+
             case "--w":
                 if self.weic_args:
                     command_weic = f"--w{''.join(map(str, self.weic_args))}"
-                else:
-                    command_weic = "--w"
+
             case _:
                 command_weic = ""
 

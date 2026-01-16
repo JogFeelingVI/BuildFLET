@@ -2,10 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-16 08:03:47
+# @Last Modified time: 2026-01-16 13:40:03
 
 import asyncio
-from fastapi.background import P
 from .jackpot_core import randomData
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -20,6 +19,92 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
+class gdbug(ft.GestureDetector):
+    def __init__(
+        self,
+        icon: ft.Icon,
+        initialize=None,
+        on_tap_handler=None,
+        on_long_press_handler=None,
+    ):
+        super().__init__()
+        # 保存回调
+        self.initialize_task = initialize
+        self.on_tap_handler = on_tap_handler
+        self.on_long_press_handler = on_long_press_handler
+
+        # 标志位防止重复初始化
+        self._is_running = False
+
+        # 构建 UI
+        self.mouse_cursor = ft.MouseCursor.CLICK
+        self.content = self._build_content(icon)
+
+        # 绑定内部处理函数，实现点击动画
+        self.on_tap = self._handle_tap
+        self.on_long_press_start = self._handle_long_press
+
+    def _build_content(self, icon):
+        return ft.Container(
+            content=icon,
+            padding=15,
+            bgcolor=Dracula_colors.ORANGE,
+            width=56,
+            height=56,
+            border_radius=16,
+            alignment=ft.Alignment.CENTER,
+            # 增加动画属性，让按钮“活”起来
+            animate_scale=ft.Animation(300, ft.AnimationCurve.DECELERATE),
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=12,
+                color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK),
+                offset=ft.Offset(0, 4),
+            ),
+        )
+
+    def did_mount(self):
+        # 只有在第一次挂载且有初始化任务时执行
+        if self.initialize_task and not self._is_running:
+            self.page.run_task(self.initialize_task)
+            self._is_running = True
+        return super().did_mount()
+
+    # --- 内部手势处理，增加动画反馈 ---
+
+    async def _handle_tap(self, e):
+        # 模拟物理按压效果：缩小 -> 恢复
+        self.content.scale = 0.85
+        self.content.update()
+
+        # 执行外部传入的点击逻辑
+        if self.on_tap_handler:
+            if asyncio.iscoroutinefunction(self.on_tap_handler):
+                await self.on_tap_handler(e)
+            else:
+                self.on_tap_handler(e)
+
+        # 弹回正常大小
+        self.content.scale = 1.0
+        self.content.update()
+
+    async def _handle_long_press(self, e):
+        # 长按反馈：轻微放大
+        self.content.scale = 1.15
+        self.content.update()
+
+        # 执行长按逻辑
+        if self.on_long_press_handler:
+            if asyncio.iscoroutinefunction(self.on_long_press_handler):
+                await self.on_long_press_handler(e)
+            else:
+                self.on_long_press_handler(e)
+
+        # 恢复大小
+        self.content.scale = 1.0
+        self.content.update()
+
+
 class LotteryPage:
     def __init__(self, page: ft.Page):
         self.page = page
@@ -32,44 +117,45 @@ class LotteryPage:
                 label="0",
                 bgcolor=Dracula_colors.COMMENT,
                 text_color=Dracula_colors.FOREGROUND,
+                label_visible=False,
             ),
         )
 
-        # self.Fab = ft.FloatingActionButton(
-        #     icon=self.lottery_icon,
-        #     bgcolor=Dracula_colors.ORANGE,
-        #     on_click=lambda _: self.Get_Lottery_data(-1),
-        #     tooltip="click:add now DISM,long prass: save data.",
-        #     # opacity=0.65,
+        self.Fab = gdbug(
+            icon=self.lottery_icon,
+            initialize=self.initialize_data,
+            on_tap_handler=lambda _: self.Get_Lottery_data(-1),
+            on_long_press_handler=self.inisatll_save_dig,
+        )
+
+        # self.Fab = ft.GestureDetector(
+        #     content=ft.Container(
+        #         content=self.lottery_icon,
+        #         padding=15,
+        #         bgcolor=Dracula_colors.ORANGE,
+        #         width=56,
+        #         height=56,
+        #         border_radius=ft.border_radius.all(16),  # 圆形
+        #         alignment=ft.Alignment.CENTER,
+        #         # 添加阴影，使其看起来像悬浮按钮
+        #         shadow=ft.BoxShadow(
+        #             spread_radius=1,
+        #             blur_radius=10,
+        #             color="#42000000",
+        #             offset=ft.Offset(0, 2),
+        #         ),
+        #     ),
+        #     mouse_cursor=ft.MouseCursor.CLICK,
+        #     on_tap=lambda _: self.Get_Lottery_data(-1),
+        #     on_long_press=self.inisatll_save_dig,
         # )
-
-        self.Fab = ft.GestureDetector(
-            content=ft.Container(
-                content=self.lottery_icon,
-                padding=15,
-                bgcolor=Dracula_colors.ORANGE,
-                width=56,
-                height=56,
-                border_radius=ft.border_radius.all(16),  # 圆形
-                alignment=ft.Alignment.CENTER,
-                # 添加阴影，使其看起来像悬浮按钮
-                shadow=ft.BoxShadow(
-                    spread_radius=1,
-                    blur_radius=10,
-                    color="#42000000",
-                    offset=ft.Offset(0, 2),
-                ),
-            ),
-            mouse_cursor=ft.MouseCursor.CLICK,
-            on_tap=lambda _: self.Get_Lottery_data(-1),
-            on_long_press=self.inisatll_save_dig,
-        )
 
         self.lottery_items_column = ft.Column(
             spacing=1, scroll=ft.ScrollMode.HIDDEN, expand=True
         )
         self.view = self.get_data_view()
-        self.page.run_task(self.initialize_data)
+
+        # self.page.run_task(self.initialize_data)
 
     async def inisatll_save_dig(self, e):
         raw_json = await self.page.shared_preferences.get("save_data_list")
@@ -88,9 +174,27 @@ class LotteryPage:
             item = saved_data.pop(0)
             items.append(item)
             data_row.append(
-                ft.Container(
-                    content=LotteryBalls(item, ball_size=29, align="LE"),
-                    padding=2,
+                # ft.Container(
+                #     content=LotteryBalls(item, ball_size=29, align="LE"),
+                #     padding=2,
+                # )
+                ft.Dismissible(
+                    content=ft.Container(
+                        content=LotteryBalls(item, ball_size=29, align="LE"),
+                        padding=2,
+                    ),
+                    background=ft.Container(
+                        bgcolor=ft.Colors.RED_700,
+                        content=ft.Row(
+                            [
+                                ft.Icon(ft.Icons.DELETE_OUTLINE, color=ft.Colors.WHITE),
+                                ft.Text("Delete", color=ft.Colors.WHITE, weight="bold"),
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
+                        ),
+                        padding=ft.padding.only(left=20),
+                        border_radius=5,
+                    ),
                 )
             )
             count += 1
@@ -123,6 +227,13 @@ class LotteryPage:
         def handle_cancel(e):
             BottomSheet.open = False
             self.page.update()
+
+        def handle_clear(e):
+            print("Clear all saved data.")
+            nonlocal items
+            items.clear()
+            self.Badge_number(0)
+            BottomSheet.open = False
 
         genid = randomData.generate_secure_string(8)
 
@@ -171,6 +282,10 @@ class LotteryPage:
                         content="Cancel",
                         on_click=handle_cancel,
                     ),
+                    ft.TextButton(
+                        content="Clear All",
+                        on_click=handle_clear,
+                    ),
                 ],
             ),
             padding=ft.Padding(top=0, bottom=20, left=20, right=20),
@@ -217,10 +332,6 @@ class LotteryPage:
         with open(obj_path, "wb") as f:
             f.write(image)
 
-    def handle_cancel(self, bs: ft.BottomSheet):
-        bs.open = False
-        self.page.update()
-
     def handle_dismiss_save(self, data: list):
         self.page.run_task(self.dismiss_save_data, data)
 
@@ -235,23 +346,28 @@ class LotteryPage:
 
     async def initialize_data(self):
         """异步加载初始数据并渲染"""
-        raw_json = await self.page.shared_preferences.get("save_data_list")
-        saved_data = json.loads(raw_json) if raw_json else []
-        initial_count = len(saved_data)
-        self.lottery_icon.badge.label = f"{initial_count}"
-        if self.lottery_icon.badge.label == "0":
-            self.lottery_icon.badge.label_visible = False
-        else:
-            self.lottery_icon.badge.label_visible = True
-        self.Fab.update()
+        try:  # 确保这是一个异步函数
+            raw_json = await self.page.shared_preferences.get("save_data_list")
+            saved_data = json.loads(raw_json) if raw_json else []
+            initial_count = len(saved_data)
+            self.lottery_icon.badge.label = f"{initial_count}"
+            if self.lottery_icon.badge.label == "0":
+                self.lottery_icon.badge.label_visible = False
+            else:
+                self.lottery_icon.badge.label_visible = True
+
+        except Exception as e:
+            print(f"Waiting for interface initialization...: {e}")
+        finally:
+            self.Fab.update()
 
     def Badge_number(self, lens: int = 0):
         self.page.run_task(self.initialize_data)
         for nbar in self.page.navigation_bar.destinations:
             if isinstance(nbar, ft.NavigationBarDestination) and nbar.label == "Lotter":
-                if lens!=0:
+                if lens != 0:
                     nbar.icon.badge = str(lens)
-                else:   
+                else:
                     nbar.icon.badge = None
         self.page.update()
 
@@ -310,7 +426,7 @@ class LotteryPage:
         return ft.Column(
             controls=[
                 ft.Text(
-                    "Lottery",
+                    value="Lottery",
                     size=25,
                     weight=ft.FontWeight.BOLD,
                     color=Dracula_colors.COMMENT,
