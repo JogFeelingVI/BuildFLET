@@ -191,6 +191,7 @@ class LotteryPage:
                                 ft.Text("Delete", color=ft.Colors.WHITE, weight="bold"),
                             ],
                             alignment=ft.MainAxisAlignment.START,
+                    dismiss_direction=ft.DismissDirection.START_TO_END,
                         ),
                         padding=ft.padding.only(left=20),
                         border_radius=5,
