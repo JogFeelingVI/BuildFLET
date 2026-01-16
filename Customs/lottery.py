@@ -261,7 +261,7 @@ class LotteryPage:
                                     color=Dracula_colors.BACKGROUND,
                                 ),
                             ],
-                            alignment=ft.MainAxisAlignment.END,  # 关键点：主轴对齐到末尾
+                            alignment=ft.MainAxisAlignment.START,  # 关键点：主轴对齐到末尾
                         ),
                     ],
                 ),
