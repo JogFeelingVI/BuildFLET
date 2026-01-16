@@ -14,6 +14,7 @@ class LotteryBalls(ft.Row):
     Args:
         align (str): CE or LE
     """
+
     def __init__(self, numbers_str: str, ball_size=32, align="CE"):
         super().__init__()
         self.numbers_str = numbers_str
