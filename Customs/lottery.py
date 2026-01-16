@@ -168,7 +168,7 @@ class LotteryPage:
             self.page.show_dialog(get_snack_bar("No data to save.", "error"))
             return
         count = 0
-        max_count = 7
+        max_count = 5
         items = []
         while count < max_count:
             item = saved_data.pop(0)
