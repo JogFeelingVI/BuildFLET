@@ -5,7 +5,6 @@
 # @Last Modified time: 2026-01-16 08:03:47
 
 import asyncio
-from fastapi.background import P
 from .jackpot_core import randomData
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
