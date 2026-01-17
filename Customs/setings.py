@@ -121,6 +121,7 @@ class UserDirectory(ft.Card):
                     self.tips,
                     self.button,
                 ],
+                tight=True,
                 spacing=10,
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
