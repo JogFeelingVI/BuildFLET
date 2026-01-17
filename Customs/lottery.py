@@ -344,6 +344,7 @@ class LotteryPage:
                     savebut,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                tight=True,
             ),
             on_dismiss=lambda _, data=items: self.handle_dismiss_save(data),
         )

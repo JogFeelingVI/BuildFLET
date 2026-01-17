@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 13:56:52
+# @Last Modified time: 2026-01-17 22:58:02
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -92,10 +92,12 @@ class UserDirectory(ft.Card):
         super().__init__()
         self.stored_dir = None
         self.tips = ft.Text(
-            "💡 Tip: Set the user directory to store filter files and saved images.",
+            "Tip: Set the user directory to store filter files and saved images.",
             color=DraculaColors.FOREGROUND,
             size=12,
             max_lines=2,
+            overflow=ft.TextOverflow.ELLIPSIS,
+            no_wrap=True,
         )
         self.button = ft.Button(
             "User Directory",
@@ -121,7 +123,6 @@ class UserDirectory(ft.Card):
                     self.tips,
                     self.button,
                 ],
-                tight=True,
                 spacing=10,
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
