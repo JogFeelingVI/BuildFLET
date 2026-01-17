@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-15 06:10:20
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-15 22:47:02
+# @Last Modified time: 2026-01-16 23:43:36
 
 from .DraculaTheme import Dracula_colors
 from .lotteryballs import LotteryBalls
@@ -92,6 +92,7 @@ class dism(ft.Dismissible):
             bgcolor=Dracula_colors.RED,
             alignment=ft.Alignment.CENTER_LEFT,
             padding=ft.Padding.only(left=20),
+            border_radius=5,
         )
 
     def sbgc(self):
@@ -100,6 +101,7 @@ class dism(ft.Dismissible):
             bgcolor=Dracula_colors.PURPLE,
             alignment=ft.Alignment.CENTER_RIGHT,
             padding=ft.Padding.only(right=20),
+            border_radius=5,
         )
 
     def MarkData(self, name):

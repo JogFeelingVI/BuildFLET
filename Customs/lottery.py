@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-16 13:40:03
+# @Last Modified time: 2026-01-17 00:14:42
 
 import asyncio
 from .jackpot_core import randomData
@@ -184,18 +184,25 @@ class LotteryPage:
                         padding=2,
                     ),
                     background=ft.Container(
-                        bgcolor=ft.Colors.RED_700,
+                        bgcolor=Dracula_colors.RED,
                         content=ft.Row(
                             [
-                                ft.Icon(ft.Icons.DELETE_OUTLINE, color=ft.Colors.WHITE),
-                                ft.Text("Delete", color=ft.Colors.WHITE, weight="bold"),
+                                ft.Icon(
+                                    ft.Icons.DELETE_OUTLINE,
+                                    color=Dracula_colors.FOREGROUND,
+                                ),
+                                ft.Text(
+                                    "Delete",
+                                    color=Dracula_colors.FOREGROUND,
+                                    weight="bold",
+                                ),
                             ],
                             alignment=ft.MainAxisAlignment.START,
-                    dismiss_direction=ft.DismissDirection.START_TO_END,
                         ),
                         padding=ft.padding.only(left=20),
                         border_radius=5,
                     ),
+                    dismiss_direction=ft.DismissDirection.START_TO_END,
                 )
             )
             count += 1
@@ -244,11 +251,18 @@ class LotteryPage:
                     tight=True,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
-                        ft.Text(
-                            value="JackPot",
-                            size=30,
-                            weight="bold",
-                            color=Dracula_colors.PINK,
+                        # ft.Text(
+                        #     value="JackPot",
+                        #     size=30,
+                        #     weight=ft.FontWeight.W_900,
+                        #     color=Dracula_colors.PINK,
+                        # ),
+                        #? 添加图片
+                        ft.Image(
+                            src="jackpot.png",
+                            fit=ft.BoxFit.FIT_HEIGHT,
+                            width=397*0.45,
+                            height=127*0.45
                         ),
                         ft.Divider(color=Dracula_colors.PURPLE),
                         *data_row,
@@ -257,7 +271,7 @@ class LotteryPage:
                                 ft.Text(
                                     value=f"GENID: {genid}",
                                     size=15,
-                                    weight="bold",
+                                    weight=ft.FontWeight.W_100,
                                     color=Dracula_colors.BACKGROUND,
                                 ),
                             ],
