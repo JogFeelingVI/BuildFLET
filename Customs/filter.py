@@ -2,8 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-16 10:48:07
-from .ColorTokenizer import Tokenizer
+# @Last Modified time: 2026-01-17 07:49:40
+from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
@@ -23,14 +23,14 @@ class UserdirButton(ft.TextButton):
         self,
     ):
         super().__init__()
-        self.showtext = ft.Text(
-            "Filter",
-            size=25,
-            weight=ft.FontWeight.BOLD,
-            color=DraculaColors.COMMENT,
+        self.showimg = ft.Image(
+            src="filter.png",
+            fit=ft.BoxFit.FIT_HEIGHT,
+            width=328 * 0.45,
+            height=112 * 0.45,
         )
         self.content = ft.Container(
-            content=self.showtext,
+            content=self.showimg,
             # 设置缩放动画：200毫秒，减速曲线
             animate=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT),
         )
@@ -38,8 +38,8 @@ class UserdirButton(ft.TextButton):
 
     def animate_filter(self, flg: int = 1):
         # 动画逻辑：例如点击后放大并改变颜色
-        color = DraculaColors.PINK if flg == 1 else DraculaColors.COMMENT
-        self.showtext.color = color  # 改变颜色
+        scale = 1.2 if flg == 1 else 1.0
+        self.showimg.scale = scale  # 改变颜色
         self.page.update()
         # print(f"animate is runing.{self.content.scale} {flg=}")
 
@@ -846,6 +846,18 @@ class FilterPage:
                 )
             return spans
 
+        def targetspan(text: str):
+            split_wc = spiltfortarget(text)
+            spans = []
+            for ttext, color in split_wc:
+                spans.append(
+                    ft.TextSpan(
+                        ttext,
+                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
+                    )
+                )
+            return spans
+
         self.filter_items_column.controls.clear()
         for idx, item in enumerate(self.filters_list):
             self.filter_items_column.controls.append(
@@ -855,8 +867,10 @@ class FilterPage:
                             ft.Icons.FILTER_LIST, color=DraculaColors.ORANGE
                         ),
                         title=ft.Text(
-                            f"Target: {item['target']} Func: {item['func']}",
-                            color=DraculaColors.ORANGE,
+                            spans=targetspan(
+                                f"Target: {item['target']} Func: {item['func']}"
+                            ),
+                            # color=DraculaColors.ORANGE,
                         ),
                         #! 添加文字渲染器
                         subtitle=ft.Text(spans=tokenspan(item["condition"])),

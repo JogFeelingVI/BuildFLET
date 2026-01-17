@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 02:37:12
+# @Last Modified time: 2026-01-17 14:52:44
 
 import asyncio
 from .jackpot_core import randomData
@@ -105,46 +105,70 @@ class gdbug(ft.GestureDetector):
         self.content.update()
 
 
-# class sbbdismiss(ft.Column):
-#     """自主读取savelist"""
+class sbbdismiss(ft.Column):
+    """自主读取savelist"""
 
-#     def __init__(self, data: list):
-#         """data = 01 02 03 | 04 05 06"""
-#         super().__init__()
+    def __init__(self, data: list):
+        """data = 01 02 03 | 04 05 06"""
+        super().__init__()
+        self.External_data= data
+        self.items=[]
+        
+    def did_mount(self):
+        self.running = True
+        self.load_data()
+        
+    def load_data(self):
+        lines = []
+        while len(lines) < 5 and len(self.External_data) > 0:
+            item = self.External_data.pop(0)
+            self.items.append(item)
+            lines.append(self.__build_row(item))
+        self.controls = lines
+        self.update()
 
-#     def __build_content(self, item: list):
-#         return ft.Dismissible(
-#             content=ft.Container(
-#                 content=LotteryBalls(item, ball_size=29, align="LE"),
-#                 padding=2,
-#             ),
-#             background=ft.Container(
-#                 bgcolor=DraculaColors.RED,
-#                 content=ft.Row(
-#                     [
-#                         ft.Icon(
-#                             ft.Icons.DELETE_OUTLINE,
-#                             color=DraculaColors.FOREGROUND,
-#                         ),
-#                         ft.Text(
-#                             "Delete",
-#                             color=DraculaColors.FOREGROUND,
-#                             weight="bold",
-#                         ),
-#                     ],
-#                     alignment=ft.MainAxisAlignment.START,
-#                 ),
-#                 padding=ft.padding.only(left=20),
-#                 border_radius=5,
-#             ),
-#             dismiss_direction=ft.DismissDirection.START_TO_END,
-#             on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
-#                 self.handle_data_row_dismiss, e, lb
-#             ),  # 传递当前 LotteryBalls 实例
-#         )
+    def __build_row(self, item: list):
+        return ft.Dismissible(
+            content=ft.Container(
+                content=LotteryBalls(item, ball_size=29, align="LE"),
+                padding=2,
+            ),
+            background=ft.Container(
+                bgcolor=DraculaColors.RED,
+                content=ft.Row(
+                    [
+                        ft.Icon(
+                            ft.Icons.DELETE_OUTLINE,
+                            color=DraculaColors.FOREGROUND,
+                        ),
+                        ft.Text(
+                            "Delete",
+                            color=DraculaColors.FOREGROUND,
+                            weight="bold",
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.START,
+                ),
+                padding=ft.Padding.only(left=20),
+                border_radius=5,
+            ),
+            dismiss_direction=ft.DismissDirection.START_TO_END,
+            on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
+                self.handle_data_row_dismiss, e, lb
+            ),  # 传递当前 LotteryBalls 实例
+        )
 
-#     def handle_data_row_dismiss(self):
-#         pass
+    async def handle_data_row_dismiss(self,e,lb):
+        await e.control.confirm_dismiss(True)
+        self.External_data.append(lb)
+        self.items.remove(lb)
+        self.controls.remove(e.control)
+        print(f'handle_data_row_dismiss {lb}')
+        if len(self.External_data)>0:
+            nlb = self.External_data.pop(0)
+            self.items.append(nlb)
+            self.controls.append(self.__build_row(nlb))
+        self.update()
 
 
 class LotteryPage:
@@ -203,66 +227,12 @@ class LotteryPage:
         raw_json = await self.page.shared_preferences.get("save_data_list")
         saved_data = json.loads(raw_json) if raw_json else []
         print(f"kaishi Save. {saved_data=}")
-        data_row = [ft.Text("Save List len is zero.")]
-        if saved_data.__len__() != 0:
-            data_row.clear()
-        else:
+        if saved_data.__len__() == 0:
             self.page.show_dialog(get_snack_bar("No data to save.", "error"))
             return
-        count = 0
-        max_count = 5
-        items = []
-
-        # ? data_row_handle
-        async def handle_data_row_dismiss(e: ft.DismissibleDismissEvent, shuju: str):
-            print(f"handle_data_row_dismiss {shuju=}")
-            await e.control.confirm_dismiss(True)
-            if e.direction == ft.DismissDirection.START_TO_END:
-                # if shuju in saved_data:
-                #     saved_data.remove(shuju)
-                print(f"Start_TO_END Dismissed delete item.")
-
-        while count < max_count:
-            item = saved_data.pop(0)
-            items.append(item)
-            # ? *data_row
-            data_row.append(
-                ft.Dismissible(
-                    content=ft.Container(
-                        content=LotteryBalls(item, ball_size=29, align="LE"),
-                        padding=2,
-                    ),
-                    background=ft.Container(
-                        bgcolor=DraculaColors.RED,
-                        content=ft.Row(
-                            [
-                                ft.Icon(
-                                    ft.Icons.DELETE_OUTLINE,
-                                    color=DraculaColors.FOREGROUND,
-                                ),
-                                ft.Text(
-                                    "Delete",
-                                    color=DraculaColors.FOREGROUND,
-                                    weight="bold",
-                                ),
-                            ],
-                            alignment=ft.MainAxisAlignment.START,
-                        ),
-                        padding=ft.padding.only(left=20),
-                        border_radius=5,
-                    ),
-                    dismiss_direction=ft.DismissDirection.START_TO_END,
-                    on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
-                        handle_data_row_dismiss, e, lb
-                    ),  # 传递当前 LotteryBalls 实例
-                )
-            )
-            count += 1
-            if saved_data.__len__() == 0:
-                break
-
-        await self.page.shared_preferences.set("save_data_list", json.dumps(saved_data))
-        await self.initialize_data()
+        sbms = sbbdismiss(saved_data)
+        saved_data = sbms.External_data
+        items = sbms.items
 
         async def handle_save(e):
             e.control.disabled = True
@@ -302,6 +272,7 @@ class LotteryPage:
                 content=ft.Column(
                     tight=True,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    opacity=1.0,
                     controls=[
                         # ft.Text(
                         #     value="JackPot",
@@ -322,7 +293,7 @@ class LotteryPage:
                             alignment=ft.MainAxisAlignment.START,
                         ),
                         ft.Divider(color=DraculaColors.PURPLE),
-                        *data_row,
+                        sbms,
                         ft.Row(
                             controls=[
                                 ft.Text(
@@ -376,8 +347,10 @@ class LotteryPage:
             ),
             on_dismiss=lambda _, data=items: self.handle_dismiss_save(data),
         )
-
         self.page.show_dialog(BottomSheet)
+        
+        await self.page.shared_preferences.set("save_data_list", json.dumps(saved_data))
+        await self.initialize_data()
 
     async def select_dir(self):
         stored_dir = await self.page.shared_preferences.get("user_dir")
@@ -497,12 +470,18 @@ class LotteryPage:
     def get_data_view(self):
         return ft.Column(
             controls=[
-                ft.Text(
-                    value="Lottery",
-                    size=25,
-                    weight=ft.FontWeight.BOLD,
-                    color=DraculaColors.COMMENT,
+                ft.Image(
+                    src="lotter.png",
+                    fit=ft.BoxFit.FIT_HEIGHT,
+                    width=288 * 0.45,
+                    height=131 * 0.45,
                 ),
+                # ft.Text(
+                #     value="Lottery",
+                #     size=25,
+                #     weight=ft.FontWeight.BOLD,
+                #     color=DraculaColors.COMMENT,
+                # ),
                 # ft.Button(
                 #     "Get lottery results",
                 #     icon=ft.Icons.SHOW_CHART,

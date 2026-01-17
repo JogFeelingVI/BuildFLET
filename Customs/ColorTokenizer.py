@@ -2,73 +2,38 @@
 # @Author: JogFeelingVI
 # @Date:   #-#-# #:#:#
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-14 07:01:53
+# @Last Modified time: 2026-01-17 07:10:53
 
 import re
-import time
-import flet as ft
-from itertools import product
-
-# Tail, head
-__tailparameters = [
-    ">#",
-    "># --z",
-    "># --w",
-    "># --h",
-    "># --m#",
-    "<#",
-    "<# --z",
-    "<# --h",
-    "<# --w",
-    "<# --m#",
-    #
-    "range #,#",
-    "range #,# --z",
-    "range #,# --h",
-    "range #,# --w#",
-    "range #,# --m#",
-]
-
-__headparameters = [
-    "bit#",
-    "bit#,#",
-    "mod#",
-]
-
-__single_rule = [
-    "#,#,#,#,#,#,#",
-    "#,#,#,#",
-    "#,#",
-    "#,#,#",
-    # bitN >,<
-    ">#",
-    "># --z",
-    "># --w",
-    "># --h",
-    "># --m#",
-    "<#",
-    "<# --z",
-    "<# --h",
-    "<# --w",
-    "<# --m#",
-    # range
-    "range #,#",
-    "range #,# --z",
-    "range #,# --h",
-    "range #,# --w#",
-    "range #,# --m#",
-]
 
 
-def combination_rule():
-    """组合头部参数和尾部参数 用来测试所有命令行"""
-    for i in __single_rule:
-        ri = i.replace("#", "1")
-        yield ri
-    combin = product(__headparameters, __tailparameters)
-    for h, t in combin:
-        ri = f"{h} {t}".replace("#", "1")
-        yield ri
+class RegexMatch:
+    def __init__(self, pattern):
+        self.pattern = re.compile(pattern)
+
+    def __eq__(self, other):
+        return bool(self.pattern.fullmatch(str(other)))
+
+
+def spiltfortarget(word: str):
+    """分割splix"""
+    resplit = re.compile(r"(\s+)")
+    words = resplit.split(word)
+    # 定义匹配模式
+    isPAH = RegexMatch(r"P[A-H]")
+    isfunx = RegexMatch(r"[A-Za-z_]{2,}")
+    wc = []
+    for w in words:
+        match w:
+            case str as name if name.lower().endswith(":"):
+                wc.append((str, "#ffb86c"))
+            case pn if isPAH == pn:
+                wc.append((w, "#50fa7b"))
+            case fn if isfunx == fn:
+                wc.append((w, "#bd93f9"))
+            case _:
+                wc.append((w, None))
+    return wc
 
 
 class Tokenizer:
@@ -122,18 +87,3 @@ class Tokenizer:
             result.append((word[last_index:], None))
 
         return result
-
-
-# def main():
-#     token = Tokenizer()
-#     for i in combination_rule():
-#         segment = token.Segment(i)
-#         if segment:
-#             print(f"main {i} {segment}")
-
-
-# if __name__ == "__main__":
-#     ta = time.perf_counter()
-#     main()
-#     tb = time.perf_counter()
-#     print(f"time: {tb - ta:.6f}sec")

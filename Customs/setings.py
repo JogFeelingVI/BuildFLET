@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 01:33:40
+# @Last Modified time: 2026-01-17 13:56:52
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -12,6 +12,7 @@ import flet as ft
 import json
 import os
 import re
+import asyncio
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -82,6 +83,77 @@ Lotter_Data = {
         "PB_K": 1,
     },
 }
+
+
+class UserDirectory(ft.Card):
+    """用户目录指示器"""
+
+    def __init__(self):
+        super().__init__()
+        self.stored_dir = None
+        self.tips = ft.Text(
+            "💡 Tip: Set the user directory to store filter files and saved images.",
+            color=DraculaColors.FOREGROUND,
+            size=12,
+            max_lines=2,
+        )
+        self.button = ft.Button(
+            "User Directory",
+            bgcolor=DraculaColors.PURPLE,
+            color=DraculaColors.FOREGROUND,
+            on_click=lambda _: self.page.run_task(self.select_user_dif),
+        )
+        self.content = self._build_UI()
+        self.count = 10
+
+    def did_mount(self):
+        self.running = True
+        self.page.run_task(self.update_ui)
+
+    def will_unmount(self):
+        self.running = False
+
+    def _build_UI(self):
+        return ft.Container(
+            padding=10,
+            content=ft.Row(
+                controls=[
+                    self.tips,
+                    self.button,
+                ],
+                spacing=10,
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            ),
+        )
+
+    async def update_ui(self):
+        if self.running:
+            await asyncio.sleep(1)  # 初始延迟，确保页面加载完成
+
+            temp = await self.getuser_dir()
+            print(f"Checking user directory...{temp=}")
+            if temp:
+                self.tips.value = f"📂 User Directory: {temp}"
+                self.button.disabled = True
+                self.button.bgcolor = DraculaColors.BACKGROUND
+                self.page.update()
+
+    async def getuser_dir(self):
+        """获取用户目录"""
+        temp = await self.page.shared_preferences.get("user_dir")
+        if self.page.web:
+            temp = app_data_path
+        print(f"Fetched user directory: {temp=}")
+        return temp
+
+    async def select_user_dif(self):
+        if not self.page.web:
+            picked_dir = await ft.FilePicker().get_directory_path(
+                dialog_title="Please select a directory?"
+            )
+            if picked_dir:
+                await self.page.shared_preferences.set("user_dir", picked_dir)
+                await self.update_ui()
 
 
 class SetingsPage:
@@ -296,6 +368,7 @@ class SetingsPage:
             )
         rule_mode_show = ft.Card(
             # bgcolor=DraculaColors.CURRENT_LINE,
+            show_border_on_foreground=True,
             content=ft.Container(
                 padding=12,
                 # expand=True,
@@ -352,7 +425,13 @@ class SetingsPage:
 
         return ft.Column(
             controls=[
-                ft.Text("Setting", size=25, weight="bold", color=DraculaColors.COMMENT),
+                ft.Image(
+                    src="setting.png",
+                    fit=ft.BoxFit.FIT_HEIGHT,
+                    width=475 * 0.45,
+                    height=135 * 0.45,
+                ),
+                # ft.Text("Setting", size=25, weight="bold", color=DraculaColors.COMMENT),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),
                 ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
@@ -362,6 +441,7 @@ class SetingsPage:
                     scroll=ft.ScrollMode.HIDDEN,
                     expand=True,
                 ),
+                UserDirectory(),
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
