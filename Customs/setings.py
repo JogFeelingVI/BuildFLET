@@ -2,11 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-16 01:21:40
+# @Last Modified time: 2026-01-17 01:33:40
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
-from .DraculaTheme import Dracula_colors
+from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
 import flet as ft
 import json
@@ -98,7 +98,7 @@ class SetingsPage:
         )
         self.Fab = ft.FloatingActionButton(
             icon=ft.Icons.RULE,
-            bgcolor=Dracula_colors.PURPLE,
+            bgcolor=DraculaColors.PURPLE,
             on_click=lambda _: self.open_dialog(),
             # opacity=0.65,
         )
@@ -290,12 +290,12 @@ class SetingsPage:
                 ft.Text(
                     f"⚠ Section [ {key} ].  Choose {count} number from {count_range}.",
                     max_lines=2,
-                    color=Dracula_colors.PURPLE,
+                    color=DraculaColors.PURPLE,
                     size=15,
                 )
             )
         rule_mode_show = ft.Card(
-            # bgcolor=Dracula_colors.CURRENT_LINE,
+            # bgcolor=DraculaColors.CURRENT_LINE,
             content=ft.Container(
                 padding=12,
                 # expand=True,
@@ -308,7 +308,7 @@ class SetingsPage:
                             f"🚩Note: {randomDatax['note']}",
                             size=15,
                             weight="bold",
-                            color=Dracula_colors.ORANGE,
+                            color=DraculaColors.ORANGE,
                             max_lines=2,
                         ),
                         ft.Divider(),
@@ -326,7 +326,7 @@ class SetingsPage:
 
     def get_dlg(self):
         dlg = ft.AlertDialog(
-            title=ft.Text("add new game rules", color=Dracula_colors.COMMENT),
+            title=ft.Text("add new game rules", color=DraculaColors.COMMENT),
             content=ft.Container(
                 content=self.selection_container,
                 width=350,  # 锁定宽度防止抖动
@@ -335,8 +335,8 @@ class SetingsPage:
                 ft.TextButton("Cancel", on_click=lambda _: self.close_dlg()),
                 ft.Button(
                     "Apply",
-                    bgcolor=Dracula_colors.RED,
-                    color=Dracula_colors.FOREGROUND,
+                    bgcolor=DraculaColors.RED,
+                    color=DraculaColors.FOREGROUND,
                     on_click=lambda _: self.handle_apply(),
                 ),
             ],
@@ -352,9 +352,7 @@ class SetingsPage:
 
         return ft.Column(
             controls=[
-                ft.Text(
-                    "Setting", size=25, weight="bold", color=Dracula_colors.COMMENT
-                ),
+                ft.Text("Setting", size=25, weight="bold", color=DraculaColors.COMMENT),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),
                 ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),

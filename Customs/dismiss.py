@@ -4,7 +4,7 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-16 23:43:36
 
-from .DraculaTheme import Dracula_colors
+from .DraculaTheme import DraculaColors
 from .lotteryballs import LotteryBalls
 from .jackpot_core import randomData, filter_for_pabc
 import flet as ft
@@ -89,7 +89,7 @@ class dism(ft.Dismissible):
     def bgc(self):
         return ft.Container(
             content=ft.Text("Save", weight="bold"),
-            bgcolor=Dracula_colors.RED,
+            bgcolor=DraculaColors.RED,
             alignment=ft.Alignment.CENTER_LEFT,
             padding=ft.Padding.only(left=20),
             border_radius=5,
@@ -98,7 +98,7 @@ class dism(ft.Dismissible):
     def sbgc(self):
         return ft.Container(
             content=ft.Text("ReLoading", weight="bold"),
-            bgcolor=Dracula_colors.PURPLE,
+            bgcolor=DraculaColors.PURPLE,
             alignment=ft.Alignment.CENTER_RIGHT,
             padding=ft.Padding.only(right=20),
             border_radius=5,
@@ -129,7 +129,7 @@ class dism(ft.Dismissible):
                     "😡Press and hold to try again.",
                     weight="bold",
                     size=18,
-                    color=Dracula_colors.PURPLE,
+                    color=DraculaColors.PURPLE,
                 )
             ],
             expand=True,
@@ -216,7 +216,7 @@ class listext_onlong(ft.Card):
         self.data = "01 02 03 04 05 06 + 08"
         self.content = self.reContent(0)
         self.padding = 10
-        # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=Dracula_colors.ORANGE)
+        # self.leading = ft.Icon(ft.Icons.GENERATING_TOKENS, color=DraculaColors.ORANGE)
         # self.subtitle = LotteryBalls(self.data,25)
         # self.on_long_press = lambda _: self.get_data(1, True)
         self.runing = True
@@ -246,7 +246,7 @@ class listext_onlong(ft.Card):
                             "😡Press and hold to try again.",
                             weight="bold",
                             size=18,
-                            color=Dracula_colors.PURPLE,
+                            color=DraculaColors.PURPLE,
                         )
                     ],
                     expand=True,
@@ -261,7 +261,7 @@ class listext_onlong(ft.Card):
                             "😅Initializing the computing core.",
                             weight="bold",
                             size=18,
-                            color=Dracula_colors.CURRENT_LINE,
+                            color=DraculaColors.CURRENT_LINE,
                         )
                     ],
                     expand=True,

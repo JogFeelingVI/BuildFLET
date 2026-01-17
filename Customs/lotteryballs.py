@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-10 06:05:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-12 07:47:11
+# @Last Modified time: 2026-01-17 01:33:36
 
-from .DraculaTheme import Dracula_colors
+from .DraculaTheme import DraculaColors
 import flet as ft
 
 

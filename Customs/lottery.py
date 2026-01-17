@@ -2,13 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 00:14:42
+# @Last Modified time: 2026-01-17 02:37:12
 
 import asyncio
 from .jackpot_core import randomData
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
-from .DraculaTheme import Dracula_colors
+from .DraculaTheme import DraculaColors
 from .dismiss import dism
 import flet as ft
 import json
@@ -48,7 +48,7 @@ class gdbug(ft.GestureDetector):
         return ft.Container(
             content=icon,
             padding=15,
-            bgcolor=Dracula_colors.ORANGE,
+            bgcolor=DraculaColors.ORANGE,
             width=56,
             height=56,
             border_radius=16,
@@ -105,6 +105,48 @@ class gdbug(ft.GestureDetector):
         self.content.update()
 
 
+# class sbbdismiss(ft.Column):
+#     """自主读取savelist"""
+
+#     def __init__(self, data: list):
+#         """data = 01 02 03 | 04 05 06"""
+#         super().__init__()
+
+#     def __build_content(self, item: list):
+#         return ft.Dismissible(
+#             content=ft.Container(
+#                 content=LotteryBalls(item, ball_size=29, align="LE"),
+#                 padding=2,
+#             ),
+#             background=ft.Container(
+#                 bgcolor=DraculaColors.RED,
+#                 content=ft.Row(
+#                     [
+#                         ft.Icon(
+#                             ft.Icons.DELETE_OUTLINE,
+#                             color=DraculaColors.FOREGROUND,
+#                         ),
+#                         ft.Text(
+#                             "Delete",
+#                             color=DraculaColors.FOREGROUND,
+#                             weight="bold",
+#                         ),
+#                     ],
+#                     alignment=ft.MainAxisAlignment.START,
+#                 ),
+#                 padding=ft.padding.only(left=20),
+#                 border_radius=5,
+#             ),
+#             dismiss_direction=ft.DismissDirection.START_TO_END,
+#             on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
+#                 self.handle_data_row_dismiss, e, lb
+#             ),  # 传递当前 LotteryBalls 实例
+#         )
+
+#     def handle_data_row_dismiss(self):
+#         pass
+
+
 class LotteryPage:
     def __init__(self, page: ft.Page):
         self.page = page
@@ -112,11 +154,11 @@ class LotteryPage:
         self.buttons = self.set_Lotter_buttons()
         self.lottery_icon = ft.Icon(
             icon=ft.Icons.MONEY,
-            color=Dracula_colors.FOREGROUND,
+            color=DraculaColors.FOREGROUND,
             badge=ft.Badge(
                 label="0",
-                bgcolor=Dracula_colors.COMMENT,
-                text_color=Dracula_colors.FOREGROUND,
+                bgcolor=DraculaColors.COMMENT,
+                text_color=DraculaColors.FOREGROUND,
                 label_visible=False,
             ),
         )
@@ -132,7 +174,7 @@ class LotteryPage:
         #     content=ft.Container(
         #         content=self.lottery_icon,
         #         padding=15,
-        #         bgcolor=Dracula_colors.ORANGE,
+        #         bgcolor=DraculaColors.ORANGE,
         #         width=56,
         #         height=56,
         #         border_radius=ft.border_radius.all(16),  # 圆形
@@ -170,30 +212,37 @@ class LotteryPage:
         count = 0
         max_count = 5
         items = []
+
+        # ? data_row_handle
+        async def handle_data_row_dismiss(e: ft.DismissibleDismissEvent, shuju: str):
+            print(f"handle_data_row_dismiss {shuju=}")
+            await e.control.confirm_dismiss(True)
+            if e.direction == ft.DismissDirection.START_TO_END:
+                # if shuju in saved_data:
+                #     saved_data.remove(shuju)
+                print(f"Start_TO_END Dismissed delete item.")
+
         while count < max_count:
             item = saved_data.pop(0)
             items.append(item)
+            # ? *data_row
             data_row.append(
-                # ft.Container(
-                #     content=LotteryBalls(item, ball_size=29, align="LE"),
-                #     padding=2,
-                # )
                 ft.Dismissible(
                     content=ft.Container(
                         content=LotteryBalls(item, ball_size=29, align="LE"),
                         padding=2,
                     ),
                     background=ft.Container(
-                        bgcolor=Dracula_colors.RED,
+                        bgcolor=DraculaColors.RED,
                         content=ft.Row(
                             [
                                 ft.Icon(
                                     ft.Icons.DELETE_OUTLINE,
-                                    color=Dracula_colors.FOREGROUND,
+                                    color=DraculaColors.FOREGROUND,
                                 ),
                                 ft.Text(
                                     "Delete",
-                                    color=Dracula_colors.FOREGROUND,
+                                    color=DraculaColors.FOREGROUND,
                                     weight="bold",
                                 ),
                             ],
@@ -203,6 +252,9 @@ class LotteryPage:
                         border_radius=5,
                     ),
                     dismiss_direction=ft.DismissDirection.START_TO_END,
+                    on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
+                        handle_data_row_dismiss, e, lb
+                    ),  # 传递当前 LotteryBalls 实例
                 )
             )
             count += 1
@@ -255,16 +307,21 @@ class LotteryPage:
                         #     value="JackPot",
                         #     size=30,
                         #     weight=ft.FontWeight.W_900,
-                        #     color=Dracula_colors.PINK,
+                        #     color=DraculaColors.PINK,
                         # ),
-                        #? 添加图片
-                        ft.Image(
-                            src="jackpot.png",
-                            fit=ft.BoxFit.FIT_HEIGHT,
-                            width=397*0.45,
-                            height=127*0.45
+                        # ? 添加图片
+                        ft.Row(
+                            controls=[
+                                ft.Image(
+                                    src="jackpot.png",
+                                    fit=ft.BoxFit.FIT_HEIGHT,
+                                    width=397 * 0.45,
+                                    height=127 * 0.45,
+                                ),
+                            ],
+                            alignment=ft.MainAxisAlignment.START,
                         ),
-                        ft.Divider(color=Dracula_colors.PURPLE),
+                        ft.Divider(color=DraculaColors.PURPLE),
                         *data_row,
                         ft.Row(
                             controls=[
@@ -272,14 +329,14 @@ class LotteryPage:
                                     value=f"GENID: {genid}",
                                     size=15,
                                     weight=ft.FontWeight.W_100,
-                                    color=Dracula_colors.BACKGROUND,
+                                    color=DraculaColors.BACKGROUND,
                                 ),
                             ],
                             alignment=ft.MainAxisAlignment.START,  # 关键点：主轴对齐到末尾
                         ),
                     ],
                 ),
-                bgcolor=Dracula_colors.CURRENT_LINE,
+                bgcolor=DraculaColors.CURRENT_LINE,
                 padding=20,
                 width=400,
                 # height=680,
@@ -309,7 +366,7 @@ class LotteryPage:
 
         BottomSheet = ft.BottomSheet(
             # scrollable=True,
-            bgcolor=Dracula_colors.CURRENT_LINE,
+            bgcolor=DraculaColors.CURRENT_LINE,
             content=ft.Column(
                 controls=[
                     sc,
@@ -444,7 +501,7 @@ class LotteryPage:
                     value="Lottery",
                     size=25,
                     weight=ft.FontWeight.BOLD,
-                    color=Dracula_colors.COMMENT,
+                    color=DraculaColors.COMMENT,
                 ),
                 # ft.Button(
                 #     "Get lottery results",

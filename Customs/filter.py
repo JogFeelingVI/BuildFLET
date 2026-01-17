@@ -6,7 +6,7 @@
 from .ColorTokenizer import Tokenizer
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
-from .DraculaTheme import Dracula_colors
+from .DraculaTheme import DraculaColors
 import flet as ft
 import os
 import json
@@ -27,7 +27,7 @@ class UserdirButton(ft.TextButton):
             "Filter",
             size=25,
             weight=ft.FontWeight.BOLD,
-            color=Dracula_colors.COMMENT,
+            color=DraculaColors.COMMENT,
         )
         self.content = ft.Container(
             content=self.showtext,
@@ -38,7 +38,7 @@ class UserdirButton(ft.TextButton):
 
     def animate_filter(self, flg: int = 1):
         # 动画逻辑：例如点击后放大并改变颜色
-        color = Dracula_colors.PINK if flg == 1 else Dracula_colors.COMMENT
+        color = DraculaColors.PINK if flg == 1 else DraculaColors.COMMENT
         self.showtext.color = color  # 改变颜色
         self.page.update()
         # print(f"animate is runing.{self.content.scale} {flg=}")
@@ -155,7 +155,7 @@ class Decrement_Button(ft.Container):
         WH: float = 0.0,
         Start_Value=1,
         Loop_Value=20,
-        bgcolor=Dracula_colors.RED,
+        bgcolor=DraculaColors.RED,
         onClickOutside=None,
         onLongPressOutside=None,
     ):
@@ -167,7 +167,7 @@ class Decrement_Button(ft.Container):
         self.ball_size = ball_size
         self.content = ft.Text(
             value=self.text,
-            color=Dracula_colors.FOREGROUND,
+            color=DraculaColors.FOREGROUND,
             size=self.ball_size * 0.45,
             weight=ft.FontWeight.BOLD,
         )
@@ -222,7 +222,7 @@ class Decrement_Button(ft.Container):
 #         self.padding = ft.Padding.all(0)
 #         # self.showvale = ft.Text(">0", expand=1,text_align=ft.TextAlign.RIGHT)
 #         self.slider = ft.CupertinoSlider(
-#             thumb_color=Dracula_colors.PURPLE,
+#             thumb_color=DraculaColors.PURPLE,
 #             min=vmin,
 #             max=vmax,
 #             expand=True,
@@ -245,7 +245,7 @@ class select_fang(ft.Container):
         self.border_radius = 5
         self.alignment = ft.Alignment.CENTER
         self.animate = ft.Animation(300, ft.AnimationCurve.DECELERATE)  # 颜色切换动画
-        self.bgcolor = Dracula_colors.CURRENT_LINE
+        self.bgcolor = DraculaColors.CURRENT_LINE
         self.on_click = self.handle_click
         self.name = name
         self.selected = False
@@ -254,7 +254,7 @@ class select_fang(ft.Container):
     def handle_click(self, e):
         self.selected = not self.selected
         self.bgcolor = (
-            Dracula_colors.PURPLE if self.selected else Dracula_colors.CURRENT_LINE
+            DraculaColors.PURPLE if self.selected else DraculaColors.CURRENT_LINE
         )
         self.update()
 
@@ -273,10 +273,10 @@ class tary(ft.Row):
         self.weic_args = []
         self.gui_size_font = 10
         self.showcommand = ft.Text(
-            value="wait...", color=Dracula_colors.COMMENT, size=12
+            value="wait...", color=DraculaColors.COMMENT, size=12
         )
         self.uc_haed = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.RED,
+            thumb_color=DraculaColors.RED,
             selected_index=0,
             controls=[
                 ft.Text("null", size=self.gui_size_font),
@@ -287,7 +287,7 @@ class tary(ft.Row):
             on_change=lambda _: self.uc_haed_change(),
         )
         self.uc_opet = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.RED,
+            thumb_color=DraculaColors.RED,
             selected_index=0,
             controls=[
                 ft.Text(">", size=self.gui_size_font),
@@ -297,7 +297,7 @@ class tary(ft.Row):
             on_change=lambda _: self.uc_opet_change(),
         )
         self.uc_weic = ft.CupertinoSlidingSegmentedButton(
-            thumb_color=Dracula_colors.RED,
+            thumb_color=DraculaColors.RED,
             selected_index=0,
             controls=[
                 ft.Text("#", size=self.gui_size_font),
@@ -432,7 +432,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e,
                         c=f"bitX",
                         ca=0: self.loop_number_click(e, c, ca),
@@ -449,7 +449,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e,
                         c=f"bitX,Y",
                         ca=0: self.loop_number_click(e, c, ca),
@@ -462,7 +462,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.COMMENT,
+                        bgcolor=DraculaColors.COMMENT,
                         onClickOutside=lambda e,
                         c=f"bitX,Y",
                         ca=1: self.loop_number_click(e, c, ca),
@@ -479,7 +479,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e,
                         c=f"modX",
                         ca=0: self.loop_number_click(e, c, ca),
@@ -514,7 +514,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e, c=f">", ca=0: self.select_opt_change(
                             e, c, ca
                         ),
@@ -530,7 +530,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e, c=f"<", ca=0: self.select_opt_change(
                             e, c, ca
                         ),
@@ -546,7 +546,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.CURRENT_LINE,
+                        bgcolor=DraculaColors.CURRENT_LINE,
                         onClickOutside=lambda e,
                         c=f"range",
                         ca=0: self.select_opt_change(e, c, ca),
@@ -559,7 +559,7 @@ class tary(ft.Row):
                     Decrement_Button(
                         ball_size=25,
                         WH=1.65,
-                        bgcolor=Dracula_colors.COMMENT,
+                        bgcolor=DraculaColors.COMMENT,
                         onClickOutside=lambda e,
                         c=f"range",
                         ca=1: self.select_opt_change(e, c, ca),
@@ -635,16 +635,16 @@ class FilterPage:
         self.filter_items_column = ft.Column(spacing=2)
         # --- 1. 定义 Target 下拉列表 ---
         self.pop_func = ft.PopupMenuButton(
-            content=ft.Text(value="func", color=Dracula_colors.GREEN, weight="bold"),
+            content=ft.Text(value="func", color=DraculaColors.GREEN, weight="bold"),
         )
         self.Fab = ft.FloatingActionButton(
             icon=ft.Icons.FILTER_LIST,
-            bgcolor=Dracula_colors.PINK,
+            bgcolor=DraculaColors.PINK,
             on_click=lambda _: self.open_dialog(-1),
             # opacity=0.65,
         )
         self.pop_target = ft.PopupMenuButton(
-            content=ft.Text(value="all", color=Dracula_colors.COMMENT, weight="bold"),
+            content=ft.Text(value="all", color=DraculaColors.COMMENT, weight="bold"),
         )
         self.tary_row = tary()
         self.condition_input = AI_Auto_input()
@@ -671,7 +671,7 @@ class FilterPage:
     def get_dlg(self):
         tary_value = self.page.session.store.get("tary") or False
         dlg = ft.AlertDialog(
-            title=ft.Text("Filter Settings", color=Dracula_colors.COMMENT),
+            title=ft.Text("Filter Settings", color=DraculaColors.COMMENT),
             content=ft.Container(
                 content=ft.Column(
                     controls=[
@@ -687,7 +687,7 @@ class FilterPage:
                         ft.Row(
                             controls=[
                                 ft.Text(
-                                    "Conditions:", size=12, color=Dracula_colors.COMMENT
+                                    "Conditions:", size=12, color=DraculaColors.COMMENT
                                 ),
                                 ft.Switch(
                                     value=tary_value,
@@ -709,8 +709,8 @@ class FilterPage:
                 ft.TextButton("Cancel", on_click=self.close_dlg),
                 ft.Button(
                     "Apply",
-                    bgcolor=Dracula_colors.RED,
-                    color=Dracula_colors.FOREGROUND,
+                    bgcolor=DraculaColors.RED,
+                    color=DraculaColors.FOREGROUND,
                     on_click=self.handle_apply,
                 ),
             ],
@@ -852,30 +852,31 @@ class FilterPage:
                 ft.Dismissible(
                     content=ft.ListTile(
                         leading=ft.Icon(
-                            ft.Icons.FILTER_LIST, color=Dracula_colors.ORANGE
+                            ft.Icons.FILTER_LIST, color=DraculaColors.ORANGE
                         ),
                         title=ft.Text(
                             f"Target: {item['target']} Func: {item['func']}",
-                            color=Dracula_colors.ORANGE,
+                            color=DraculaColors.ORANGE,
                         ),
                         #! 添加文字渲染器
                         subtitle=ft.Text(spans=tokenspan(item["condition"])),
                         # subtitle=ft.Text(
                         #     f"Condition: {item['condition']}",
-                        #     color=Dracula_colors.PURPLE,
+                        #     color=DraculaColors.PURPLE,
                         # ),
-                        # bgcolor=Dracula_colors.CURRENT_LINE,
+                        # bgcolor=DraculaColors.CURRENT_LINE,
                         on_long_press=lambda _, i=idx: self.open_dialog(i),
                     ),
                     on_dismiss=lambda _, i=idx: self.remove_filter(i),
                     dismiss_direction=ft.DismissDirection.START_TO_END,
                     background=ft.Container(
-                        bgcolor=Dracula_colors.RED,
+                        bgcolor=DraculaColors.RED,
                         content=ft.Text(
-                            "Delete", color=Dracula_colors.FOREGROUND, weight="bold"
+                            "Delete", color=DraculaColors.FOREGROUND, weight="bold"
                         ),
                         alignment=ft.Alignment.CENTER_LEFT,
                         padding=20,
+                        border_radius=5,
                     ),
                 )
             )

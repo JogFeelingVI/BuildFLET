@@ -5,7 +5,7 @@
 # @Last Modified time: 2026-01-14 05:48:04
 
 
-class Dracula_colors:
+class DraculaColors:
     """定义德古拉配色方案"""
 
     BACKGROUND = "#282a36"

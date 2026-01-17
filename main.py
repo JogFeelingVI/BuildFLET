@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 00:15:13
+# @Last Modified time: 2026-01-17 02:40:39
 
-from Customs.DraculaTheme import Dracula_colors
+from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
 from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
@@ -32,7 +32,7 @@ async def main(page: ft.Page):
     # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
     lottery_icon = ft.Icon(
         ft.Icons.DATA_EXPLORATION_OUTLINED,
-        color=Dracula_colors.PURPLE,
+        color=DraculaColors.PURPLE,
         # 初始赋值：如果大于 0 就显示，否则 None
         badge=str(initial_count) if initial_count > 0 else None,
     )
@@ -71,14 +71,12 @@ async def main(page: ft.Page):
     page.navigation_bar = ft.NavigationBar(
         destinations=[
             ft.NavigationBarDestination(
-                icon=ft.Icon(ft.Icons.SETTINGS_OUTLINED, color=Dracula_colors.PURPLE),
+                icon=ft.Icon(ft.Icons.SETTINGS_OUTLINED, color=DraculaColors.PURPLE),
                 selected_icon=ft.Icons.SETTINGS,
                 label="Setting",
             ),
             ft.NavigationBarDestination(
-                icon=ft.Icon(
-                    ft.Icons.FILTER_LIST_OUTLINED, color=Dracula_colors.PURPLE
-                ),
+                icon=ft.Icon(ft.Icons.FILTER_LIST_OUTLINED, color=DraculaColors.PURPLE),
                 selected_icon=ft.Icons.FILTER_LIST,
                 label="Filter",
             ),
