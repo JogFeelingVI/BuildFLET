@@ -118,14 +118,15 @@ class UserDirectory(ft.Card):
     def _build_UI(self):
         return ft.Container(
             padding=10,
-            content=ft.Row(
+            content=ft.Column(
                 controls=[
                     self.tips,
+                    ft.Divider(),
                     self.button,
                 ],
                 spacing=10,
 wrap=True,
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                alignment=ft.MainAxisAlignment.START,
             ),
         )
 
