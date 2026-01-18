@@ -97,7 +97,7 @@ class UserDirectory(ft.Card):
             size=12,
             max_lines=2,
             overflow=ft.TextOverflow.ELLIPSIS,
-            no_wrap=True,
+            no_wrap=False,
         )
         self.button = ft.Button(
             "User Directory",
@@ -124,6 +124,7 @@ class UserDirectory(ft.Card):
                     self.button,
                 ],
                 spacing=10,
+wrap=True,
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
         )
