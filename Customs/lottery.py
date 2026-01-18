@@ -111,13 +111,13 @@ class sbbdismiss(ft.Column):
     def __init__(self, data: list):
         """data = 01 02 03 | 04 05 06"""
         super().__init__()
-        self.External_data= data
-        self.items=[]
-        
+        self.External_data = data
+        self.items = []
+
     def did_mount(self):
         self.running = True
         self.load_data()
-        
+
     def load_data(self):
         lines = []
         while len(lines) < 5 and len(self.External_data) > 0:
@@ -158,13 +158,13 @@ class sbbdismiss(ft.Column):
             ),  # 传递当前 LotteryBalls 实例
         )
 
-    async def handle_data_row_dismiss(self,e,lb):
+    async def handle_data_row_dismiss(self, e, lb):
         await e.control.confirm_dismiss(True)
         self.External_data.append(lb)
         self.items.remove(lb)
         self.controls.remove(e.control)
-        print(f'handle_data_row_dismiss {lb}')
-        if len(self.External_data)>0:
+        print(f"handle_data_row_dismiss {lb}")
+        if len(self.External_data) > 0:
             nlb = self.External_data.pop(0)
             self.items.append(nlb)
             self.controls.append(self.__build_row(nlb))
@@ -349,7 +349,7 @@ class LotteryPage:
             on_dismiss=lambda _, data=items: self.handle_dismiss_save(data),
         )
         self.page.show_dialog(BottomSheet)
-        
+
         await self.page.shared_preferences.set("save_data_list", json.dumps(saved_data))
         await self.initialize_data()
 

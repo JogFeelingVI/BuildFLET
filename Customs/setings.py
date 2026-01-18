@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 22:58:02
+# @Last Modified time: 2026-01-18 15:00:15
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -84,7 +84,110 @@ Lotter_Data = {
     },
 }
 
+class DefaultSettings(ft.Card):
+    """默认设置指示器"""
 
+    def __init__(self, add_rule=None, callback=None):
+        super().__init__()
+        self.content = self._build_default_bu()
+        self.apply_rule = {}
+        self.callback = callback
+        self.add_rule = add_rule
+        
+    def did_mount(self):
+        self.running = True
+        self.page.run_task(self._Lotter_Data)
+    
+    def will_unmount(self):
+        self.running = False
+        
+    async def _Lotter_Data(self):
+        """加载彩票预设数据并生成按钮"""
+        # --- 构造按钮列表 ---
+        if self.running:
+            await asyncio.sleep(1)
+            
+            add_rule = ft.TextButton(
+                        content="new rule",
+                        tooltip=ft.Tooltip(message="new game rule"),
+                        on_click=self.handle_add_rule,
+                    )
+            button_list = [add_rule]
+            
+            # 注意：Lotter_Data 应该在函数外部定义或作为参数传入
+            for k, item in Lotter_Data.items():
+                description = item.get("description", "")
+                button_list.append(
+                    ft.TextButton(
+                        content=f"{k}",
+                        tooltip=ft.Tooltip(message=description),
+                        # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
+                        on_click=lambda e,
+                        name=k,
+                        data=item,
+                        desc=description: self.save_preset_to_file(name, data, desc),
+                    )
+                )
+            self.content.content.controls = button_list
+            self.update()
+            
+    def handle_add_rule(self, e):
+        if self.add_rule:
+            self.add_rule()
+            
+    def save_preset_to_file(self, name: str, preset_data: dict, desc: str):
+        """将处理后的预设数据写入 json 文件"""
+        # 1. 构造符合你要求的嵌套格式
+        valid_json = {
+            "randomData": {
+                "note": f"{desc}",
+            }
+        }
+
+        # 2. 解析 Lotter_Data 项并转换格式
+        # 我们需要找到像 SA, SB, PA 这样的键，并匹配对应的 _K 键
+        keys = preset_data.keys()
+        for k in list(keys):
+            # 过滤掉描述字段和数量字段(_K)，只处理 SA, SB, PA 等
+            if k == "description" or k.endswith("_K"):
+                continue
+
+            count_key = f"{k}_K"
+            if count_key in keys:
+                # 转换键名：将 SA 转换为 PA, SB 转换为 PB (或者保持原样，取决于你的 UI 需求)
+                # 这里假设你的 UI 统一使用 PA, PB, PC，我们做一个简单的映射
+                target_key = k.replace("SA", "PA").replace("SB", "PB")
+
+                valid_json["randomData"][target_key] = {
+                    "enabled": True,
+                    "range_start": preset_data[k][0],
+                    "range_end": preset_data[k][1],
+                    "count": preset_data[count_key],
+                }
+
+        with open(jackpot_seting, "w", encoding="utf-8") as f:
+            json.dump(valid_json, f, indent=4, ensure_ascii=False)
+            self.page.show_dialog(
+                get_snack_bar(f"Preset '{name}' has been applied and saved.")
+            )
+        self.apply_rule = valid_json
+        if self.callback:
+            self.callback()
+
+    def _build_default_bu(self):
+        return ft.Container(
+            padding=10,
+            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border_radius=10,
+            content=ft.Row(
+                controls=[],
+                spacing=2,
+                run_spacing=2,
+                wrap=True,
+                alignment=ft.MainAxisAlignment.START,
+            ),
+        )
+    
 class UserDirectory(ft.Card):
     """用户目录指示器"""
 
@@ -118,14 +221,15 @@ class UserDirectory(ft.Card):
     def _build_UI(self):
         return ft.Container(
             padding=10,
+            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border_radius=10,
             content=ft.Column(
                 controls=[
                     self.tips,
-                    ft.Divider(),
                     self.button,
                 ],
-                spacing=10,
-wrap=True,
+                spacing=2,
+                wrap=True,
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
@@ -165,19 +269,19 @@ class SetingsPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
-        self.buttons = self.load_Lotter_Data()
+        # self.buttons = self.load_Lotter_Data()
         self.add_button_row = ft.Row(
             controls=[
                 ft.Button("Add Row", icon=ft.Icons.ADD, on_click=self.handle_add_click)
             ],
             alignment=ft.MainAxisAlignment.END,
         )
-        self.Fab = ft.FloatingActionButton(
-            icon=ft.Icons.RULE,
-            bgcolor=DraculaColors.PURPLE,
-            on_click=lambda _: self.open_dialog(),
-            # opacity=0.65,
-        )
+        # self.Fab = ft.FloatingActionButton(
+        #     icon=ft.Icons.RULE,
+        #     bgcolor=DraculaColors.PURPLE,
+        #     on_click=lambda _: self.open_dialog(),
+        #     # opacity=0.65,
+        # )
         self.note_text = ft.TextField(
             label="Note",
             hint_text="Rule Settings Instructions",
@@ -196,68 +300,12 @@ class SetingsPage:
             tight=True,
             spacing=10,
         )
+        self.default_setings = DefaultSettings(self.open_dialog,self.render_filters)
         self.apply_rule = {}
         self.filter_items_column = ft.Column(spacing=10)
         self.dlg = self.get_dlg()
         self.view = self.get_seting_view()
 
-    def load_Lotter_Data(self):
-        """加载彩票预设数据并生成按钮"""
-        # --- 构造按钮列表 ---
-        button_list = []
-        # 注意：Lotter_Data 应该在函数外部定义或作为参数传入
-        for k, item in Lotter_Data.items():
-            description = item.get("description", "")
-            button_list.append(
-                ft.Button(
-                    f"{k}",
-                    tooltip=ft.Tooltip(message=description),
-                    # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
-                    on_click=lambda e,
-                    name=k,
-                    data=item,
-                    desc=description: self.save_preset_to_file(name, data, desc),
-                )
-            )
-        return button_list
-
-    def save_preset_to_file(self, name: str, preset_data: dict, desc: str):
-        """将处理后的预设数据写入 json 文件"""
-        # 1. 构造符合你要求的嵌套格式
-        valid_json = {
-            "randomData": {
-                "note": f"{desc}",
-            }
-        }
-
-        # 2. 解析 Lotter_Data 项并转换格式
-        # 我们需要找到像 SA, SB, PA 这样的键，并匹配对应的 _K 键
-        keys = preset_data.keys()
-        for k in list(keys):
-            # 过滤掉描述字段和数量字段(_K)，只处理 SA, SB, PA 等
-            if k == "description" or k.endswith("_K"):
-                continue
-
-            count_key = f"{k}_K"
-            if count_key in keys:
-                # 转换键名：将 SA 转换为 PA, SB 转换为 PB (或者保持原样，取决于你的 UI 需求)
-                # 这里假设你的 UI 统一使用 PA, PB, PC，我们做一个简单的映射
-                target_key = k.replace("SA", "PA").replace("SB", "PB")
-
-                valid_json["randomData"][target_key] = {
-                    "enabled": True,
-                    "range_start": preset_data[k][0],
-                    "range_end": preset_data[k][1],
-                    "count": preset_data[count_key],
-                }
-
-        with open(jackpot_seting, "w", encoding="utf-8") as f:
-            json.dump(valid_json, f, indent=4, ensure_ascii=False)
-            self.page.show_dialog(
-                get_snack_bar(f"Preset '{name}' has been applied and saved.")
-            )
-        self.apply_rule = valid_json
-        self.render_filters()
 
     def get_Selection_line(self, Selection_name: str):
         name = f"P{Selection_name}"
@@ -350,6 +398,7 @@ class SetingsPage:
     def render_filters(self):
         """渲染过滤器列表"""
         self.filter_items_column.controls.clear()
+        self.apply_rule = self.default_setings.apply_rule
         self.page.session.store.set("settings", self.apply_rule)
         randomDatax = self.apply_rule.get("randomData", {})
         rd = randomData(seting=randomDatax)
@@ -438,14 +487,15 @@ class SetingsPage:
                 # ft.Text("Setting", size=25, weight="bold", color=DraculaColors.COMMENT),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),
-                ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
-                ft.Divider(),
+                # ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
+                # ft.Divider(),
                 ft.Column(
                     self.filter_items_column,
                     scroll=ft.ScrollMode.HIDDEN,
                     expand=True,
                 ),
                 UserDirectory(),
+                self.default_setings,
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
