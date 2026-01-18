@@ -177,6 +177,7 @@ class DefaultSettings(ft.Card):
     def _build_default_bu(self):
         return ft.Container(
             padding=10,
+            width=float("inf"),
             border=ft.Border.all(2, DraculaColors.COMMENT),
             border_radius=10,
             content=ft.Row(
@@ -221,6 +222,7 @@ class UserDirectory(ft.Card):
     def _build_UI(self):
         return ft.Container(
             padding=10,
+            width=float("inf"),
             border=ft.Border.all(2, DraculaColors.COMMENT),
             border_radius=10,
             content=ft.Column(
