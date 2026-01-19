@@ -86,7 +86,7 @@ Lotter_Data = {
 
 
 class input_user_rule(ft.Card):
-    def __init__(self,callback=None):
+    def __init__(self, callback=None):
         super().__init__()
         self.visible = False
         self.content = self.__build_card()
@@ -123,7 +123,7 @@ class input_user_rule(ft.Card):
                     expand=1,
                     icon=ft.Icons.WINDOW,
                     content="Apply",
-                    on_click=self.handle_Apply
+                    on_click=self.handle_Apply,
                 ),
                 ft.TextButton(
                     expand=1,
@@ -195,16 +195,16 @@ class input_user_rule(ft.Card):
     def handle_Cancel(self):
         self.visible = False
         self.update()
-        
+
     async def handle_Apply(self):
         temp = self.templejson.copy()
         rows = self.content.content.controls
         for _item in rows:
             if isinstance(_item, ft.TextField):
-                temp['randomData']['note'] = _item.value or 'Jackptot lotter apk'
+                temp["randomData"]["note"] = _item.value or "Jackptot lotter apk"
                 continue
             if isinstance(_item, ft.Row):
-                label = ''
+                label = ""
                 label_value = {}
                 for _child_item in _item.controls:
                     if not isinstance(_child_item, ft.TextField):
@@ -213,25 +213,26 @@ class input_user_rule(ft.Card):
                         label = _child_item.label
                         label_value.update(self.Convert_to_list(_child_item.value))
                     if _child_item.label.startswith("C"):
-                        count = int(_child_item.value) if _child_item.value.isdigit() else 0
-                        label_value.update({"count":count})
+                        count = (
+                            int(_child_item.value) if _child_item.value.isdigit() else 0
+                        )
+                        label_value.update({"count": count})
                 if label == "" or not label_value["enabled"]:
                     continue
-                temp['randomData'][label] = label_value
+                temp["randomData"][label] = label_value
         global jackpot_seting
-        print(f'bind temple dict {temp} {jackpot_seting}')
+        print(f"bind temple dict {temp} {jackpot_seting}")
         with open(jackpot_seting, "w", encoding="utf-8") as f:
             json.dump(temp, f, indent=4, ensure_ascii=False)
         self.page.session.store.set("settings", temp)
         if self.callback:
             self.callback()
         self.handle_Cancel()
-                
-                        
+
     def Convert_to_list(self, lable_value: str):
         """处理用户输入"""
         if lable_value in [None, ""]:
-            return {"enabled":False}
+            return {"enabled": False}
         mathch = re.findall(r"(\d+)", lable_value)
         if mathch:
             value = [int(x) for x in mathch if x.isdigit()]
@@ -239,10 +240,8 @@ class input_user_rule(ft.Card):
             range_end = max(value)
             if range_start == range_end:
                 range_start = 0
-            return {"range_start":range_start, "range_end":range_end, "enabled":True}
-        return {"enabled":False}
-                        
-                        
+            return {"range_start": range_start, "range_end": range_end, "enabled": True}
+        return {"enabled": False}
 
 
 class showRule(ft.Card):
@@ -350,18 +349,18 @@ class DefaultSettings(ft.Card):
                 content="new rule",
                 tooltip=ft.Tooltip(message="new game rule"),
                 on_click=self.handle_add_rule,
-                style=ft.ButtonStyle(
-                    shape=ft.RoundedRectangleBorder(radius=2),
-                    color=DraculaColors.FOREGROUND,
-                    bgcolor=DraculaColors.COMMENT,
-                    overlay_color=DraculaColors.PINK,
-                    side=ft.BorderSide(
-                        1,
-                        DraculaColors.FOREGROUND,
-                        ft.BorderSideStrokeAlign.INSIDE,
-                        ft.BorderStyle.SOLID,
-                    ),
-                ),
+                # style=ft.ButtonStyle(
+                #     shape=ft.RoundedRectangleBorder(radius=2),
+                #     color=DraculaColors.FOREGROUND,
+                #     bgcolor=DraculaColors.COMMENT,
+                #     overlay_color=DraculaColors.PINK,
+                #     side=ft.BorderSide(
+                #         1,
+                #         DraculaColors.FOREGROUND,
+                #         ft.BorderSideStrokeAlign.INSIDE,
+                #         ft.BorderStyle.SOLID,
+                #     ),
+                # ),
             )
             button_list = [add_rule]
 
@@ -427,7 +426,7 @@ class DefaultSettings(ft.Card):
 
     def __build_card(self):
         return ft.Container(
-            padding=10,
+            padding=12,
             width=float("inf"),
             border=ft.Border.all(2, DraculaColors.COMMENT),
             border_radius=10,
@@ -484,7 +483,7 @@ class UserDirectory(ft.Card):
 
     def __build_card(self):
         return ft.Container(
-            padding=10,
+            padding=12,
             # width=200,
             width=float("inf"),
             border=ft.Border.all(2, DraculaColors.COMMENT),
@@ -535,7 +534,7 @@ class SetingsPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
-                
+
         self.rule_mode_show = showRule()
         self.uese_input_mode = input_user_rule(self.render_filters)
         self.default_setings = DefaultSettings(self.open_dialog, self.render_filters)
@@ -566,14 +565,10 @@ class SetingsPage:
             data=name,
         )
 
-   
     def render_filters(self):
         """渲染过滤器列表"""
         self.rule_mode_show.updateCard()
         self.page.update()
-
-
-    
 
     def open_dialog(self):
         self.uese_input_mode.openCard()
@@ -581,7 +576,6 @@ class SetingsPage:
         self.page.update()
 
     def get_seting_view(self):
-
         return ft.Column(
             controls=[
                 ft.Image(

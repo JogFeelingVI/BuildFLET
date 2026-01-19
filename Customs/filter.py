@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 07:49:40
+# @Last Modified time: 2026-01-19 14:28:39
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -210,29 +210,6 @@ class Decrement_Button(ft.Container):
         self.update()
         if self.onLongPressOutside_callback:
             self.onLongPressOutside_callback(e)
-
-
-# class CuperSlider_name(ft.Container):
-#     """Text slider gs"""
-
-#     def __init__(self, vmin=1, vmax=160, changeend=None):
-#         super().__init__()
-#         self.data = 9
-#         self.expand = True
-#         self.padding = ft.Padding.all(0)
-#         # self.showvale = ft.Text(">0", expand=1,text_align=ft.TextAlign.RIGHT)
-#         self.slider = ft.CupertinoSlider(
-#             thumb_color=DraculaColors.PURPLE,
-#             min=vmin,
-#             max=vmax,
-#             expand=True,
-#             on_change_end=changeend,
-#         )
-#         self.content = ft.Row(
-#             controls=[self.slider],
-#             expand=1,
-#             # align=ft.Alignment.CENTER_LEFT,
-#         )
 
 
 class select_fang(ft.Container):
@@ -624,11 +601,230 @@ class tary(ft.Row):
         # print(f"run uc_weic_change done.")
 
 
+#
+#
+# New de kongjian
+#
+#
+
+
+class FiltersList(ft.Card):
+    def __init__(self, callback=None):
+        super().__init__()
+        self.content = self.__build_card()
+        self.callback = callback
+        self.automatically_save = False
+
+    def did_mount(self):
+        self.running = True
+
+    def will_unmount(self):
+        self.running = False
+
+    def __build_card(self):
+        return ft.Container(
+            padding=12,
+            width=float("inf"),
+            # width=400,
+            border=ft.Border.all(2, DraculaColors.ORANGE),
+            border_radius=10,
+            content=self.__command_button(),
+        )
+
+    def addFilter(self, cmd: str):
+        return
+
+    def __command_button(self):
+        """Add, Apply, Cancel"""
+        return ft.Row(
+            controls=[
+                ft.Text(
+                    "Various filter commands can be added to narrow down the massive pool of phone numbers."
+                )
+            ],
+            # 给这一行打个标签，方便以后提取数据
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+
+class InputPad(ft.Card):
+    def __init__(self, callback=None):
+        super().__init__()
+        self.callback = callback
+        self.visible = False
+        self.__FT_show = self.__load_FT_show()
+        self.content = self.__build_card()
+
+    def did_mount(self):
+        self.running = True
+
+    def will_unmount(self):
+        self.running = False
+
+    def openPad(self):
+        if not self.running:
+            return
+        self.visible = not self.visible
+        self.update()
+
+    def __build_card(self):
+        return ft.Container(
+            padding=12,
+            width=float("inf"),
+            # width=400,
+            border=ft.Border.all(2, DraculaColors.PURPLE),
+            border_radius=10,
+            content=self.__Pad(),
+        )
+
+    def __Pad(self):
+        """Add, Apply, Cancel"""
+        return ft.Column(
+            controls=[
+                ft.Text(
+                    "This is a test plan designed to facilitate rapid data entry for filtering projects.",
+                    color=DraculaColors.PURPLE,
+                ),
+                self.__load_funxtarget(),
+                self.__FT_show,
+                ft.Divider(),
+            ],
+            # 给这一行打个标签，方便以后提取数据
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+    def __load_funxtarget(self):
+        return ft.Row(
+            controls=[
+                ft.Text("Use"),
+                ft.TextButton("func", icon=ft.Icons.FUNCTIONS, data="FUN", on_click=self.handle_func_click),
+                ft.Text("to calculate the target"),
+                ft.TextButton("all", icon=ft.Icons.FACE, data="PN"),
+            ]
+        )
+    
+    def __load_FT_show(self):
+        return ft.Row(
+            data="FTSHOW",
+            controls=[],
+            wrap=True,
+            visible=False,
+        )
+    
+    def handle_func_click(self,e):
+        def function_click(k):
+            if isinstance(e.control, ft.TextButton):
+                e.control.content = k
+                self.__FT_show.visible = False
+        funcs_dc = filterFunc.getFuncName()
+        
+        fun_items = []
+        for key, item in funcs_dc.items():
+            fun_items.append(
+                ft.TextButton(
+                    content=f"{key}",
+                    icon=ft.Icons.FUNCTIONS_SHARP,
+                    on_click=lambda _, k=key: function_click(k),
+                )
+            )
+        self.__FT_show.controls = fun_items
+        self.__FT_show.visible = True
+        
+        
+
+class CommandList(ft.Card):
+    def __init__(self, add_callback=None):
+        super().__init__()
+        self.content = self.__build_card()
+        self.addcallback = add_callback
+        self.automatically_save = False
+
+    def did_mount(self):
+        self.running = True
+
+    def will_unmount(self):
+        self.running = False
+
+    def __build_card(self):
+        return ft.Container(
+            padding=12,
+            width=float("inf"),
+            # width=400,
+            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border_radius=10,
+            content=self.__command_button(),
+        )
+
+    def __command_button(self):
+        """Add, Apply, Cancel"""
+        return ft.Row(
+            controls=[
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.FILTER,
+                    content="Add",
+                    on_click=self.handle_add,
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.SAVE,
+                    content="Save",
+                    # on_click=self.handle_Apply,
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.FILE_OPEN,
+                    content="Open",
+                    # on_click=self.handle_Cancel,
+                ),
+                ft.Switch(
+                    expand=1,
+                    label="Automatically Saved",
+                    value=False,
+                    active_track_color=DraculaColors.PINK,
+                ),
+            ],
+            # 给这一行打个标签，方便以后提取数据
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+    def handle_add(self, e):
+        # self.row_name_char += 1
+        # new_row = self.__get_range_count(f"{chr(self.row_name_char)}")
+        # temp_len = len(self.content.content.controls)
+        # self.content.content.controls.insert(temp_len - 1, new_row)
+        if self.running and self.addcallback:
+            self.addcallback()
+            if isinstance(e.control, ft.TextButton):
+                if e.control.content == "Add":
+                    e.control.content = "Closed"
+                    e.control.icon = ft.Icons.CLOSE
+                else:
+                    e.control.content = "Add"
+                    e.control.icon = ft.Icons.FILTER
+                e.control.update()
+
+    def handle_Cancel(self):
+        self.visible = False
+        self.update()
+
+
+#
+#
+# FilterPage
+#
+#
+
+
 class FilterPage:
     """筛选页面类"""
 
     def __init__(self, page: ft.Page):
         self.page = page
+        self.Filters_cmd_list = FiltersList()
+        self.Input_Pad = InputPad()
+        self.Command_List = CommandList(add_callback=self.Input_Pad.openPad)
+        # ? new control
         self.filters_list = []
         self.editing_index = -1
         self.last_selected_target = None
@@ -929,17 +1125,25 @@ class FilterPage:
         self.page.update()
 
     def get_filter_view(self):
-        self.page.overlay.append(self.dlg)
-        user_dict_button = UserdirButton()
-        user_dict_button.setting(self.save_file, self.load_file)
+        # self.page.overlay.append(self.dlg)
+        # user_dict_button = UserdirButton()
+        # user_dict_button.setting(self.save_file, self.load_file)
 
         return ft.Column(
             controls=[
-                user_dict_button,
-                ft.Divider(),
-                ft.Column(
-                    [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True
+                ft.Image(
+                    src="filter.png",
+                    fit=ft.BoxFit.FIT_HEIGHT,
+                    width=328 * 0.45,
+                    height=112 * 0.45,
                 ),
+                ft.Divider(),
+                self.Filters_cmd_list,
+                self.Input_Pad,
+                self.Command_List,
+                # ft.Column(
+                #     [self.filter_items_column], scroll=ft.ScrollMode.HIDDEN, expand=True
+                # ),
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
