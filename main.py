@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-18 15:07:07
+# @Last Modified time: 2026-01-19 02:16:35
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -13,7 +13,7 @@ import os
 import json
 import asyncio
 
-# 获取系统标示 
+# 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
@@ -33,14 +33,14 @@ async def main(page: ft.Page):
     lottery_icon = ft.Icon(
         ft.Icons.DATA_EXPLORATION_OUTLINED,
         color=DraculaColors.PURPLE,
-        # 初始赋值：如果大于 0 就显示，否则 None 
+        # 初始赋值：如果大于 0 就显示，否则 None
         badge=str(initial_count) if initial_count > 0 else None,
     )
 
-    # --- 页面逻辑控制 --- 
+    # --- 页面逻辑控制 ---
     def on_navigation_change(e):
         index = e.control.selected_index
-        # 切换中间的内容区域  
+        # 切换中间的内容区域
         if index == 0:
             content_area.content = setting_class.view
             page.floating_action_button = None

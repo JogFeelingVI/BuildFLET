@@ -2,8 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-18 15:00:15
+# @Last Modified time: 2026-01-19 02:15:27
 
+from annotated_types import T
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
@@ -84,6 +85,83 @@ Lotter_Data = {
     },
 }
 
+
+class showRule(ft.Card):
+    def __init__(self):
+        super().__init__()
+        self.content = self.__build_card()
+
+    def did_mount(self):
+        self.running = True
+        self.updateCard()
+
+    def will_unmount(self):
+        self.running = False
+
+    def updateCard(self):
+        self.page.run_task(self.__update_card)
+
+    async def __update_card(self):
+        if not self.running:
+            return
+        apply_rule = self.page.session.store.get("settings")
+        if not apply_rule:
+            return
+        randomDatax = apply_rule.get("randomData", None)
+        if not randomDatax:
+            return
+        example = randomData(seting=randomDatax).get_exp()
+        textlist = [LotteryBalls(example,32,"LE"), ft.Divider()]
+        for key, item in randomDatax.items():
+            if key == "note":
+                textlist.append(
+                    ft.Text(
+                        f"🚩Note: {item}",
+                        size=15,
+                        weight="bold",
+                        color=DraculaColors.ORANGE,
+                        max_lines=2,
+                    )
+                )
+                continue
+            # print(f'{key} {item} ==-==')
+            count_range = f"{item['range_start']} - {item['range_end']}"
+            count = item["count"]
+
+            textlist.append(
+                ft.Text(
+                    f"Section [ {key} ].  Choose {count} number from {count_range}.",
+                    max_lines=2,
+                    color=DraculaColors.PURPLE,
+                    size=15,
+                )
+            )
+        self.content.content.controls = textlist
+        self.update()
+
+    def __build_card(self):
+        print("bulid card is running.")
+        return ft.Container(
+            padding=12,
+            # expand=True,
+            # opacity=0.65,
+            width=float("inf"),
+            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border_radius=10,
+            content=ft.Column(
+                tight=True,
+                controls=[
+                    # LotteryBalls(exp, align="LE"),
+                    # ft.Divider(),
+                    # *textlist,
+                    ft.Text(
+                        "💡Please add game rules. You can customize them using [new rule] or use the preset options."
+                    ),
+                ],
+            ),
+        )
+
+
 class DefaultSettings(ft.Card):
     """默认设置指示器"""
 
@@ -93,27 +171,40 @@ class DefaultSettings(ft.Card):
         self.apply_rule = {}
         self.callback = callback
         self.add_rule = add_rule
-        
+
     def did_mount(self):
         self.running = True
         self.page.run_task(self._Lotter_Data)
-    
+
     def will_unmount(self):
         self.running = False
-        
+
     async def _Lotter_Data(self):
         """加载彩票预设数据并生成按钮"""
         # --- 构造按钮列表 ---
         if self.running:
             await asyncio.sleep(1)
-            
-            add_rule = ft.TextButton(
-                        content="new rule",
-                        tooltip=ft.Tooltip(message="new game rule"),
-                        on_click=self.handle_add_rule,
-                    )
+
+            add_rule = ft.Button(
+                icon=ft.Icons.RULE,
+                content="new rule",
+                tooltip=ft.Tooltip(message="new game rule"),
+                on_click=self.handle_add_rule,
+                style=ft.ButtonStyle(
+                    shape=ft.RoundedRectangleBorder(radius=2),
+                    color=DraculaColors.FOREGROUND,
+                    bgcolor=DraculaColors.COMMENT,
+                    overlay_color=DraculaColors.PINK,
+                    side=ft.BorderSide(
+                        1,
+                        DraculaColors.FOREGROUND,
+                        ft.BorderSideStrokeAlign.INSIDE,
+                        ft.BorderStyle.SOLID,
+                    ),
+                ),
+            )
             button_list = [add_rule]
-            
+
             # 注意：Lotter_Data 应该在函数外部定义或作为参数传入
             for k, item in Lotter_Data.items():
                 description = item.get("description", "")
@@ -130,11 +221,11 @@ class DefaultSettings(ft.Card):
                 )
             self.content.content.controls = button_list
             self.update()
-            
+
     def handle_add_rule(self, e):
         if self.add_rule:
             self.add_rule()
-            
+
     def save_preset_to_file(self, name: str, preset_data: dict, desc: str):
         """将处理后的预设数据写入 json 文件"""
         # 1. 构造符合你要求的嵌套格式
@@ -188,7 +279,8 @@ class DefaultSettings(ft.Card):
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
-    
+
+
 class UserDirectory(ft.Card):
     """用户目录指示器"""
 
@@ -196,18 +288,29 @@ class UserDirectory(ft.Card):
         super().__init__()
         self.stored_dir = None
         self.tips = ft.Text(
-            "Tip: Set the user directory to store filter files and saved images.",
+            "💡 Tip: Set the user directory to store filter files and saved images.",
             color=DraculaColors.FOREGROUND,
             size=12,
             max_lines=2,
-            overflow=ft.TextOverflow.ELLIPSIS,
+            # overflow=ft.TextOverflow.ELLIPSIS,
             no_wrap=False,
         )
         self.button = ft.Button(
             "User Directory",
-            bgcolor=DraculaColors.PURPLE,
-            color=DraculaColors.FOREGROUND,
+            icon=ft.Icons.FOLDER_OFF,
             on_click=lambda _: self.page.run_task(self.select_user_dif),
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=2),
+                color=DraculaColors.FOREGROUND,
+                bgcolor=DraculaColors.COMMENT,
+                overlay_color=DraculaColors.PINK,
+                side=ft.BorderSide(
+                    1,
+                    DraculaColors.FOREGROUND,
+                    ft.BorderSideStrokeAlign.INSIDE,
+                    ft.BorderStyle.SOLID,
+                ),
+            ),
         )
         self.content = self._build_UI()
         self.count = 10
@@ -222,16 +325,18 @@ class UserDirectory(ft.Card):
     def _build_UI(self):
         return ft.Container(
             padding=10,
+            # width=200,
             width=float("inf"),
             border=ft.Border.all(2, DraculaColors.COMMENT),
             border_radius=10,
-            content=ft.Column(
+            content=ft.Row(
                 controls=[
                     self.tips,
                     self.button,
                 ],
-                spacing=2,
+                spacing=5,
                 wrap=True,
+                # tight=True,
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
@@ -244,8 +349,7 @@ class UserDirectory(ft.Card):
             print(f"Checking user directory...{temp=}")
             if temp:
                 self.tips.value = f"📂 User Directory: {temp}"
-                self.button.disabled = True
-                self.button.bgcolor = DraculaColors.BACKGROUND
+                self.button.visible = False
                 self.page.update()
 
     async def getuser_dir(self):
@@ -302,12 +406,13 @@ class SetingsPage:
             tight=True,
             spacing=10,
         )
-        self.default_setings = DefaultSettings(self.open_dialog,self.render_filters)
+        self.rule_mode_show = showRule()
+        self.default_setings = DefaultSettings(self.open_dialog, self.render_filters)
         self.apply_rule = {}
-        self.filter_items_column = ft.Column(spacing=10)
+
+        # self.filter_items_column = ft.Column(spacing=10)
         self.dlg = self.get_dlg()
         self.view = self.get_seting_view()
-
 
     def get_Selection_line(self, Selection_name: str):
         name = f"P{Selection_name}"
@@ -399,53 +504,55 @@ class SetingsPage:
 
     def render_filters(self):
         """渲染过滤器列表"""
-        self.filter_items_column.controls.clear()
+        # self.filter_items_column.controls.clear()
         self.apply_rule = self.default_setings.apply_rule
         self.page.session.store.set("settings", self.apply_rule)
-        randomDatax = self.apply_rule.get("randomData", {})
-        rd = randomData(seting=randomDatax)
-        exp = rd.get_exp()
-        textlist = []
-        for key, item in randomDatax.items():
-            if key == "note":
-                continue
-            # print(f'{key} {item} ==-==')
-            count_range = f"{item['range_start']} - {item['range_end']}"
-            count = item["count"]
+        self.rule_mode_show.updateCard()
+        # randomDatax = self.apply_rule.get("randomData", {})
+        # rd = randomData(seting=randomDatax)
+        # exp = rd.get_exp()
+        # textlist = []
+        # for key, item in randomDatax.items():
+        #     if key == "note":
+        #         continue
+        #     # print(f'{key} {item} ==-==')
+        #     count_range = f"{item['range_start']} - {item['range_end']}"
+        #     count = item["count"]
 
-            textlist.append(
-                ft.Text(
-                    f"⚠ Section [ {key} ].  Choose {count} number from {count_range}.",
-                    max_lines=2,
-                    color=DraculaColors.PURPLE,
-                    size=15,
-                )
-            )
-        rule_mode_show = ft.Card(
-            # bgcolor=DraculaColors.CURRENT_LINE,
-            show_border_on_foreground=True,
-            content=ft.Container(
-                padding=12,
-                # expand=True,
-                # opacity=0.65,
-                content=ft.Column(
-                    tight=True,
-                    controls=[
-                        LotteryBalls(exp, align="LE"),
-                        ft.Text(
-                            f"🚩Note: {randomDatax['note']}",
-                            size=15,
-                            weight="bold",
-                            color=DraculaColors.ORANGE,
-                            max_lines=2,
-                        ),
-                        ft.Divider(),
-                        *textlist,
-                    ],
-                ),
-            ),
-        )
-        self.filter_items_column.controls.append(rule_mode_show)
+        #     textlist.append(
+        #         ft.Text(
+        #             f"Section [ {key} ].  Choose {count} number from {count_range}.",
+        #             max_lines=2,
+        #             color=DraculaColors.PURPLE,
+        #             size=15,
+        #         )
+        #     )
+        # rule_mode_show = ft.Card(
+        #     # bgcolor=DraculaColors.CURRENT_LINE,
+        #     show_border_on_foreground=True,
+        #     content=ft.Container(
+        #         padding=12,
+        #         # expand=True,
+        #         # opacity=0.65,
+        #         content=ft.Column(
+        #             tight=True,
+        #             controls=[
+        #                 LotteryBalls(exp, align="LE"),
+        #                 ft.Text(
+        #                     f"🚩Note: {randomDatax['note']}",
+        #                     size=15,
+        #                     weight="bold",
+        #                     color=DraculaColors.ORANGE,
+        #                     max_lines=2,
+        #                 ),
+        #                 ft.Divider(),
+        #                 *textlist,
+        #             ],
+        #         ),
+        #     ),
+        # )
+        # rule_mode_show = showRule()
+        # self.filter_items_column.controls.append(rule_mode_show)
         self.page.update()
 
     def close_dlg(self):
@@ -491,11 +598,7 @@ class SetingsPage:
                 ft.Divider(),
                 # ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 # ft.Divider(),
-                ft.Column(
-                    self.filter_items_column,
-                    scroll=ft.ScrollMode.HIDDEN,
-                    expand=True,
-                ),
+                self.rule_mode_show,
                 UserDirectory(),
                 self.default_setings,
             ],
