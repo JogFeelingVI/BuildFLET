@@ -4,7 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-19 02:15:27
 
-from annotated_types import T
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
