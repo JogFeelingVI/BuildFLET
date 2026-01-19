@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-19 02:15:27
+# @Last Modified time: 2026-01-19 07:52:10
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -85,6 +85,166 @@ Lotter_Data = {
 }
 
 
+class input_user_rule(ft.Card):
+    def __init__(self,callback=None):
+        super().__init__()
+        self.visible = False
+        self.content = self.__build_card()
+        self.callback = callback
+        self.row_name_char = 65
+        self.templejson = {
+            "randomData": {
+                "note": "🇨🇳体育排列3/5",
+                "PA": {"enabled": True, "range_start": 0, "range_end": 9, "count": 1},
+            }
+        }
+
+    def did_mount(self):
+        self.running = True
+
+    def will_unmount(self):
+        self.running = False
+
+    def openCard(self):
+        self.visible = True
+        self.update()
+
+    def __command_button(self):
+        """Add, Apply, Cancel"""
+        return ft.Row(
+            controls=[
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.ADD_BOX,
+                    content="Add",
+                    on_click=self.handle_add,
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.WINDOW,
+                    content="Apply",
+                    on_click=self.handle_Apply
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.CANCEL,
+                    content="Cancel",
+                    on_click=self.handle_Cancel,
+                ),
+            ],
+            # 给这一行打个标签，方便以后提取数据
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+        )
+
+    def __get_note(self):
+        return ft.TextField(
+            label="Note",
+            hint_text="Rule Settings Instructions",
+            expand=1,
+            border=ft.InputBorder.UNDERLINE,
+        )
+
+    def __get_range_count(self, name="a"):
+        name = name.upper()
+        return ft.Row(
+            controls=[
+                ft.TextField(
+                    label=f"P{name.upper()}",
+                    expand=2,
+                    hint_text="min,max",
+                    data=f"{name}_Max",
+                    border=ft.InputBorder.UNDERLINE,
+                ),
+                ft.TextField(
+                    label="Count",
+                    expand=1,
+                    data=f"{name}_K",
+                    border=ft.InputBorder.UNDERLINE,
+                ),
+            ],
+            # 给这一行打个标签，方便以后提取数据
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            data=name,
+        )
+
+    def __build_card(self):
+        return ft.Container(
+            padding=12,
+            # expand=True,
+            # opacity=0.65,
+            width=float("inf"),
+            border=ft.Border.all(2, DraculaColors.PINK),
+            border_radius=10,
+            content=ft.Column(
+                tight=True,
+                controls=[
+                    ft.Text("Add new game rules.", size=25),
+                    self.__get_note(),
+                    self.__get_range_count("a"),
+                    self.__command_button(),
+                ],
+            ),
+        )
+
+    def handle_add(self):
+        self.row_name_char += 1
+        new_row = self.__get_range_count(f"{chr(self.row_name_char)}")
+        temp_len = len(self.content.content.controls)
+        self.content.content.controls.insert(temp_len - 1, new_row)
+
+    def handle_Cancel(self):
+        self.visible = False
+        self.update()
+        
+    async def handle_Apply(self):
+        temp = self.templejson.copy()
+        rows = self.content.content.controls
+        for _item in rows:
+            if isinstance(_item, ft.TextField):
+                temp['randomData']['note'] = _item.value or 'Jackptot lotter apk'
+                continue
+            if isinstance(_item, ft.Row):
+                label = ''
+                label_value = {}
+                for _child_item in _item.controls:
+                    if not isinstance(_child_item, ft.TextField):
+                        continue
+                    if _child_item.label.startswith("P"):
+                        label = _child_item.label
+                        label_value.update(self.Convert_to_list(_child_item.value))
+                    if _child_item.label.startswith("C"):
+                        count = int(_child_item.value) if _child_item.value.isdigit() else 0
+                        label_value.update({"count":count})
+                if label == "" or not label_value["enabled"]:
+                    continue
+                temp['randomData'][label] = label_value
+        global jackpot_seting
+        print(f'bind temple dict {temp} {jackpot_seting}')
+        with open(jackpot_seting, "w", encoding="utf-8") as f:
+            json.dump(temp, f, indent=4, ensure_ascii=False)
+        self.page.session.store.set("settings", temp)
+        if self.callback:
+            self.callback()
+        self.handle_Cancel()
+                
+                        
+    def Convert_to_list(self, lable_value: str):
+        """处理用户输入"""
+        if lable_value in [None, ""]:
+            return {"enabled":False}
+        mathch = re.findall(r"(\d+)", lable_value)
+        if mathch:
+            value = [int(x) for x in mathch if x.isdigit()]
+            range_start = min(value)
+            range_end = max(value)
+            if range_start == range_end:
+                range_start = 0
+            return {"range_start":range_start, "range_end":range_end, "enabled":True}
+        return {"enabled":False}
+                        
+                        
+
+
 class showRule(ft.Card):
     def __init__(self):
         super().__init__()
@@ -103,6 +263,7 @@ class showRule(ft.Card):
     async def __update_card(self):
         if not self.running:
             return
+        await asyncio.sleep(0.5)
         apply_rule = self.page.session.store.get("settings")
         if not apply_rule:
             return
@@ -110,7 +271,7 @@ class showRule(ft.Card):
         if not randomDatax:
             return
         example = randomData(seting=randomDatax).get_exp()
-        textlist = [LotteryBalls(example,32,"LE"), ft.Divider()]
+        textlist = [LotteryBalls(example, 32, "LE"), ft.Divider()]
         for key, item in randomDatax.items():
             if key == "note":
                 textlist.append(
@@ -166,23 +327,23 @@ class DefaultSettings(ft.Card):
 
     def __init__(self, add_rule=None, callback=None):
         super().__init__()
-        self.content = self._build_default_bu()
-        self.apply_rule = {}
+        self.content = self.__build_card()
+        # self.apply_rule = {}
         self.callback = callback
         self.add_rule = add_rule
 
     def did_mount(self):
         self.running = True
-        self.page.run_task(self._Lotter_Data)
+        self.page.run_task(self.__Lotter_Data)
 
     def will_unmount(self):
         self.running = False
 
-    async def _Lotter_Data(self):
+    async def __Lotter_Data(self):
         """加载彩票预设数据并生成按钮"""
         # --- 构造按钮列表 ---
         if self.running:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)
 
             add_rule = ft.Button(
                 icon=ft.Icons.RULE,
@@ -257,14 +418,14 @@ class DefaultSettings(ft.Card):
 
         with open(jackpot_seting, "w", encoding="utf-8") as f:
             json.dump(valid_json, f, indent=4, ensure_ascii=False)
-            self.page.show_dialog(
-                get_snack_bar(f"Preset '{name}' has been applied and saved.")
-            )
-        self.apply_rule = valid_json
+            # self.page.show_dialog(
+            #     get_snack_bar(f"Preset '{name}' has been applied and saved.")
+            # )
+        self.page.session.store.set("settings", valid_json)
         if self.callback:
             self.callback()
 
-    def _build_default_bu(self):
+    def __build_card(self):
         return ft.Container(
             padding=10,
             width=float("inf"),
@@ -311,7 +472,7 @@ class UserDirectory(ft.Card):
                 ),
             ),
         )
-        self.content = self._build_UI()
+        self.content = self.__build_card()
         self.count = 10
 
     def did_mount(self):
@@ -321,7 +482,7 @@ class UserDirectory(ft.Card):
     def will_unmount(self):
         self.running = False
 
-    def _build_UI(self):
+    def __build_card(self):
         return ft.Container(
             padding=10,
             # width=200,
@@ -342,7 +503,7 @@ class UserDirectory(ft.Card):
 
     async def update_ui(self):
         if self.running:
-            await asyncio.sleep(1)  # 初始延迟，确保页面加载完成
+            await asyncio.sleep(0.5)  # 初始延迟，确保页面加载完成
 
             temp = await self.getuser_dir()
             print(f"Checking user directory...{temp=}")
@@ -374,43 +535,12 @@ class SetingsPage:
 
     def __init__(self, page: ft.Page):
         self.page = page
-        # self.buttons = self.load_Lotter_Data()
-        self.add_button_row = ft.Row(
-            controls=[
-                ft.Button("Add Row", icon=ft.Icons.ADD, on_click=self.handle_add_click)
-            ],
-            alignment=ft.MainAxisAlignment.END,
-        )
-        # self.Fab = ft.FloatingActionButton(
-        #     icon=ft.Icons.RULE,
-        #     bgcolor=DraculaColors.PURPLE,
-        #     on_click=lambda _: self.open_dialog(),
-        #     # opacity=0.65,
-        # )
-        self.note_text = ft.TextField(
-            label="Note",
-            hint_text="Rule Settings Instructions",
-            expand=1,
-            border=ft.InputBorder.UNDERLINE,
-        )
-        self.selection_container = ft.Column(
-            controls=[
-                ft.Row(
-                    controls=[self.note_text],
-                    tight=True,
-                ),
-                self.get_Selection_line("A"),
-                self.add_button_row,
-            ],
-            tight=True,
-            spacing=10,
-        )
+                
         self.rule_mode_show = showRule()
+        self.uese_input_mode = input_user_rule(self.render_filters)
         self.default_setings = DefaultSettings(self.open_dialog, self.render_filters)
         self.apply_rule = {}
 
-        # self.filter_items_column = ft.Column(spacing=10)
-        self.dlg = self.get_dlg()
         self.view = self.get_seting_view()
 
     def get_Selection_line(self, Selection_name: str):
@@ -436,153 +566,21 @@ class SetingsPage:
             data=name,
         )
 
-    def Processing_user_input(self, cdvalue: str):
-        """处理用户输入"""
-        if cdvalue in [None, ""]:
-            return None
-        mathch = re.findall(r"(\d+)", cdvalue)
-        if mathch:
-            val = [int(x) for x in mathch if x.isdigit()]
-            return val if len(val) == 2 else val[0]
-        return None
-
-    def handle_apply(self):
-        # 获取所有输入行的数据逻辑
-        Rows_data = {"note": self.note_text.value or "setting game rule"}
-        for control in self.selection_container.controls:
-            if not hasattr(control, "data"):
-                continue  # 只有输入行有 data 属性
-            tag = control.data  # 提取标签名 P...
-            Rows_data[tag] = {}
-            try:
-                for _child in control.controls:
-                    if not isinstance(_child, ft.TextField):
-                        continue
-                    _cd = _child.data
-                    _cd_val = _child.value
-                    _cd_val = self.Processing_user_input(_cd_val)
-                    if _cd_val is None:
-                        continue
-                    if _cd.endswith("_Max"):
-                        if isinstance(_cd_val, list) and len(_cd_val) == 2:
-                            Rows_data[tag]["range_start"] = _cd_val[0]
-                            Rows_data[tag]["range_end"] = _cd_val[1]
-                        elif isinstance(_cd_val, int):
-                            Rows_data[tag]["range_start"] = 1
-                            Rows_data[tag]["range_end"] = _cd_val
-                    if _cd.endswith("_K"):
-                        Rows_data[tag]["count"] = _cd_val
-                    Rows_data[tag]["enabled"] = True
-            except Exception:
-                self.page.show_dialog(get_snack_bar("Rule settings error.", "error"))
-        Rows_data = {k: v for k, v in Rows_data.items() if v not in [None, {}]}
-        json_data = {"randomData": Rows_data.copy()}
-        with open(jackpot_seting, "w", encoding="utf-8") as f:
-            json.dump(json_data, f, indent=4, ensure_ascii=False)
-        self.page.show_dialog(get_snack_bar(f"Game rules have been set."))
-        self.apply_rule = json_data
-        self.dlg.open = False
-        self.render_filters()
-        self.page.update()
-
-    def handle_add_click(self, e):
-        # 计算当前已有多少个输入行 (排除掉底部的 Add 按钮行)
-        # 减 1 是因为最后一行是按钮行
-        current_count = len(self.selection_container.controls) - 2
-        # 字母排序 A, B, C...
-        new_name = chr(65 + current_count)  # 65 是 'A'
-        # 创建新行
-        new_line = self.get_Selection_line(new_name)
-
-        # 【关键】将新行插入到倒数第一位（即 Add 按钮的上方）
-        self.selection_container.controls.insert(
-            len(self.selection_container.controls) - 1, new_line
-        )
-        # 【关键】刷新容器，让新行显示出来
-        self.selection_container.update()
-
+   
     def render_filters(self):
         """渲染过滤器列表"""
-        # self.filter_items_column.controls.clear()
-        self.apply_rule = self.default_setings.apply_rule
-        self.page.session.store.set("settings", self.apply_rule)
         self.rule_mode_show.updateCard()
-        # randomDatax = self.apply_rule.get("randomData", {})
-        # rd = randomData(seting=randomDatax)
-        # exp = rd.get_exp()
-        # textlist = []
-        # for key, item in randomDatax.items():
-        #     if key == "note":
-        #         continue
-        #     # print(f'{key} {item} ==-==')
-        #     count_range = f"{item['range_start']} - {item['range_end']}"
-        #     count = item["count"]
-
-        #     textlist.append(
-        #         ft.Text(
-        #             f"Section [ {key} ].  Choose {count} number from {count_range}.",
-        #             max_lines=2,
-        #             color=DraculaColors.PURPLE,
-        #             size=15,
-        #         )
-        #     )
-        # rule_mode_show = ft.Card(
-        #     # bgcolor=DraculaColors.CURRENT_LINE,
-        #     show_border_on_foreground=True,
-        #     content=ft.Container(
-        #         padding=12,
-        #         # expand=True,
-        #         # opacity=0.65,
-        #         content=ft.Column(
-        #             tight=True,
-        #             controls=[
-        #                 LotteryBalls(exp, align="LE"),
-        #                 ft.Text(
-        #                     f"🚩Note: {randomDatax['note']}",
-        #                     size=15,
-        #                     weight="bold",
-        #                     color=DraculaColors.ORANGE,
-        #                     max_lines=2,
-        #                 ),
-        #                 ft.Divider(),
-        #                 *textlist,
-        #             ],
-        #         ),
-        #     ),
-        # )
-        # rule_mode_show = showRule()
-        # self.filter_items_column.controls.append(rule_mode_show)
         self.page.update()
 
-    def close_dlg(self):
-        self.dlg.open = False
-        self.page.update()
 
-    def get_dlg(self):
-        dlg = ft.AlertDialog(
-            title=ft.Text("add new game rules", color=DraculaColors.COMMENT),
-            content=ft.Container(
-                content=self.selection_container,
-                width=350,  # 锁定宽度防止抖动
-            ),
-            actions=[
-                ft.TextButton("Cancel", on_click=lambda _: self.close_dlg()),
-                ft.Button(
-                    "Apply",
-                    bgcolor=DraculaColors.RED,
-                    color=DraculaColors.FOREGROUND,
-                    on_click=lambda _: self.handle_apply(),
-                ),
-            ],
-        )
-        return dlg
+    
 
     def open_dialog(self):
-        self.dlg.open = True
+        self.uese_input_mode.openCard()
+        # self.dlg.open = True
         self.page.update()
 
     def get_seting_view(self):
-        self.page.overlay.append(self.dlg)
 
         return ft.Column(
             controls=[
@@ -600,6 +598,7 @@ class SetingsPage:
                 self.rule_mode_show,
                 UserDirectory(),
                 self.default_setings,
+                self.uese_input_mode,
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
