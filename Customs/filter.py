@@ -688,7 +688,7 @@ class FiltersList(ft.Card):
                         ft.Text(f"{_scd['condition']}"),
                     ],
                 ),
-                leading=ft.Icon(ft.Icons.FILTER_ALT),
+                #leading=ft.Icon(ft.Icons.FILTER_ALT),
                 delete_icon_color=DraculaColors.RED,
                 on_delete=deleteForE,
                 on_click=editForE,
