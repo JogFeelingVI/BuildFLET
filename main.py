@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-19 14:25:25
+# @Last Modified time: 2026-01-20 13:00:23
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -46,7 +46,7 @@ async def main(page: ft.Page):
             page.floating_action_button = None
         elif index == 1:
             content_area.content = filter_class.view
-            page.floating_action_button = filter_class.Fab
+            page.floating_action_button = None
         elif index == 2:
             content_area.content = lottery_class.view
             page.floating_action_button = lottery_class.Fab

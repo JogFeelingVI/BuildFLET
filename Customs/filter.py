@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-19 14:28:39
+# @Last Modified time: 2026-01-20 13:00:19
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -15,7 +15,7 @@ import asyncio
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-jackpot_filers = os.path.join(app_data_path, "jackpot_filters.dict")
+# jackpot_filers = os.path.join(app_data_path, "jackpot_filters.dict")
 
 
 class UserdirButton(ft.TextButton):
@@ -609,11 +609,24 @@ class tary(ft.Row):
 
 
 class FiltersList(ft.Card):
-    def __init__(self, callback=None):
+    def __init__(
+        self,
+    ):
         super().__init__()
         self.content = self.__build_card()
-        self.callback = callback
-        self.automatically_save = False
+        self.editItemCallback = None
+        self.add_closed_stat = None
+        self.filtersAll_change = "none"  # add none del save
+        self.filtersAll = []
+
+    def setting_edit_Callback(self, edit_item_callback=None):
+        self.editItemCallback = edit_item_callback
+        
+    def setting_command_stat(self,add_closed_stat:None):
+        self.add_closed_stat = add_closed_stat
+        
+    def givefilterall(self):
+        return self.filtersAll
 
     def did_mount(self):
         self.running = True
@@ -631,40 +644,133 @@ class FiltersList(ft.Card):
             content=self.__command_button(),
         )
 
-    def addFilter(self, cmd: str):
-        return
+    def addFilter(self, scriptd: dict):
+        _scd = scriptd.copy()
+        if "" in _scd.values():
+            print(f"add filter error {_scd}")
+            return
+        if not isinstance(self.content.content, ft.Row):
+            return
+
+        controls = self.content.content.controls
+
+        def deleteForE(e):
+            if not isinstance(e.control, ft.Chip):
+                return
+            e_chip = e.control
+            e_script = e.control.data
+            controls.remove(e_chip)
+            self.filtersAll.remove(e_script)
+            self.filtersAll_change = "del"
+
+        def editForE(e):
+            if not isinstance(e.control, ft.Chip):
+                return
+            e_chip = e.control
+            e_script = e.control.data
+            # print(f"edit {e_chip.data}")
+            controls.remove(e_chip)
+            self.filtersAll.remove(e_script)
+            if self.editItemCallback:
+                self.editItemCallback(e_script)
+            if self.add_closed_stat:
+                self.add_closed_stat()
+            e_chip.update()
+
+        self.filtersAll.append(_scd)
+        controls.append(
+            ft.Chip(
+                data=_scd,
+                label=ft.Column(
+                    spacing=0,
+                    controls=[
+                        ft.Text(f"use {_scd['func']} target {_scd['target']}"),
+                        ft.Text(f"{_scd['condition']}"),
+                    ],
+                ),
+                leading=ft.Icon(ft.Icons.FILTER_ALT),
+                delete_icon_color=DraculaColors.RED,
+                on_delete=deleteForE,
+                on_click=editForE,
+            )
+        )
+        self.filtersAll_change = "add"
+        self.content.content.update()
+        self.page.run_task(self.filter_data_task)
+        
+    async def filter_data_task(self):
+        # self.page.session.store.set("filters", fiter_data)
+        await self.page.session.store.set("filters", self.filtersAll)
 
     def __command_button(self):
         """Add, Apply, Cancel"""
         return ft.Row(
+            wrap=True,
             controls=[
-                ft.Text(
-                    "Various filter commands can be added to narrow down the massive pool of phone numbers."
-                )
+                ft.Switch(
+                    label="auto save",
+                    value=False,
+                ),
+                # "Various filter commands can be added to narrow down the massive pool of phone numbers."
             ],
             # 给这一行打个标签，方便以后提取数据
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.START,
         )
 
 
 class InputPad(ft.Card):
-    def __init__(self, callback=None):
+    def __init__(self):
         super().__init__()
-        self.callback = callback
+        self.applycallback = None
         self.visible = False
         self.__FT_show = self.__load_FT_show()
         self.content = self.__build_card()
+        self.funcs_dc = {}
+        self.target_pn = ["all"]
+        self.pad_data = {"func": "", "target": "", "condition": ""}
 
     def did_mount(self):
         self.running = True
 
     def will_unmount(self):
         self.running = False
+        
+    def settingApplyCallback(self, applycallback=None):
+        self.applycallback = applycallback
 
     def openPad(self):
+        """新增加模式"""
         if not self.running:
             return
         self.visible = not self.visible
+        self.update()
+
+    def editePad(self, script: dict):
+        """编辑模式"""
+        func_target: list = self.content.content.controls
+        for item in func_target:
+            match item.data:
+                case "__load_funxtarget":
+                    if not isinstance(item, ft.Row):
+                        return
+                    if not isinstance(item.controls[0], ft.Text):
+                        return
+                    text_spans = item.controls[0].spans
+                    text_spans[1].text = script['func']
+                    text_spans[3].text = script['target']
+                    self.pad_data['func'] = script['func']
+                    self.pad_data['target'] = script['target']
+
+                case "__command_input":
+                    if not isinstance(item, ft.TextField):
+                        return
+                    item.value = script["condition"]
+                case "__apply_text":
+                    # print('__apply_text.')
+                    pass
+                case _:
+                    pass
+        self.visible = True
         self.update()
 
     def __build_card(self):
@@ -680,6 +786,7 @@ class InputPad(ft.Card):
     def __Pad(self):
         """Add, Apply, Cancel"""
         return ft.Column(
+            data="__Pad",
             controls=[
                 ft.Text(
                     "This is a test plan designed to facilitate rapid data entry for filtering projects.",
@@ -688,55 +795,167 @@ class InputPad(ft.Card):
                 self.__load_funxtarget(),
                 self.__FT_show,
                 ft.Divider(),
+                self.__command_input(),
+                ft.Divider(),
+                self.__apply_text(),
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
 
-    def __load_funxtarget(self):
+    def __apply_text(self):
+        """Click "Apply" to add the filter."""
+        def_text_style = ft.TextStyle(size=14, color=DraculaColors.COMMENT)
+        fun_text_style = ft.TextStyle(size=14, color=DraculaColors.GREEN)
         return ft.Row(
+            data="__apply_text",
             controls=[
-                ft.Text("Use"),
-                ft.TextButton("func", icon=ft.Icons.FUNCTIONS, data="FUN", on_click=self.handle_func_click),
-                ft.Text("to calculate the target"),
-                ft.TextButton("all", icon=ft.Icons.FACE, data="PN"),
-            ]
+                ft.Text(
+                    spans=[
+                        ft.TextSpan(
+                            "Click ",
+                            style=def_text_style,
+                        ),
+                        ft.TextSpan(
+                            "'Apply'",
+                            style=fun_text_style,
+                            on_click=self.handle_apply_click,
+                        ),
+                        ft.TextSpan(" to add the filter.", style=def_text_style),
+                    ]
+                ),
+            ],
         )
-    
+
+    def __command_input(self):
+        def input_change(e):
+            if not isinstance(e.control, ft.TextField):
+                return
+            self.pad_data["condition"] = f"{e.control.value}"
+
+        return ft.TextField(
+            data="__command_input",
+            label="Execute the script",
+            hint_text="exp: bit1,2 range 1,15 --z",
+            expand=1,
+            border=ft.InputBorder.UNDERLINE,
+            on_change=input_change,
+        )
+
+    def __load_funxtarget(self):
+        """Use "avg" to calculate the target "pa"."""
+        def_text_style = ft.TextStyle(size=14, color=DraculaColors.COMMENT)
+        fun_text_style = ft.TextStyle(size=14, color=DraculaColors.ORANGE)
+        tar_text_style = ft.TextStyle(size=14, color=DraculaColors.GREEN)
+        return ft.Row(
+            data="__load_funxtarget",
+            controls=[
+                ft.Text(
+                    spans=[
+                        ft.TextSpan(
+                            "use ",
+                            style=def_text_style,
+                        ),
+                        ft.TextSpan(
+                            "*fun*",
+                            style=fun_text_style,
+                            on_click=self.handle_func_click,
+                        ),
+                        ft.TextSpan(" to calculate the target ", style=def_text_style),
+                        ft.TextSpan(
+                            "*pn*",
+                            style=tar_text_style,
+                            on_click=self.handle_pn_click,
+                        ),
+                    ]
+                ),
+            ],
+        )
+
     def __load_FT_show(self):
         return ft.Row(
-            data="FTSHOW",
+            data="__load_FT_show",
             controls=[],
             wrap=True,
             visible=False,
         )
-    
-    def handle_func_click(self,e):
+
+    def handle_apply_click(self, e):
+        if "" in self.pad_data.values():
+            return
+        # print(f'handle_apply_click {self.pad_data=}')
+        if self.applycallback:
+            self.applycallback(scriptd=self.pad_data)
+
+    def handle_func_click(self, e):
         def function_click(k):
-            if isinstance(e.control, ft.TextButton):
-                e.control.content = k
+            if isinstance(e.control, ft.TextSpan):
+                e.control.text = f"{k}"
+                e.control.data = k
                 self.__FT_show.visible = False
-        funcs_dc = filterFunc.getFuncName()
-        
+                self.pad_data["func"] = k
+
+        if self.funcs_dc.__len__() == 0:
+            self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))
+
         fun_items = []
-        for key, item in funcs_dc.items():
+        for key, item in self.funcs_dc.items():
             fun_items.append(
-                ft.TextButton(
-                    content=f"{key}",
-                    icon=ft.Icons.FUNCTIONS_SHARP,
+                ft.Chip(
+                    padding=2,
+                    label=f"{key}",
+                    data=key,
+                    leading=ft.Icon(ft.Icons.FUNCTIONS),
                     on_click=lambda _, k=key: function_click(k),
                 )
             )
         self.__FT_show.controls = fun_items
         self.__FT_show.visible = True
-        
-        
+
+    def handle_pn_click(self, e):
+        def function_click(k):
+            if isinstance(e.control, ft.TextSpan):
+                e.control.text = f"{k}"
+                e.control.data = k
+                self.__FT_show.visible = False
+                self.pad_data["target"] = k
+
+        try:
+            global jackpot_seting
+            if not os.path.exists(jackpot_seting):
+                return
+            with open(jackpot_seting, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                random_data = data.get("randomData", {})
+                self.target_pn = ["all"]
+                for key, content in random_data.items():
+                    if isinstance(content, dict) and content.get("enabled") is True:
+                        self.target_pn.append(key)
+            # ? target_pn 已经装载执行下面
+            target_pn_items = []
+            for key in self.target_pn:
+                target_pn_items.append(
+                    ft.Chip(
+                        padding=2,
+                        label=f"{key}",
+                        data=key,
+                        leading=ft.Icon(ft.Icons.FACE),
+                        on_click=lambda _, k=key: function_click(k),
+                    )
+                )
+            self.__FT_show.controls = target_pn_items
+            self.__FT_show.visible = True
+        except Exception as e:
+            pass
+
 
 class CommandList(ft.Card):
-    def __init__(self, add_callback=None):
+    def __init__(self):
         super().__init__()
         self.content = self.__build_card()
-        self.addcallback = add_callback
+        self.addcallback = None
+        self.filterAddItem  = None
+        self.give_data = None
         self.automatically_save = False
 
     def did_mount(self):
@@ -744,6 +963,9 @@ class CommandList(ft.Card):
 
     def will_unmount(self):
         self.running = False
+        
+    def setting_give_data(self, give_data:None):
+        self.give_data = give_data
 
     def __build_card(self):
         return ft.Container(
@@ -761,6 +983,7 @@ class CommandList(ft.Card):
             controls=[
                 ft.TextButton(
                     expand=1,
+                    key='add_close',
                     icon=ft.Icons.FILTER,
                     content="Add",
                     on_click=self.handle_add,
@@ -769,24 +992,35 @@ class CommandList(ft.Card):
                     expand=1,
                     icon=ft.Icons.SAVE,
                     content="Save",
-                    # on_click=self.handle_Apply,
+                    on_click=self.handle_Save,
                 ),
                 ft.TextButton(
                     expand=1,
                     icon=ft.Icons.FILE_OPEN,
                     content="Open",
-                    # on_click=self.handle_Cancel,
-                ),
-                ft.Switch(
-                    expand=1,
-                    label="Automatically Saved",
-                    value=False,
-                    active_track_color=DraculaColors.PINK,
+                    on_click=self.handle_Open,
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
+        
+    def setting_edit_stat_open(self):
+        # e.control.content = "Add"
+        # e.control.icon = ft.Icons.FILTER
+        row_controls = self.content.content.controls
+        # 查找 key 为 "btn_add" 的控件
+        add_close = next((c for c in row_controls if c.key == "add_close"), None)
+        if not isinstance(add_close, ft.TextButton):
+            return
+        add_close.content = "Closed"
+        add_close.icon = ft.Icons.CLOSE
+    
+    def setting_add_callback(self, addCallBack=None):
+        self.addcallback = addCallBack
+        
+    def setting_filte_add_item(self, filterAddItem=None):
+        self.filterAddItem = filterAddItem
 
     def handle_add(self, e):
         # self.row_name_char += 1
@@ -804,9 +1038,39 @@ class CommandList(ft.Card):
                     e.control.icon = ft.Icons.FILTER
                 e.control.update()
 
-    def handle_Cancel(self):
-        self.visible = False
-        self.update()
+    async def handle_Save(self):
+        if not self.give_data:
+            return
+        fiter_data = self.give_data()
+        if not fiter_data:
+            return
+        self.page.session.store.set("filters", fiter_data)
+        temp = await self.page.shared_preferences.get("user_dir")
+        if self.page.web:
+            temp = app_data_path
+        jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
+        with open(jackpot_filters, "w", encoding="utf-8") as f:
+            for item in fiter_data:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+                
+    async def handle_Open(self):
+        temp = await self.page.shared_preferences.get("user_dir")
+        if self.page.web:
+            temp = app_data_path
+        jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
+        fiter_data = []
+        with open(jackpot_filters, "r", encoding="utf-8") as f:
+            for line in f:
+                # 去掉行尾换行符并确保行不为空
+                line = line.strip()
+                if line:
+                    # 将每一行的 JSON 字符串转回字典对象
+                    item = json.loads(line)
+                    fiter_data.append(item)
+                    if self.filterAddItem:
+                        self.filterAddItem(item)
+        self.page.session.store.set("filters", fiter_data)
+        
 
 
 #
@@ -823,306 +1087,270 @@ class FilterPage:
         self.page = page
         self.Filters_cmd_list = FiltersList()
         self.Input_Pad = InputPad()
-        self.Command_List = CommandList(add_callback=self.Input_Pad.openPad)
+        self.Command_List = CommandList()
+        
+        self.Input_Pad.settingApplyCallback(applycallback=self.Filters_cmd_list.addFilter)
+        self.Command_List.setting_add_callback(addCallBack=self.Input_Pad.openPad)
+        self.Command_List.setting_give_data(give_data=self.Filters_cmd_list.givefilterall)
+        self.Command_List.setting_filte_add_item(filterAddItem=self.Filters_cmd_list.addFilter)
+        self.Filters_cmd_list.setting_edit_Callback(self.Input_Pad.editePad)
+        self.Filters_cmd_list.setting_command_stat(add_closed_stat=self.Command_List.setting_edit_stat_open)
         # ? new control
-        self.filters_list = []
-        self.editing_index = -1
-        self.last_selected_target = None
-        self.filter_items_column = ft.Column(spacing=2)
-        # --- 1. 定义 Target 下拉列表 ---
-        self.pop_func = ft.PopupMenuButton(
-            content=ft.Text(value="func", color=DraculaColors.GREEN, weight="bold"),
-        )
-        self.Fab = ft.FloatingActionButton(
-            icon=ft.Icons.FILTER_LIST,
-            bgcolor=DraculaColors.PINK,
-            on_click=lambda _: self.open_dialog(-1),
-            # opacity=0.65,
-        )
-        self.pop_target = ft.PopupMenuButton(
-            content=ft.Text(value="all", color=DraculaColors.COMMENT, weight="bold"),
-        )
-        self.tary_row = tary()
-        self.condition_input = AI_Auto_input()
-        self.input_row = ft.Row(
-            controls=[
-                self.condition_input,
-            ],
-            align=ft.Alignment.CENTER_LEFT,
-            tight=True,
-        )
-        self.dlg = self.get_dlg()
+        # self.filters_list = []
+        # self.editing_index = -1
+        # self.last_selected_target = None
+        # self.filter_items_column = ft.Column(spacing=2)
+        # # --- 1. 定义 Target 下拉列表 ---
+        # self.pop_func = ft.PopupMenuButton(
+        #     content=ft.Text(value="func", color=DraculaColors.GREEN, weight="bold"),
+        # )
+        # self.Fab = ft.FloatingActionButton(
+        #     icon=ft.Icons.FILTER_LIST,
+        #     bgcolor=DraculaColors.PINK,
+        #     on_click=lambda _: self.open_dialog(-1),
+        #     # opacity=0.65,
+        # )
+        # self.pop_target = ft.PopupMenuButton(
+        #     content=ft.Text(value="all", color=DraculaColors.COMMENT, weight="bold"),
+        # )
+        # self.tary_row = tary()
+        # self.condition_input = AI_Auto_input()
+        # self.input_row = ft.Row(
+        #     controls=[
+        #         self.condition_input,
+        #     ],
+        #     align=ft.Alignment.CENTER_LEFT,
+        #     tight=True,
+        # )
+        # self.dlg = self.get_dlg()
         self.view = self.get_filter_view()
 
-    def close_dlg(self, e):
-        self.dlg.open = False
-        self.page.update()
+    # def close_dlg(self, e):
+    #     self.dlg.open = False
+    #     self.page.update()
 
-    def tary_change(self, e):
-        self.page.session.store.set("tary", e.data)
-        self.tary_row.visible = e.data
-        self.condition_input.disabled = e.data
-        self.condition_input.visible = not e.data
+    # def tary_change(self, e):
+    #     self.page.session.store.set("tary", e.data)
+    #     self.tary_row.visible = e.data
+    #     self.condition_input.disabled = e.data
+    #     self.condition_input.visible = not e.data
 
-    def get_dlg(self):
-        tary_value = self.page.session.store.get("tary") or False
-        dlg = ft.AlertDialog(
-            title=ft.Text("Filter Settings", color=DraculaColors.COMMENT),
-            content=ft.Container(
-                content=ft.Column(
-                    controls=[
-                        ft.Row(
-                            controls=[
-                                ft.Text("Select Fun:"),
-                                self.pop_func,
-                                ft.Text("Target:"),
-                                self.pop_target,
-                            ],
-                            tight=True,
-                        ),
-                        ft.Row(
-                            controls=[
-                                ft.Text(
-                                    "Conditions:", size=12, color=DraculaColors.COMMENT
-                                ),
-                                ft.Switch(
-                                    value=tary_value,
-                                    height=25,
-                                    on_change=self.tary_change,
-                                ),
-                            ],
-                            align=ft.Alignment.CENTER_LEFT,
-                            tight=True,
-                        ),
-                        self.tary_row,
-                        self.input_row,
-                    ],
-                    tight=True,
-                ),
-                width=350,
-            ),
-            actions=[
-                ft.TextButton("Cancel", on_click=self.close_dlg),
-                ft.Button(
-                    "Apply",
-                    bgcolor=DraculaColors.RED,
-                    color=DraculaColors.FOREGROUND,
-                    on_click=self.handle_apply,
-                ),
-            ],
-        )
-        return dlg
+    # def get_dlg(self):
+    #     tary_value = self.page.session.store.get("tary") or False
+    #     dlg = ft.AlertDialog(
+    #         title=ft.Text("Filter Settings", color=DraculaColors.COMMENT),
+    #         content=ft.Container(
+    #             content=ft.Column(
+    #                 controls=[
+    #                     ft.Row(
+    #                         controls=[
+    #                             ft.Text("Select Fun:"),
+    #                             self.pop_func,
+    #                             ft.Text("Target:"),
+    #                             self.pop_target,
+    #                         ],
+    #                         tight=True,
+    #                     ),
+    #                     ft.Row(
+    #                         controls=[
+    #                             ft.Text(
+    #                                 "Conditions:", size=12, color=DraculaColors.COMMENT
+    #                             ),
+    #                             ft.Switch(
+    #                                 value=tary_value,
+    #                                 height=25,
+    #                                 on_change=self.tary_change,
+    #                             ),
+    #                         ],
+    #                         align=ft.Alignment.CENTER_LEFT,
+    #                         tight=True,
+    #                     ),
+    #                     self.tary_row,
+    #                     self.input_row,
+    #                 ],
+    #                 tight=True,
+    #             ),
+    #             width=350,
+    #         ),
+    #         actions=[
+    #             ft.TextButton("Cancel", on_click=self.close_dlg),
+    #             ft.Button(
+    #                 "Apply",
+    #                 bgcolor=DraculaColors.RED,
+    #                 color=DraculaColors.FOREGROUND,
+    #                 on_click=self.handle_apply,
+    #             ),
+    #         ],
+    #     )
+    #     return dlg
 
-    def handle_func_click(self, name: str):
-        self.pop_func.content.value = name
+    # def handle_func_click(self, name: str):
+    #     self.pop_func.content.value = name
 
-    def handle_target_click(self, name: str):
-        self.pop_target.content.value = name
+    # def handle_target_click(self, name: str):
+    #     self.pop_target.content.value = name
 
-    def refresh_target_options(self):
-        try:
-            global jackpot_seting
-            enabled_tags = ["all"]
-            if not os.path.exists(jackpot_seting):
-                return
-            with open(jackpot_seting, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                random_data = data.get("randomData", {})
-                for key, content in random_data.items():
-                    if isinstance(content, dict) and content.get("enabled") is True:
-                        enabled_tags.append(key)
-            if len(enabled_tags) == 1:
-                return
-            #!在这里修改
-            new_pop_items = []
-            for key in enabled_tags:
-                new_pop_items.append(
-                    ft.PopupMenuItem(
-                        content=f"{key}",
-                        on_click=lambda e, k=key: self.handle_target_click(k),
-                    )
-                )
-            self.pop_target.items = new_pop_items
-        except Exception:
-            self.page.show_dialog(
-                get_snack_bar("refresh target options error.", "error")
-            )
-        return enabled_tags
+    # def handle_apply(self, e):
+    #     tary_value = self.page.session.store.get("tary") or False
+    #     _func = self.pop_func.content.value
+    #     _target = self.pop_target.content.value or "all"
+    #     _condit = (
+    #         self.condition_input.value
+    #         if not tary_value
+    #         else self.tary_row.showcommand.value
+    #     )
+    #     if _func == "func" or _condit == "":
+    #         return
 
-    def refresh_func_options(self):
-        self.funcs_dict = filterFunc.getFuncName()
-        new_pop_items = []
-        for key, item in self.funcs_dict.items():
-            new_pop_items.append(
-                ft.PopupMenuItem(
-                    content=f"{key}",
-                    on_click=lambda e, k=key: self.handle_func_click(k),
-                )
-            )
-        self.pop_func.items = new_pop_items
-        return list(self.funcs_dict.keys())
+    #     # 保存本次的选择，以便下次 Add 时默认选中
+    #     self.last_selected_target = _target
 
-    def handle_apply(self, e):
-        tary_value = self.page.session.store.get("tary") or False
-        _func = self.pop_func.content.value
-        _target = self.pop_target.content.value or "all"
-        _condit = (
-            self.condition_input.value
-            if not tary_value
-            else self.tary_row.showcommand.value
-        )
-        if _func == "func" or _condit == "":
-            return
+    #     new_data = {
+    #         "func": _func,
+    #         "target": _target,
+    #         "condition": _condit,
+    #     }
 
-        # 保存本次的选择，以便下次 Add 时默认选中
-        self.last_selected_target = _target
+    #     if self.editing_index == -1:
+    #         self.filters_list.append(new_data)
+    #     else:
+    #         self.filters_list[self.editing_index] = new_data
 
-        new_data = {
-            "func": _func,
-            "target": _target,
-            "condition": _condit,
-        }
+    #     self.dlg.open = False
+    #     self.render_filters()
+    #     self.page.session.store.set("filters", self.filters_list)
+    #     self.page.update()
 
-        if self.editing_index == -1:
-            self.filters_list.append(new_data)
-        else:
-            self.filters_list[self.editing_index] = new_data
+    # def open_dialog(self, index=-1):
+    #     self.editing_index = index
+    #     available_tags = self.refresh_target_options()
+    #     available_func = self.refresh_func_options()
 
-        self.dlg.open = False
-        self.render_filters()
-        self.page.session.store.set("filters", self.filters_list)
-        self.page.update()
+    #     if index == -1:
+    #         # --- 新增模式 (Add Filter) ---
+    #         # 优先级 1: 如果有上一次记录的选择，且该选择目前依然在启用列表中，则继续使用它
+    #         if self.last_selected_target in available_tags:
+    #             self.pop_target.content.value = self.last_selected_target
+    #         # 优先级 2: 否则，如果列表不为空，默认选择第一项
+    #         elif available_tags:
+    #             self.pop_target.content.value = available_tags[0]
+    #         else:
+    #             self.pop_target.content.value = "all"
 
-    def open_dialog(self, index=-1):
-        self.editing_index = index
-        available_tags = self.refresh_target_options()
-        available_func = self.refresh_func_options()
+    #         self.condition_input.value = ""  # 新增时清空输入框
+    #     else:
+    #         # --- 编辑模式 (Long Press) ---
+    #         item = self.filters_list[index]
+    #         # 确保保存的值还在当前启用列表中，否则下拉框会显示空白
+    #         self.pop_target.content.value = (
+    #             item["target"] if item["target"] in available_tags else None
+    #         )
+    #         self.pop_func.content.value = (
+    #             item["func"] if item["func"] in available_func else None
+    #         )
+    #         self.condition_input.value = item["condition"]
 
-        if index == -1:
-            # --- 新增模式 (Add Filter) ---
-            # 优先级 1: 如果有上一次记录的选择，且该选择目前依然在启用列表中，则继续使用它
-            if self.last_selected_target in available_tags:
-                self.pop_target.content.value = self.last_selected_target
-            # 优先级 2: 否则，如果列表不为空，默认选择第一项
-            elif available_tags:
-                self.pop_target.content.value = available_tags[0]
-            else:
-                self.pop_target.content.value = "all"
+    #     self.dlg.open = True
+    #     self.page.update()
 
-            self.condition_input.value = ""  # 新增时清空输入框
-        else:
-            # --- 编辑模式 (Long Press) ---
-            item = self.filters_list[index]
-            # 确保保存的值还在当前启用列表中，否则下拉框会显示空白
-            self.pop_target.content.value = (
-                item["target"] if item["target"] in available_tags else None
-            )
-            self.pop_func.content.value = (
-                item["func"] if item["func"] in available_func else None
-            )
-            self.condition_input.value = item["condition"]
+    # def render_filters(self):
+    #     token = Tokenizer()
 
-        self.dlg.open = True
-        self.page.update()
+    #     def tokenspan(text: str):
+    #         segments = token.Segment(text)
+    #         spans = [
+    #             ft.TextSpan("Condition: ", style=ft.TextStyle(color=ft.Colors.WHITE))
+    #         ]
+    #         for text, color in segments:
+    #             spans.append(
+    #                 ft.TextSpan(
+    #                     text,
+    #                     style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
+    #                 )
+    #             )
+    #         return spans
 
-    def render_filters(self):
-        token = Tokenizer()
+    #     def targetspan(text: str):
+    #         split_wc = spiltfortarget(text)
+    #         spans = []
+    #         for ttext, color in split_wc:
+    #             spans.append(
+    #                 ft.TextSpan(
+    #                     ttext,
+    #                     style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
+    #                 )
+    #             )
+    #         return spans
 
-        def tokenspan(text: str):
-            segments = token.Segment(text)
-            spans = [
-                ft.TextSpan("Condition: ", style=ft.TextStyle(color=ft.Colors.WHITE))
-            ]
-            for text, color in segments:
-                spans.append(
-                    ft.TextSpan(
-                        text,
-                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
-                    )
-                )
-            return spans
+    #     self.filter_items_column.controls.clear()
+    #     for idx, item in enumerate(self.filters_list):
+    #         self.filter_items_column.controls.append(
+    #             ft.Dismissible(
+    #                 content=ft.ListTile(
+    #                     leading=ft.Icon(
+    #                         ft.Icons.FILTER_LIST, color=DraculaColors.ORANGE
+    #                     ),
+    #                     title=ft.Text(
+    #                         spans=targetspan(
+    #                             f"Target: {item['target']} Func: {item['func']}"
+    #                         ),
+    #                         # color=DraculaColors.ORANGE,
+    #                     ),
+    #                     #! 添加文字渲染器
+    #                     subtitle=ft.Text(spans=tokenspan(item["condition"])),
+    #                     # subtitle=ft.Text(
+    #                     #     f"Condition: {item['condition']}",
+    #                     #     color=DraculaColors.PURPLE,
+    #                     # ),
+    #                     # bgcolor=DraculaColors.CURRENT_LINE,
+    #                     on_long_press=lambda _, i=idx: self.open_dialog(i),
+    #                 ),
+    #                 on_dismiss=lambda _, i=idx: self.remove_filter(i),
+    #                 dismiss_direction=ft.DismissDirection.START_TO_END,
+    #                 background=ft.Container(
+    #                     bgcolor=DraculaColors.RED,
+    #                     content=ft.Text(
+    #                         "Delete", color=DraculaColors.FOREGROUND, weight="bold"
+    #                     ),
+    #                     alignment=ft.Alignment.CENTER_LEFT,
+    #                     padding=20,
+    #                     border_radius=5,
+    #                 ),
+    #             )
+    #         )
 
-        def targetspan(text: str):
-            split_wc = spiltfortarget(text)
-            spans = []
-            for ttext, color in split_wc:
-                spans.append(
-                    ft.TextSpan(
-                        ttext,
-                        style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
-                    )
-                )
-            return spans
+    # def remove_filter(self, index):
+    #     self.filters_list.pop(index)
+    #     self.render_filters()
+    #     self.page.session.store.set("filters", self.filters_list)
+    #     self.page.update()
 
-        self.filter_items_column.controls.clear()
-        for idx, item in enumerate(self.filters_list):
-            self.filter_items_column.controls.append(
-                ft.Dismissible(
-                    content=ft.ListTile(
-                        leading=ft.Icon(
-                            ft.Icons.FILTER_LIST, color=DraculaColors.ORANGE
-                        ),
-                        title=ft.Text(
-                            spans=targetspan(
-                                f"Target: {item['target']} Func: {item['func']}"
-                            ),
-                            # color=DraculaColors.ORANGE,
-                        ),
-                        #! 添加文字渲染器
-                        subtitle=ft.Text(spans=tokenspan(item["condition"])),
-                        # subtitle=ft.Text(
-                        #     f"Condition: {item['condition']}",
-                        #     color=DraculaColors.PURPLE,
-                        # ),
-                        # bgcolor=DraculaColors.CURRENT_LINE,
-                        on_long_press=lambda _, i=idx: self.open_dialog(i),
-                    ),
-                    on_dismiss=lambda _, i=idx: self.remove_filter(i),
-                    dismiss_direction=ft.DismissDirection.START_TO_END,
-                    background=ft.Container(
-                        bgcolor=DraculaColors.RED,
-                        content=ft.Text(
-                            "Delete", color=DraculaColors.FOREGROUND, weight="bold"
-                        ),
-                        alignment=ft.Alignment.CENTER_LEFT,
-                        padding=20,
-                        border_radius=5,
-                    ),
-                )
-            )
+    # def save_file(self, user_dirs: str):
+    #     file_path = os.path.join(user_dirs, "jackpot_filters.dict")
+    #     with open(file_path, "w", encoding="utf-8") as f:
+    #         for item in self.filters_list:
+    #             f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    #     self.page.show_dialog(get_snack_bar(f"{file_path} saved successfully."))
 
-    def remove_filter(self, index):
-        self.filters_list.pop(index)
-        self.render_filters()
-        self.page.session.store.set("filters", self.filters_list)
-        self.page.update()
-
-    def save_file(self, user_dirs: str):
-        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
-        with open(file_path, "w", encoding="utf-8") as f:
-            for item in self.filters_list:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        self.page.show_dialog(get_snack_bar(f"{file_path} saved successfully."))
-
-    def load_file(self, user_dirs: str):
-        file_path = os.path.join(user_dirs, "jackpot_filters.dict")
-        if not os.path.isfile(file_path):
-            return
-        filters_list = []
-        with open(file_path, "r", encoding="utf-8") as f:
-            for line in f:
-                # 去掉行尾换行符并确保行不为空
-                line = line.strip()
-                if line:
-                    # 将每一行的 JSON 字符串转回字典对象
-                    item = json.loads(line)
-                    filters_list.append(item)
-        if not filters_list:
-            return
-        self.filters_list = filters_list
-        self.page.session.store.set("filters", self.filters_list)
-        self.render_filters()
-        self.page.update()
+    # def load_file(self, user_dirs: str):
+    #     file_path = os.path.join(user_dirs, "jackpot_filters.dict")
+    #     if not os.path.isfile(file_path):
+    #         return
+    #     filters_list = []
+    #     with open(file_path, "r", encoding="utf-8") as f:
+    #         for line in f:
+    #             # 去掉行尾换行符并确保行不为空
+    #             line = line.strip()
+    #             if line:
+    #                 # 将每一行的 JSON 字符串转回字典对象
+    #                 item = json.loads(line)
+    #                 filters_list.append(item)
+    #     if not filters_list:
+    #         return
+    #     self.filters_list = filters_list
+    #     self.page.session.store.set("filters", self.filters_list)
+    #     self.render_filters()
+    #     self.page.update()
 
     def get_filter_view(self):
         # self.page.overlay.append(self.dlg)

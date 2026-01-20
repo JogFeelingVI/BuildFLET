@@ -458,18 +458,18 @@ class UserDirectory(ft.Card):
             "User Directory",
             icon=ft.Icons.FOLDER_OFF,
             on_click=lambda _: self.page.run_task(self.select_user_dif),
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=2),
-                color=DraculaColors.FOREGROUND,
-                bgcolor=DraculaColors.COMMENT,
-                overlay_color=DraculaColors.PINK,
-                side=ft.BorderSide(
-                    1,
-                    DraculaColors.FOREGROUND,
-                    ft.BorderSideStrokeAlign.INSIDE,
-                    ft.BorderStyle.SOLID,
-                ),
-            ),
+            # style=ft.ButtonStyle(
+            #     shape=ft.RoundedRectangleBorder(radius=2),
+            #     color=DraculaColors.FOREGROUND,
+            #     bgcolor=DraculaColors.COMMENT,
+            #     overlay_color=DraculaColors.PINK,
+            #     # side=ft.BorderSide(
+            #     #     1,
+            #     #     DraculaColors.FOREGROUND,
+            #     #     ft.BorderSideStrokeAlign.INSIDE,
+            #     #     ft.BorderStyle.SOLID,
+            #     # ),
+            # ),
         )
         self.content = self.__build_card()
         self.count = 10

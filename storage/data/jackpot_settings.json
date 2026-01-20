@@ -1,17 +1,17 @@
 {
     "randomData": {
-        "note": "qweeee",
+        "note": "🇨🇳百万富翁缔造者",
         "PA": {
-            "range_start": 1,
-            "range_end": 36,
             "enabled": true,
+            "range_start": 1,
+            "range_end": 33,
             "count": 6
         },
         "PB": {
-            "range_start": 1,
-            "range_end": 12,
             "enabled": true,
-            "count": 2
+            "range_start": 1,
+            "range_end": 16,
+            "count": 1
         }
     }
 }
