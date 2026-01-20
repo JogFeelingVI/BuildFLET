@@ -689,7 +689,7 @@ class FiltersList(ft.Card):
                     ],
                 ),
                 #leading=ft.Icon(ft.Icons.FILTER_ALT),
-                delete_icon_color=DraculaColors.RED,
+label_padding=1,                delete_icon_color=DraculaColors.RED,
                 on_delete=deleteForE,
                 on_click=editForE,
             )
