@@ -2,8 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-21 05:36:10
-from operator import le
+# @Last Modified time: 2026-01-21 12:36:28
+
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -12,6 +12,7 @@ import flet as ft
 import os
 import json
 import asyncio
+import hashlib
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -619,6 +620,7 @@ class FiltersList(ft.Card):
         self.add_closed_stat = None
         self.filtersAll_change = "none"  # add none del edit
         self.filtersAll = []
+        self.filterSeed = set()
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
@@ -645,12 +647,56 @@ class FiltersList(ft.Card):
             content=self.__command_button(),
         )
 
+    def targetspan(self, text: str):
+        split_wc = spiltfortarget(text)
+        spans = []
+        for ttext, color in split_wc:
+            spans.append(
+                ft.TextSpan(
+                    ttext,
+                    style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
+                )
+            )
+        return spans
+
+    def tokenspan(self, text: str):
+        segments = Tokenizer().Segment(text)
+        spans = []
+        for text, color in segments:
+            spans.append(
+                ft.TextSpan(
+                    text,
+                    style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
+                )
+            )
+        return spans
+
     def addFilter(self, scriptd: dict):
         _scd = scriptd.copy()
         if "" in _scd.values():
             print(f"add filter error {_scd}")
             return
         if not isinstance(self.content.content, ft.Row):
+            return
+
+        # hash 确认
+        def hashcode(scr: dict, cmd: str = "is"):
+            scr_obj = f"{scr['func']}{scr['target']}{scr['condition']}"
+            scr_hash = hashlib.sha256(scr_obj.encode("utf-8"))
+            match cmd.lower().strip():
+                case "is":
+                    if scr_hash.hexdigest() not in self.filterSeed:
+                        self.filterSeed.add(f"{scr_hash.hexdigest()}")
+                        return True
+                    else:
+                        return False
+                case "del":
+                    if scr_hash.hexdigest() in self.filterSeed:
+                        self.filterSeed.remove(scr_hash.hexdigest())
+                case _:
+                    pass
+
+        if hashcode(_scd, "is") == False:
             return
 
         controls = self.content.content.controls
@@ -660,6 +706,7 @@ class FiltersList(ft.Card):
                 return
             e_chip = e.control
             e_script = e.control.data
+            hashcode(e_script, "del")
             controls.remove(e_chip)
             self.filtersAll.remove(e_script)
             self.filtersAll_change = "del"
@@ -670,6 +717,7 @@ class FiltersList(ft.Card):
             e_chip = e.control
             e_script = e.control.data
             # print(f"edit {e_chip.data}")
+            hashcode(e_script, "del")
             controls.remove(e_chip)
             self.filtersAll.remove(e_script)
             if self.editItemCallback:
@@ -686,8 +734,11 @@ class FiltersList(ft.Card):
                 label=ft.Column(
                     spacing=0,
                     controls=[
-                        ft.Text(f"{_scd['func']} {_scd['target']}",size=14),
-                        ft.Text(f"{_scd['condition']}", size=14),
+                        ft.Text(
+                            spans=self.targetspan(f"{_scd['func']} {_scd['target']}"),
+                            size=14,
+                        ),
+                        ft.Text(spans=self.tokenspan(f"{_scd['condition']}"), size=14),
                     ],
                 ),
                 # leading=ft.Icon(ft.Icons.FILTER_ALT),
@@ -695,7 +746,10 @@ class FiltersList(ft.Card):
                 padding=3,
                 delete_icon=ft.Container(
                     content=ft.Icon(
-                        ft.Icons.DELETE_FOREVER, color=DraculaColors.RED, size=20, margin=0
+                        ft.Icons.DELETE_FOREVER,
+                        color=DraculaColors.RED,
+                        size=20,
+                        margin=0,
                     ),
                     margin=ft.Margin.all(0),
                     padding=0,
@@ -704,7 +758,6 @@ class FiltersList(ft.Card):
                 on_delete=deleteForE,
                 on_click=editForE,
             )
-            
         )
         self.filtersAll_change = "add"
         self.content.content.update()
@@ -719,7 +772,13 @@ class FiltersList(ft.Card):
         return ft.Row(
             wrap=True,
             controls=[
-                ft.Switch(label="auto save", value=False, on_change=self.handle_switch),
+                ft.Switch(
+                    value=False,
+                    on_change=self.handle_switch,
+                    tooltip=ft.Tooltip(
+                        message="It saves automatically every 20 seconds."
+                    ),
+                ),
                 # "Various filter commands can be added to narrow down the massive pool of phone numbers."
             ],
             # 给这一行打个标签，方便以后提取数据
@@ -819,12 +878,11 @@ class InputPad(ft.Card):
                         continue
                     if not isinstance(item.controls[0], ft.Chip):
                         continue
-                    item.controls[0].label='Click to finish editing.'
+                    item.controls[0].label = "Click to finish editing."
                 case _:
                     pass
         self.visible = True
         self.update()
-        
 
     def __build_card(self):
         return ft.Container(
@@ -928,9 +986,9 @@ class InputPad(ft.Card):
     def handle_apply_click(self, e):
         if "" in self.pad_data.values():
             return
-        if not isinstance(e.control,ft.Chip):
+        if not isinstance(e.control, ft.Chip):
             return
-        e.control.label = 'Click to add a filter.'
+        e.control.label = "Click to add a filter."
         # print(f'handle_apply_click {self.pad_data=}')
         if self.applycallback:
             self.applycallback(scriptd=self.pad_data)
@@ -942,7 +1000,7 @@ class InputPad(ft.Card):
                 e.control.text = f"{k}"
                 e.control.data = k
                 self.__FT_show.visible = False
-                self.pad_data["func"] = f'{k}'.strip()
+                self.pad_data["func"] = f"{k}".strip()
 
         if self.funcs_dc.__len__() == 0:
             self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))
@@ -967,7 +1025,7 @@ class InputPad(ft.Card):
                 e.control.text = f"{k}"
                 e.control.data = k
                 self.__FT_show.visible = False
-                self.pad_data["target"] = f'{k}'.strip()
+                self.pad_data["target"] = f"{k}".strip()
 
         try:
             global jackpot_seting

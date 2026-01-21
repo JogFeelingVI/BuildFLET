@@ -86,11 +86,11 @@ Lotter_Data = {
 
 
 class input_user_rule(ft.Card):
-    def __init__(self, callback=None):
+    def __init__(self):
         super().__init__()
         self.visible = False
         self.content = self.__build_card()
-        self.callback = callback
+        self.render_filters = None
         self.row_name_char = 65
         self.templejson = {
             "randomData": {
@@ -98,6 +98,9 @@ class input_user_rule(ft.Card):
                 "PA": {"enabled": True, "range_start": 0, "range_end": 9, "count": 1},
             }
         }
+
+    def setting_render_filters(self, render_filters=None):
+        self.render_filters = render_filters
 
     def did_mount(self):
         self.running = True
@@ -324,12 +327,18 @@ class showRule(ft.Card):
 class DefaultSettings(ft.Card):
     """默认设置指示器"""
 
-    def __init__(self, add_rule=None, callback=None):
+    def __init__(self):
         super().__init__()
         self.content = self.__build_card()
         # self.apply_rule = {}
-        self.callback = callback
+        self.render_filters = None
+        self.add_rule = None
+
+    def setting_add_rule(self, add_rule=None):
         self.add_rule = add_rule
+
+    def setting_render_filters(self, render_filters=None):
+        self.render_filters = render_filters
 
     def did_mount(self):
         self.running = True
@@ -349,18 +358,6 @@ class DefaultSettings(ft.Card):
                 content="new rule",
                 tooltip=ft.Tooltip(message="new game rule"),
                 on_click=self.handle_add_rule,
-                # style=ft.ButtonStyle(
-                #     shape=ft.RoundedRectangleBorder(radius=2),
-                #     color=DraculaColors.FOREGROUND,
-                #     bgcolor=DraculaColors.COMMENT,
-                #     overlay_color=DraculaColors.PINK,
-                #     side=ft.BorderSide(
-                #         1,
-                #         DraculaColors.FOREGROUND,
-                #         ft.BorderSideStrokeAlign.INSIDE,
-                #         ft.BorderStyle.SOLID,
-                #     ),
-                # ),
             )
             button_list = [add_rule]
 
@@ -421,8 +418,8 @@ class DefaultSettings(ft.Card):
             #     get_snack_bar(f"Preset '{name}' has been applied and saved.")
             # )
         self.page.session.store.set("settings", valid_json)
-        if self.callback:
-            self.callback()
+        if self.render_filters:
+            self.render_filters()
 
     def __build_card(self):
         return ft.Container(
@@ -458,25 +455,13 @@ class UserDirectory(ft.Card):
             "User Directory",
             icon=ft.Icons.FOLDER_OFF,
             on_click=lambda _: self.page.run_task(self.select_user_dif),
-            # style=ft.ButtonStyle(
-            #     shape=ft.RoundedRectangleBorder(radius=2),
-            #     color=DraculaColors.FOREGROUND,
-            #     bgcolor=DraculaColors.COMMENT,
-            #     overlay_color=DraculaColors.PINK,
-            #     # side=ft.BorderSide(
-            #     #     1,
-            #     #     DraculaColors.FOREGROUND,
-            #     #     ft.BorderSideStrokeAlign.INSIDE,
-            #     #     ft.BorderStyle.SOLID,
-            #     # ),
-            # ),
         )
         self.content = self.__build_card()
         self.count = 10
 
     def did_mount(self):
         self.running = True
-        self.page.run_task(self.update_ui)
+        self.page.run_task(self.Checking_user_dir)
 
     def will_unmount(self):
         self.running = False
@@ -500,7 +485,7 @@ class UserDirectory(ft.Card):
             ),
         )
 
-    async def update_ui(self):
+    async def Checking_user_dir(self):
         if self.running:
             await asyncio.sleep(0.5)  # 初始延迟，确保页面加载完成
 
@@ -526,7 +511,7 @@ class UserDirectory(ft.Card):
             )
             if picked_dir:
                 await self.page.shared_preferences.set("user_dir", picked_dir)
-                await self.update_ui()
+                await self.Checking_user_dir()
 
 
 class SetingsPage:
@@ -536,10 +521,13 @@ class SetingsPage:
         self.page = page
 
         self.rule_mode_show = showRule()
-        self.uese_input_mode = input_user_rule(self.render_filters)
-        self.default_setings = DefaultSettings(self.open_dialog, self.render_filters)
+        self.uese_input_mode = input_user_rule()
+        self.default_setings = DefaultSettings()
         self.apply_rule = {}
 
+        self.uese_input_mode.setting_render_filters(self.render_filters)
+        self.default_setings.setting_add_rule(self.open_dialog)
+        self.default_setings.setting_render_filters(self.render_filters)
         self.view = self.get_seting_view()
 
     def get_Selection_line(self, Selection_name: str):
