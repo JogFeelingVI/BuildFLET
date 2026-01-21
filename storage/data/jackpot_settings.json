@@ -1,17 +1,17 @@
 {
     "randomData": {
-        "note": "🇨🇳百万富翁缔造者",
+        "note": "🇨🇳体育大乐透",
         "PA": {
             "enabled": true,
             "range_start": 1,
-            "range_end": 33,
-            "count": 6
+            "range_end": 35,
+            "count": 5
         },
         "PB": {
             "enabled": true,
             "range_start": 1,
-            "range_end": 16,
-            "count": 1
+            "range_end": 12,
+            "count": 2
         }
     }
 }

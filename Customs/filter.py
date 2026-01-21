@@ -2,7 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-20 13:00:19
+# @Last Modified time: 2026-01-21 02:51:51
+from operator import le
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -601,11 +602,11 @@ class tary(ft.Row):
         # print(f"run uc_weic_change done.")
 
 
-#
-#
-# New de kongjian
-#
-#
+_ = r"""_|_|_|_|  _|  _|    _|                                    _|        _|              _|      
+_|            _|  _|_|_|_|    _|_|    _|  _|_|    _|_|_|  _|              _|_|_|  _|_|_|_|  
+_|_|_|    _|  _|    _|      _|_|_|_|  _|_|      _|_|      _|        _|  _|_|        _|      
+_|        _|  _|    _|      _|        _|            _|_|  _|        _|      _|_|    _|      
+_|        _|  _|      _|_|    _|_|_|  _|        _|_|_|    _|_|_|_|  _|  _|_|_|        _|_|  """
 
 
 class FiltersList(ft.Card):
@@ -616,15 +617,15 @@ class FiltersList(ft.Card):
         self.content = self.__build_card()
         self.editItemCallback = None
         self.add_closed_stat = None
-        self.filtersAll_change = "none"  # add none del save
+        self.filtersAll_change = "none"  # add none del edit
         self.filtersAll = []
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
-        
-    def setting_command_stat(self,add_closed_stat:None):
+
+    def setting_command_stat(self, add_closed_stat: None):
         self.add_closed_stat = add_closed_stat
-        
+
     def givefilterall(self):
         return self.filtersAll
 
@@ -676,6 +677,7 @@ class FiltersList(ft.Card):
             if self.add_closed_stat:
                 self.add_closed_stat()
             e_chip.update()
+            self.filtersAll_change = "edit"
 
         self.filtersAll.append(_scd)
         controls.append(
@@ -684,39 +686,83 @@ class FiltersList(ft.Card):
                 label=ft.Column(
                     spacing=0,
                     controls=[
-                        ft.Text(f"use {_scd['func']} target {_scd['target']}"),
-                        ft.Text(f"{_scd['condition']}"),
+                        ft.Text(f"use {_scd['func']} target {_scd['target']}",size=14),
+                        ft.Text(f"{_scd['condition']}", size=14),
                     ],
                 ),
-                #leading=ft.Icon(ft.Icons.FILTER_ALT),
-label_padding=0,
-padding=2,               delete_icon_color=DraculaColors.RED,
+                # leading=ft.Icon(ft.Icons.FILTER_ALT),
+                label_padding=ft.Padding.only(left=3),
+                padding=3,
+                delete_icon=ft.Container(
+                    content=ft.Icon(
+                        ft.Icons.DELETE_FOREVER, color=DraculaColors.RED, size=20, margin=0
+                    ),
+                    margin=ft.Margin.all(0),
+                    padding=0,
+                ),
+                # delete_icon_color=DraculaColors.RED,
                 on_delete=deleteForE,
                 on_click=editForE,
             )
+            
         )
         self.filtersAll_change = "add"
         self.content.content.update()
-        self.page.run_task(self.filter_data_task)
-        
-    async def filter_data_task(self):
+        self.filter_data_task()
+
+    def filter_data_task(self):
         # self.page.session.store.set("filters", fiter_data)
-        await self.page.session.store.set("filters", self.filtersAll)
+        self.page.session.store.set("filters", self.filtersAll)
 
     def __command_button(self):
         """Add, Apply, Cancel"""
         return ft.Row(
             wrap=True,
             controls=[
-                ft.Switch(
-                    label="auto save",
-                    value=False,
-                ),
+                ft.Switch(label="auto save", value=False, on_change=self.handle_switch),
                 # "Various filter commands can be added to narrow down the massive pool of phone numbers."
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
+
+    def handle_switch(self, e):
+        switch = e.control
+        if not isinstance(switch, ft.Switch):
+            return
+        if not switch.value:
+            switch.badge = None
+            return
+        self.page.run_task(self.auto_save, switch, 10)
+
+    async def auto_save(self, sw: ft.Switch, time: int = 10):
+        _time = time
+        while _time != 0:
+            await asyncio.sleep(2)
+            _time -= 1
+            sw.badge = f"{_time}"
+            if self.filtersAll:
+                await self.saveTodict()
+            if _time == 0:
+                _time = time
+            if not sw.value:
+                sw.badge = None
+                break
+            sw.update()
+
+    async def saveTodict(self):
+        if self.filtersAll_change == "none":
+            return
+        self.page.session.store.set("filters", self.filtersAll)
+        temp = await self.page.shared_preferences.get("user_dir")
+        if self.page.web:
+            temp = app_data_path
+        jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
+        with open(jackpot_filters, "w", encoding="utf-8") as f:
+            for item in self.filtersAll:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        print(f"Saved.")
+        self.filtersAll_change = "none"
 
 
 class InputPad(ft.Card):
@@ -735,7 +781,7 @@ class InputPad(ft.Card):
 
     def will_unmount(self):
         self.running = False
-        
+
     def settingApplyCallback(self, applycallback=None):
         self.applycallback = applycallback
 
@@ -753,26 +799,32 @@ class InputPad(ft.Card):
             match item.data:
                 case "__load_funxtarget":
                     if not isinstance(item, ft.Row):
-                        return
+                        continue
                     if not isinstance(item.controls[0], ft.Text):
-                        return
+                        continue
                     text_spans = item.controls[0].spans
-                    text_spans[1].text = script['func']
-                    text_spans[3].text = script['target']
-                    self.pad_data['func'] = script['func']
-                    self.pad_data['target'] = script['target']
-
+                    text_spans[1].text = script["func"]
+                    text_spans[3].text = script["target"]
+                    self.pad_data["func"] = script["func"]
+                    self.pad_data["target"] = script["target"]
+                    self.pad_data["condition"] = script["condition"]
+                    # print(f"editPad {self.pad_data=} {text_spans[1].text=}")
                 case "__command_input":
                     if not isinstance(item, ft.TextField):
-                        return
+                        continue
                     item.value = script["condition"]
                 case "__apply_text":
                     # print('__apply_text.')
-                    pass
+                    if not isinstance(item, ft.Row):
+                        continue
+                    if not isinstance(item.controls[0], ft.Chip):
+                        continue
+                    item.controls[0].label='Click to finish editing.'
                 case _:
                     pass
         self.visible = True
         self.update()
+        
 
     def __build_card(self):
         return ft.Container(
@@ -806,24 +858,14 @@ class InputPad(ft.Card):
 
     def __apply_text(self):
         """Click "Apply" to add the filter."""
-        def_text_style = ft.TextStyle(size=14, color=DraculaColors.COMMENT)
-        fun_text_style = ft.TextStyle(size=14, color=DraculaColors.GREEN)
         return ft.Row(
             data="__apply_text",
             controls=[
-                ft.Text(
-                    spans=[
-                        ft.TextSpan(
-                            "Click ",
-                            style=def_text_style,
-                        ),
-                        ft.TextSpan(
-                            "'Apply'",
-                            style=fun_text_style,
-                            on_click=self.handle_apply_click,
-                        ),
-                        ft.TextSpan(" to add the filter.", style=def_text_style),
-                    ]
+                ft.Chip(
+                    label="Click to add a filter.",
+                    label_text_style=ft.TextStyle(color=DraculaColors.BACKGROUND),
+                    bgcolor=DraculaColors.GREEN,
+                    on_click=self.handle_apply_click,
                 ),
             ],
         )
@@ -832,7 +874,7 @@ class InputPad(ft.Card):
         def input_change(e):
             if not isinstance(e.control, ft.TextField):
                 return
-            self.pad_data["condition"] = f"{e.control.value}"
+            self.pad_data["condition"] = f"{e.control.value}".strip()
 
         return ft.TextField(
             data="__command_input",
@@ -878,15 +920,21 @@ class InputPad(ft.Card):
             data="__load_FT_show",
             controls=[],
             wrap=True,
+            spacing=2,
+            run_spacing=2,
             visible=False,
         )
 
     def handle_apply_click(self, e):
         if "" in self.pad_data.values():
             return
+        if not isinstance(e.control,ft.Chip):
+            return
+        e.control.label = 'Click to add a filter.'
         # print(f'handle_apply_click {self.pad_data=}')
         if self.applycallback:
             self.applycallback(scriptd=self.pad_data)
+        e.control.update()
 
     def handle_func_click(self, e):
         def function_click(k):
@@ -894,7 +942,7 @@ class InputPad(ft.Card):
                 e.control.text = f"{k}"
                 e.control.data = k
                 self.__FT_show.visible = False
-                self.pad_data["func"] = k
+                self.pad_data["func"] = f'{k}'.strip()
 
         if self.funcs_dc.__len__() == 0:
             self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))
@@ -919,7 +967,7 @@ class InputPad(ft.Card):
                 e.control.text = f"{k}"
                 e.control.data = k
                 self.__FT_show.visible = False
-                self.pad_data["target"] = k
+                self.pad_data["target"] = f'{k}'.strip()
 
         try:
             global jackpot_seting
@@ -955,7 +1003,7 @@ class CommandList(ft.Card):
         super().__init__()
         self.content = self.__build_card()
         self.addcallback = None
-        self.filterAddItem  = None
+        self.filterAddItem = None
         self.give_data = None
         self.automatically_save = False
 
@@ -964,8 +1012,8 @@ class CommandList(ft.Card):
 
     def will_unmount(self):
         self.running = False
-        
-    def setting_give_data(self, give_data:None):
+
+    def setting_give_data(self, give_data: None):
         self.give_data = give_data
 
     def __build_card(self):
@@ -984,7 +1032,7 @@ class CommandList(ft.Card):
             controls=[
                 ft.TextButton(
                     expand=1,
-                    key='add_close',
+                    key="add_close",
                     icon=ft.Icons.FILTER,
                     content="Add",
                     on_click=self.handle_add,
@@ -1005,7 +1053,7 @@ class CommandList(ft.Card):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
-        
+
     def setting_edit_stat_open(self):
         # e.control.content = "Add"
         # e.control.icon = ft.Icons.FILTER
@@ -1016,10 +1064,10 @@ class CommandList(ft.Card):
             return
         add_close.content = "Closed"
         add_close.icon = ft.Icons.CLOSE
-    
+
     def setting_add_callback(self, addCallBack=None):
         self.addcallback = addCallBack
-        
+
     def setting_filte_add_item(self, filterAddItem=None):
         self.filterAddItem = filterAddItem
 
@@ -1053,7 +1101,7 @@ class CommandList(ft.Card):
         with open(jackpot_filters, "w", encoding="utf-8") as f:
             for item in fiter_data:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-                
+
     async def handle_Open(self):
         temp = await self.page.shared_preferences.get("user_dir")
         if self.page.web:
@@ -1071,7 +1119,6 @@ class CommandList(ft.Card):
                     if self.filterAddItem:
                         self.filterAddItem(item)
         self.page.session.store.set("filters", fiter_data)
-        
 
 
 #
@@ -1089,13 +1136,21 @@ class FilterPage:
         self.Filters_cmd_list = FiltersList()
         self.Input_Pad = InputPad()
         self.Command_List = CommandList()
-        
-        self.Input_Pad.settingApplyCallback(applycallback=self.Filters_cmd_list.addFilter)
+
+        self.Input_Pad.settingApplyCallback(
+            applycallback=self.Filters_cmd_list.addFilter
+        )
         self.Command_List.setting_add_callback(addCallBack=self.Input_Pad.openPad)
-        self.Command_List.setting_give_data(give_data=self.Filters_cmd_list.givefilterall)
-        self.Command_List.setting_filte_add_item(filterAddItem=self.Filters_cmd_list.addFilter)
+        self.Command_List.setting_give_data(
+            give_data=self.Filters_cmd_list.givefilterall
+        )
+        self.Command_List.setting_filte_add_item(
+            filterAddItem=self.Filters_cmd_list.addFilter
+        )
         self.Filters_cmd_list.setting_edit_Callback(self.Input_Pad.editePad)
-        self.Filters_cmd_list.setting_command_stat(add_closed_stat=self.Command_List.setting_edit_stat_open)
+        self.Filters_cmd_list.setting_command_stat(
+            add_closed_stat=self.Command_List.setting_edit_stat_open
+        )
         # ? new control
         # self.filters_list = []
         # self.editing_index = -1
