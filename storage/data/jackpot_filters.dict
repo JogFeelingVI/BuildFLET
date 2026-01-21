@@ -1,1 +1,3 @@
-{"func": "zsSum", "target": "PA", "condition": "range 10,15"}
+{"func": "Sum", "target": "PA", "condition": "bit1,2 range 2,15 --z"}
+{"func": "Sum", "target": "PA", "condition": ">32"}
+{"func": "Ac", "target": "PA", "condition": "<4"}

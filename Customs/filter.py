@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-21 02:51:51
+# @Last Modified time: 2026-01-21 05:36:10
 from operator import le
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -686,7 +686,7 @@ class FiltersList(ft.Card):
                 label=ft.Column(
                     spacing=0,
                     controls=[
-                        ft.Text(f"use {_scd['func']} target {_scd['target']}",size=14),
+                        ft.Text(f"{_scd['func']} {_scd['target']}",size=14),
                         ft.Text(f"{_scd['condition']}", size=14),
                     ],
                 ),
@@ -742,7 +742,7 @@ class FiltersList(ft.Card):
             _time -= 1
             sw.badge = f"{_time}"
             if self.filtersAll:
-                await self.saveTodict()
+                self.page.run_task(self.saveTodict)
             if _time == 0:
                 _time = time
             if not sw.value:
@@ -761,7 +761,7 @@ class FiltersList(ft.Card):
         with open(jackpot_filters, "w", encoding="utf-8") as f:
             for item in self.filtersAll:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        print(f"Saved.")
+        print(f"saveTodict is run.")
         self.filtersAll_change = "none"
 
 
