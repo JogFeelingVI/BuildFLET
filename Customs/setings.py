@@ -278,7 +278,7 @@ class showRule(ft.Card):
             if key == "note":
                 textlist.append(
                     ft.Text(
-                        f"🚩Note: {item}",
+                        f"{item}",
                         size=15,
                         weight="bold",
                         color=DraculaColors.ORANGE,

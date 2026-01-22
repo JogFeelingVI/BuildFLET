@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-22 06:28:20
+# @Last Modified time: 2026-01-22 14:22:06
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
@@ -184,6 +184,20 @@ class ItemC2(ft.GestureDetector):
         self.running = False
         self.state_exp = 'none' # "ref" "done"
         self.Itemc2_remove = None
+        
+        self.red_glow = ft.BoxShadow(
+            blur_radius=25,       # 阴影模糊程度（数值越大越柔和）
+            spread_radius=2,      # 阴影扩散范围
+            color=ft.Colors.with_opacity(0.6, ft.Colors.RED), # 红色半透明
+            blur_style=ft.BlurStyle.NORMAL,
+        )
+        
+        self.blue_glow = ft.BoxShadow(
+            blur_radius=25,       # 阴影模糊程度（数值越大越柔和）
+            spread_radius=2,      # 阴影扩散范围
+            color=ft.Colors.with_opacity(0.6, ft.Colors.BLUE), # 红色半透明
+            blur_style=ft.BlurStyle.NORMAL,
+        )
 
         # 1. 构建内部显示的 Chip
         self.chip_content = ft.Text("03 07 11 17 29 30 + 09",size=20,color=DraculaColors.PURPLE)
@@ -193,6 +207,7 @@ class ItemC2(ft.GestureDetector):
                 content=self.chip_content,
                 alignment=ft.Alignment.CENTER_LEFT,
                 expand=True,
+                animate=ft.Animation(300, ft.AnimationCurve.DECELERATE),
             ),
             shape=ft.RoundedRectangleBorder(radius=8),
             bgcolor=DraculaColors.CURRENT_LINE, # 替换为你的 DraculaColors.CURRENT_LINE
@@ -219,7 +234,7 @@ class ItemC2(ft.GestureDetector):
         self.running = False
         
     def refresh(self, name:str="None"):
-        if self.is_refreshing:
+        if self.is_refreshing or self.chip.selected:
             return
         # print(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
@@ -239,6 +254,7 @@ class ItemC2(ft.GestureDetector):
                 if state:
                     # 成功情况
                     self.chip_content.value = tempd
+                    self.chip_content.color = DraculaColors.PURPLE
                     self.state_exp = 'done'
                     self.update()
                     print('Search successful')
@@ -246,7 +262,7 @@ class ItemC2(ft.GestureDetector):
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待
                     self.chip_content.value = f"refresh {tempd}"
-                    self.chip_content.color = DraculaColors.PURPLE
+                    self.chip_content.color = DraculaColors.ORANGE
                     self.state_exp = 'ref'
                     self.update()
                     await asyncio.sleep(0.3)  # 给 CPU 喘息时间，也让 UI 有机会渲染
@@ -254,6 +270,7 @@ class ItemC2(ft.GestureDetector):
                 if count >= max_retries:
                     print("count is max_retries, work stoping.")
                     self.chip_content.value = "Please swipe right to restart."  # 显示错误/超时界面
+                    self.chip_content.color = DraculaColors.RED
                     self.state_exp = 'none'
                     self.update()
                     break
@@ -278,7 +295,8 @@ class ItemC2(ft.GestureDetector):
         if filter_jp.handle(result) == False:
             return [rd.get_exp(result), False]
         return (rd.get_exp(result), True)
-        
+    
+           
 
     def handle_drag_update(self, e: ft.DragUpdateEvent):
         # 累加滑动距离 (e.primary_delta 在水平滑动时是 x 轴的变化量)
@@ -308,28 +326,27 @@ class ItemC2(ft.GestureDetector):
     async def handle_select(self, e):
         
         if self.is_refreshing:
-            self.chip.data = False
+            self.chip.selected = False
             return
         if self.state_exp != "done":
-            self.chip.data = False
+            self.chip.selected = False
             return
-        raw_json = await self.page.shared_preferences.get("save_data_list")
-        save_list = json.loads(raw_json) if raw_json else []
-        if  self.chip_content.value not in set(save_list):
-            save_list.append(self.chip_content.value)
-            await self.page.shared_preferences.set(
-                "save_data_list", json.dumps(save_list)
-            )
+        # raw_json = await self.page.shared_preferences.get("save_data_list")
+        # save_list = json.loads(raw_json) if raw_json else []
+        # if  self.chip_content.value not in set(save_list):
+        #     save_list.append(self.chip_content.value)
+        #     await self.page.shared_preferences.set(
+        #         "save_data_list", json.dumps(save_list)
+        #     )
 
         self.update()
 
     def handle_delete(self, e):
-        chip = e.control
-        if not isinstance(chip, ft.Chip):
+        if self.is_refreshing or self.chip.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
-        chip.update()
+        self.chip.update()
         print("点击了删除图标")
 
 #
