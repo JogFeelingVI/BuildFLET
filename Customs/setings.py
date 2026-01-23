@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-19 07:52:10
+# @Last Modified time: 2026-01-23 13:27:44
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -262,6 +262,46 @@ class showRule(ft.Card):
     def updateCard(self):
         self.page.run_task(self.__update_card)
 
+    def get_lottery_text(self, exp: str):
+        spans = []
+        before, sep, after = exp.partition("+")
+        print([before.strip(), sep.strip(), after.strip()])
+        # 2. 匹配逻辑
+        match [before.strip(), sep.strip(), after.strip()]:
+            # 情况 A: 刚好两组数据（如 6+1 模式）
+            case [b, s, a] if len(b) > len(a) and s == "+":
+                # 第一组（红球）
+                spans.append(
+                    ft.TextSpan(
+                        b,
+                        ft.TextStyle(color=DraculaColors.RED, weight="bold"),
+                    )
+                )
+                # 分隔符
+                spans.append(
+                    ft.TextSpan(
+                        f' {s} ',
+                        ft.TextStyle(color=DraculaColors.PURPLE, weight="bold"),
+                    )
+                )
+                # 第二组（紫/蓝球）
+                spans.append(
+                    ft.TextSpan(
+                        a,
+                        ft.TextStyle(color=DraculaColors.PURPLE, weight="bold"),
+                    )
+                )
+
+            # 情况 B: 多组数据（3组或更多）
+            case [b, s, a] if s == a == "" and b != a:
+                spans.append(
+                    ft.TextSpan(b, ft.TextStyle(color=DraculaColors.RED, weight="bold"))
+                )
+        return ft.Text(
+            size=20,
+            spans=spans,
+        )
+
     async def __update_card(self):
         if not self.running:
             return
@@ -273,7 +313,8 @@ class showRule(ft.Card):
         if not randomDatax:
             return
         example = randomData(seting=randomDatax).get_exp()
-        textlist = [LotteryBalls(example, 32, "LE"), ft.Divider()]
+        # textlist = [LotteryBalls(example, 32, "LE"), ft.Divider()]
+        textlist = [self.get_lottery_text(example), ft.Divider()]
         for key, item in randomDatax.items():
             if key == "note":
                 textlist.append(
@@ -498,7 +539,7 @@ class UserDirectory(ft.Card):
 
     async def getuser_dir(self):
         """获取用户目录"""
-        temp = await self.page.shared_preferences.get("user_dir")
+        temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
             temp = app_data_path
         print(f"Fetched user directory: {temp=}")
@@ -510,7 +551,7 @@ class UserDirectory(ft.Card):
                 dialog_title="Please select a directory?"
             )
             if picked_dir:
-                await self.page.shared_preferences.set("user_dir", picked_dir)
+                await ft.SharedPreferences().set("user_dir", picked_dir)
                 await self.Checking_user_dir()
 
 

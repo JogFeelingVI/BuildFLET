@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-22 14:22:06
+# @Last Modified time: 2026-01-23 13:29:10
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
@@ -175,32 +175,34 @@ class ItemC2(ft.GestureDetector):
 
     def __init__(self):
         super().__init__()
-        
+
         # 用于记录累积的滑动距离
         self.drag_accumulated = 0
         # 触发动作的阈值（滑动超过 100 像素则触发）
         self.threshold = 100
         self.is_refreshing = False
         self.running = False
-        self.state_exp = 'none' # "ref" "done"
+        self.state_exp = "none"  # "ref" "done"
         self.Itemc2_remove = None
-        
+
         self.red_glow = ft.BoxShadow(
-            blur_radius=25,       # 阴影模糊程度（数值越大越柔和）
-            spread_radius=2,      # 阴影扩散范围
-            color=ft.Colors.with_opacity(0.6, ft.Colors.RED), # 红色半透明
+            blur_radius=25,  # 阴影模糊程度（数值越大越柔和）
+            spread_radius=2,  # 阴影扩散范围
+            color=ft.Colors.with_opacity(0.6, ft.Colors.RED),  # 红色半透明
             blur_style=ft.BlurStyle.NORMAL,
         )
-        
+
         self.blue_glow = ft.BoxShadow(
-            blur_radius=25,       # 阴影模糊程度（数值越大越柔和）
-            spread_radius=2,      # 阴影扩散范围
-            color=ft.Colors.with_opacity(0.6, ft.Colors.BLUE), # 红色半透明
+            blur_radius=25,  # 阴影模糊程度（数值越大越柔和）
+            spread_radius=2,  # 阴影扩散范围
+            color=ft.Colors.with_opacity(0.6, ft.Colors.BLUE),  # 红色半透明
             blur_style=ft.BlurStyle.NORMAL,
         )
 
         # 1. 构建内部显示的 Chip
-        self.chip_content = ft.Text("03 07 11 17 29 30 + 09",size=20,color=DraculaColors.PURPLE)
+        self.chip_content = ft.Text(
+            "03 07 11 17 29 30 + 09", size=20, color=DraculaColors.PURPLE
+        )
         self.chip = ft.Chip(
             width=float("inf"),
             label=ft.Container(
@@ -210,10 +212,10 @@ class ItemC2(ft.GestureDetector):
                 animate=ft.Animation(300, ft.AnimationCurve.DECELERATE),
             ),
             shape=ft.RoundedRectangleBorder(radius=8),
-            bgcolor=DraculaColors.CURRENT_LINE, # 替换为你的 DraculaColors.CURRENT_LINE
+            bgcolor=DraculaColors.CURRENT_LINE,  # 替换为你的 DraculaColors.CURRENT_LINE
             selected_color=DraculaColors.COMMENT,
             on_delete=self.handle_delete,
-            on_select=self.handle_select # 处理点击事件
+            on_select=self.handle_select,  # 处理点击事件
             # 注意：在 GestureDetector 下，Chip 的 on_select 可能会干扰手势，
             # 建议点击事件统一由 GestureDetector 处理
         )
@@ -222,25 +224,25 @@ class ItemC2(ft.GestureDetector):
         self.content = self.chip
         self.on_horizontal_drag_update = self.handle_drag_update
         self.on_horizontal_drag_end = self.handle_drag_end
-        
+
     def setting_Itemc2_Remove(self, itemc2remove=None):
         self.Itemc2_remove = itemc2remove
-        
+
     def did_mount(self):
         if not self.running and not self.is_refreshing and self.state_exp != "done":
             self.refresh(name="did_mount")
-    
+
     def will_unmount(self):
         self.running = False
-        
-    def refresh(self, name:str="None"):
+
+    def refresh(self, name: str = "None"):
         if self.is_refreshing or self.chip.selected:
             return
         # print(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
-        
-    async def SearchForData(self,name:str):
-        print(f'SearchForData {name}')
+
+    async def SearchForData(self, name: str):
+        print(f"SearchForData {name}")
         self.is_refreshing = True
         count = 0
         max_retries = 100
@@ -255,23 +257,25 @@ class ItemC2(ft.GestureDetector):
                     # 成功情况
                     self.chip_content.value = tempd
                     self.chip_content.color = DraculaColors.PURPLE
-                    self.state_exp = 'done'
+                    self.state_exp = "done"
                     self.update()
-                    print('Search successful')
+                    print("Search successful")
                     break  # 成功后直接跳出循环
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待
                     self.chip_content.value = f"refresh {tempd}"
                     self.chip_content.color = DraculaColors.ORANGE
-                    self.state_exp = 'ref'
+                    self.state_exp = "ref"
                     self.update()
                     await asyncio.sleep(0.3)  # 给 CPU 喘息时间，也让 UI 有机会渲染
                 count += 1
                 if count >= max_retries:
                     print("count is max_retries, work stoping.")
-                    self.chip_content.value = "Please swipe right to restart."  # 显示错误/超时界面
+                    self.chip_content.value = (
+                        "Please swipe right to restart."  # 显示错误/超时界面
+                    )
                     self.chip_content.color = DraculaColors.RED
-                    self.state_exp = 'none'
+                    self.state_exp = "none"
                     self.update()
                     break
         except Exception as e:
@@ -279,8 +283,7 @@ class ItemC2(ft.GestureDetector):
             self.update()
         finally:
             self.is_refreshing = False
-            
-        
+
     def calculate_lottery(self):
         settings = self.page.session.store.get("settings")
         filters = self.page.session.store.get("filters")
@@ -295,8 +298,6 @@ class ItemC2(ft.GestureDetector):
         if filter_jp.handle(result) == False:
             return [rd.get_exp(result), False]
         return (rd.get_exp(result), True)
-    
-           
 
     def handle_drag_update(self, e: ft.DragUpdateEvent):
         # 累加滑动距离 (e.primary_delta 在水平滑动时是 x 轴的变化量)
@@ -308,7 +309,7 @@ class ItemC2(ft.GestureDetector):
             self.refresh_data()
         elif self.drag_accumulated < -self.threshold:
             self.save_item()
-        
+
         # 重置滑动计数值
         self.drag_accumulated = 0
 
@@ -324,18 +325,17 @@ class ItemC2(ft.GestureDetector):
         self.page.show_dialog(ft.SnackBar(ft.Text("项目已保存！")))
 
     async def handle_select(self, e):
-        
         if self.is_refreshing:
             self.chip.selected = False
             return
         if self.state_exp != "done":
             self.chip.selected = False
             return
-        # raw_json = await self.page.shared_preferences.get("save_data_list")
+        # raw_json = await ft.SharedPreferences().get("save_data_list")
         # save_list = json.loads(raw_json) if raw_json else []
         # if  self.chip_content.value not in set(save_list):
         #     save_list.append(self.chip_content.value)
-        #     await self.page.shared_preferences.set(
+        #     await ft.SharedPreferences().set(
         #         "save_data_list", json.dumps(save_list)
         #     )
 
@@ -348,6 +348,7 @@ class ItemC2(ft.GestureDetector):
             self.Itemc2_remove(self)
         self.chip.update()
         print("点击了删除图标")
+
 
 #
 #
@@ -375,7 +376,7 @@ class itemsList(ft.Card):
             border_radius=10,
             content=self.__command_button(),
         )
-        
+
     def add_itemc2(self, itemc2remove=None):
         control = self.content.content
         if not isinstance(control, ft.Column):
@@ -386,9 +387,9 @@ class itemsList(ft.Card):
             temp = ItemC2()
             temp.setting_Itemc2_Remove(itemc2remove)
             control.controls.append(temp)
-            print('Add ItemC2')
+            print("Add ItemC2")
             self.update()
-            
+
     def all_refresh(self):
         """全部刷新"""
         control = self.content.content
@@ -397,10 +398,10 @@ class itemsList(ft.Card):
             return
         itemc2_all = [x for x in control.controls if isinstance(x, ItemC2)]
         for item in itemc2_all:
-            if item.state_exp != "done":
+            if item.chip.selected==False:
                 item.refresh(name="all_refresh")
-                
-    def remove_item(self,item:ItemC2):
+
+    def remove_item(self, item: ItemC2):
         control = self.content.content
         if not isinstance(control, ft.Column):
             return
@@ -449,12 +450,12 @@ class commandList(ft.Card):
             border_radius=10,
             content=self.__command_button(),
         )
-        
+
     def setting_item_list_add(self, itemlistadd=None, itemc2remove=None):
         self.item_list_add = itemlistadd
         self.itemc2remove = itemc2remove
-        
-    def setting_all_refresh(self,all_refresh=None):
+
+    def setting_all_refresh(self, all_refresh=None):
         self.all_refresh = all_refresh
 
     def __command_button(self):
@@ -484,12 +485,12 @@ class commandList(ft.Card):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
-    
+
     def handle_add(self):
         """执行add"""
         if self.item_list_add and self.itemc2remove:
             self.item_list_add(self.itemc2remove)
-            
+
     def handle_refresh(self):
         if self.all_refresh:
             self.all_refresh()
@@ -503,12 +504,14 @@ class LotteryPage:
         self.page = page
         self.itemslist = itemsList()
         self.comandlist = commandList()
-        self.comandlist.setting_item_list_add(self.itemslist.add_itemc2, self.itemslist.remove_item)
+        self.comandlist.setting_item_list_add(
+            self.itemslist.add_itemc2, self.itemslist.remove_item
+        )
         self.comandlist.setting_all_refresh(self.itemslist.all_refresh)
         self.view = self.get_data_view()
 
     # async def inisatll_save_dig(self, e):
-    #     raw_json = await self.page.shared_preferences.get("save_data_list")
+    #     raw_json = await ft.SharedPreferences().get("save_data_list")
     #     saved_data = json.loads(raw_json) if raw_json else []
     #     print(f"kaishi Save. {saved_data=}")
     #     if saved_data.__len__() == 0:
@@ -634,11 +637,11 @@ class LotteryPage:
     #     )
     #     self.page.show_dialog(BottomSheet)
 
-    #     await self.page.shared_preferences.set("save_data_list", json.dumps(saved_data))
+    #     await ft.SharedPreferences().set("save_data_list", json.dumps(saved_data))
     #     await self.initialize_data()
 
     # async def select_dir(self):
-    #     stored_dir = await self.page.shared_preferences.get("user_dir")
+    #     stored_dir = await ft.SharedPreferences().get("user_dir")
     #     if stored_dir:
     #         self.user_dir = stored_dir
     #         return self.user_dir
@@ -648,7 +651,7 @@ class LotteryPage:
     #             dialog_title="Please select a directory?"
     #         )
     #         if picked_dir:
-    #             await self.page.shared_preferences.set("user_dir", picked_dir)
+    #             await ft.SharedPreferences().set("user_dir", picked_dir)
     #             self.user_dir = picked_dir
     #             return self.user_dir
     #     return self.user_dir
@@ -666,10 +669,10 @@ class LotteryPage:
     #     self.page.run_task(self.dismiss_save_data, data)
 
     # async def dismiss_save_data(self, data: list):
-    #     raw_json = await self.page.shared_preferences.get("save_data_list")
+    #     raw_json = await ft.SharedPreferences().get("save_data_list")
     #     saved_data = json.loads(raw_json) if raw_json else []
     #     saved_data.extend(data)
-    #     await self.page.shared_preferences.set("save_data_list", json.dumps(saved_data))
+    #     await ft.SharedPreferences().set("save_data_list", json.dumps(saved_data))
     #     self.page.run_task(self.initialize_data)
     #     # print(f'dismiss_save_data {saved_data=}')
     #     self.Badge_number(len(saved_data))
@@ -677,7 +680,7 @@ class LotteryPage:
     # async def initialize_data(self):
     #     """异步加载初始数据并渲染"""
     #     try:  # 确保这是一个异步函数
-    #         raw_json = await self.page.shared_preferences.get("save_data_list")
+    #         raw_json = await ft.SharedPreferences().get("save_data_list")
     #         saved_data = json.loads(raw_json) if raw_json else []
     #         initial_count = len(saved_data)
     #         self.lottery_icon.badge.label = f"{initial_count}"

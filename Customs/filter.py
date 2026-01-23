@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-21 12:36:28
+# @Last Modified time: 2026-01-23 13:29:24
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -59,7 +59,7 @@ class UserdirButton(ft.TextButton):
         self.runing = False
 
     async def select_dir(self):
-        stored_dir = await self.page.shared_preferences.get("user_dir")
+        stored_dir = await ft.SharedPreferences().get("user_dir")
         if stored_dir:
             self.user_dir = stored_dir
             return self.user_dir
@@ -69,7 +69,7 @@ class UserdirButton(ft.TextButton):
                 dialog_title="Please select a directory?"
             )
             if picked_dir:
-                await self.page.shared_preferences.set("user_dir", picked_dir)
+                await ft.SharedPreferences().set("user_dir", picked_dir)
                 self.user_dir = picked_dir
                 return self.user_dir
 
@@ -813,7 +813,7 @@ class FiltersList(ft.Card):
         if self.filtersAll_change == "none":
             return
         self.page.session.store.set("filters", self.filtersAll)
-        temp = await self.page.shared_preferences.get("user_dir")
+        temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
             temp = app_data_path
         jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
@@ -1152,7 +1152,7 @@ class CommandList(ft.Card):
         if not fiter_data:
             return
         self.page.session.store.set("filters", fiter_data)
-        temp = await self.page.shared_preferences.get("user_dir")
+        temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
             temp = app_data_path
         jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
@@ -1161,7 +1161,7 @@ class CommandList(ft.Card):
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
     async def handle_Open(self):
-        temp = await self.page.shared_preferences.get("user_dir")
+        temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
             temp = app_data_path
         jackpot_filters = os.path.join(temp, "jackpot_filters.dict")

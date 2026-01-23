@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-22 14:24:41
+# @Last Modified time: 2026-01-23 13:58:44
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -13,7 +13,7 @@ import os
 import json
 import asyncio
 
-# 获取系统标示 
+# 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
@@ -53,7 +53,7 @@ async def main(page: ft.Page):
 
     filter_class = FilterPage(page)
 
-    lottery_class = LotteryPage(page) 
+    lottery_class = LotteryPage(page)
 
     # --- 2. 界面组件定义 ---
     # 中间显示区域容器
