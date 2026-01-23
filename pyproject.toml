@@ -2,13 +2,13 @@
 name = "Lotter-app"
 version = "0.1.11"
 description = "Lotter application."
-requires-python = ">=3.12"
+requires-python = ">=3.13.11"
 authors = [
     { name = "JogFeelingVI", email = "glifelse@gmail.com" }
 ]
 
 dependencies = [
-  "flet==0.80.1",
+  "flet==0.80.3",
 ]
 
 [tool.flet]
@@ -20,4 +20,5 @@ package-mode = false
 
 [tool.flet.app]
 path = "."
+
 
