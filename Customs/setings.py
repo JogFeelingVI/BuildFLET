@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-23 13:27:44
+# @Last Modified time: 2026-01-24 02:11:09
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -228,8 +228,8 @@ class input_user_rule(ft.Card):
         with open(jackpot_seting, "w", encoding="utf-8") as f:
             json.dump(temp, f, indent=4, ensure_ascii=False)
         self.page.session.store.set("settings", temp)
-        if self.callback:
-            self.callback()
+        if self.render_filters:
+            self.render_filters()
         self.handle_Cancel()
 
     def Convert_to_list(self, lable_value: str):
@@ -248,13 +248,19 @@ class input_user_rule(ft.Card):
 
 
 class showRule(ft.Card):
+    __name__ = "showRule"
     def __init__(self):
         super().__init__()
         self.content = self.__build_card()
 
     def did_mount(self):
         self.running = True
-        self.updateCard()
+        try:
+            self.updateCard()
+        except Exception as e:
+            print(f'{self.__name__} running error {e}.')
+        finally:
+            print(f'{self.__name__} running over.')
 
     def will_unmount(self):
         self.running = False
@@ -265,7 +271,7 @@ class showRule(ft.Card):
     def get_lottery_text(self, exp: str):
         spans = []
         before, sep, after = exp.partition("+")
-        print([before.strip(), sep.strip(), after.strip()])
+        # print([before.strip(), sep.strip(), after.strip()])
         # 2. 匹配逻辑
         match [before.strip(), sep.strip(), after.strip()]:
             # 情况 A: 刚好两组数据（如 6+1 模式）
@@ -274,28 +280,28 @@ class showRule(ft.Card):
                 spans.append(
                     ft.TextSpan(
                         b,
-                        ft.TextStyle(color=DraculaColors.RED, weight="bold"),
+                        ft.TextStyle(color=DraculaColors.RED, weight=ft.FontWeight.W_900),
                     )
                 )
                 # 分隔符
                 spans.append(
                     ft.TextSpan(
                         f' {s} ',
-                        ft.TextStyle(color=DraculaColors.PURPLE, weight="bold"),
+                        ft.TextStyle(color=DraculaColors.PURPLE, weight="W_900"),
                     )
                 )
                 # 第二组（紫/蓝球）
                 spans.append(
                     ft.TextSpan(
                         a,
-                        ft.TextStyle(color=DraculaColors.PURPLE, weight="bold"),
+                        ft.TextStyle(color=DraculaColors.PURPLE, weight="W_900"),
                     )
                 )
 
             # 情况 B: 多组数据（3组或更多）
             case [b, s, a] if s == a == "" and b != a:
                 spans.append(
-                    ft.TextSpan(b, ft.TextStyle(color=DraculaColors.RED, weight="bold"))
+                    ft.TextSpan(b, ft.TextStyle(color=DraculaColors.RED, weight="W_900"))
                 )
         return ft.Text(
             size=20,
@@ -480,6 +486,7 @@ class DefaultSettings(ft.Card):
 
 class UserDirectory(ft.Card):
     """用户目录指示器"""
+    __name__ = "UserDirectory"
 
     def __init__(self):
         super().__init__()
@@ -502,7 +509,12 @@ class UserDirectory(ft.Card):
 
     def did_mount(self):
         self.running = True
-        self.page.run_task(self.Checking_user_dir)
+        try:
+            self.page.run_task(self.Checking_user_dir)
+        except Exception as e:
+            print(f'{self.__name__} running error {e}.')
+        finally:
+            print(f'{self.__name__} running over.')
 
     def will_unmount(self):
         self.running = False
@@ -564,6 +576,7 @@ class SetingsPage:
         self.rule_mode_show = showRule()
         self.uese_input_mode = input_user_rule()
         self.default_setings = DefaultSettings()
+        self.User_Directory = UserDirectory()
         self.apply_rule = {}
 
         self.uese_input_mode.setting_render_filters(self.render_filters)
@@ -619,7 +632,7 @@ class SetingsPage:
                 # ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 # ft.Divider(),
                 self.rule_mode_show,
-                UserDirectory(),
+                self.User_Directory,
                 self.default_setings,
                 self.uese_input_mode,
             ],
