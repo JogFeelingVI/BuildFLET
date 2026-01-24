@@ -78,8 +78,8 @@ class randomData:
         for key in self.targets:
             item_config = self.setting.get(key)
             numbers = pabc.get(key)
-            
-            width = max(len(f"{item_config['range_end']}") ,1)
+
+            width = max(len(f"{item_config['range_end']}"), 1)
             numbers_str = [f"{x:0{width}}" for x in numbers]
             # print(f'{numbers=} {numbers_str=}')
             parts.append(" ".join(numbers_str))
@@ -405,7 +405,7 @@ class filterFunc:
             idx_y = int(match.group(1))  # '2'
             other_part = match.group(2)  # '>13 --z'
             bitValue = pabc[target][idx_y - 1]
-        
+
         Number_for_args = CalcUtils.nwped(other_part)
         if bitValue in Number_for_args:
             return True
@@ -422,7 +422,7 @@ class filterFunc:
             acValue = [y for x in pabc.values() for y in x]
         else:
             acValue = pabc[target]
-            if len(acValue)==1:
+            if len(acValue) == 1:
                 return False
         acValue = CalcUtils.ac(pabc[target])
 
@@ -444,7 +444,7 @@ class filterFunc:
             sum_bit = [y for x in pabc.values() for y in x]
         else:
             sum_bit = pabc[target]
-            if len(sum_bit)==1:
+            if len(sum_bit) == 1:
                 return False
         # 3. 从分组中安全获取值
         idx_x = int(match.group(1))  # '1'
@@ -471,7 +471,7 @@ class filterFunc:
             diff_bit = [y for x in pabc.values() for y in x]
         else:
             diff_bit = pabc[target]
-            if len(diff_bit)==1:
+            if len(diff_bit) == 1:
                 return False
 
         # 3. 从分组中安全获取值

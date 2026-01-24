@@ -1,35 +1,11 @@
 {
     "randomData": {
-        "note": "🇨🇳体育排列3/5",
+        "note": "🇨🇳你的快乐就是他的快乐",
         "PA": {
             "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PB": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PC": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PD": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PE": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
+            "range_start": 1,
+            "range_end": 80,
+            "count": 10
         }
     }
 }

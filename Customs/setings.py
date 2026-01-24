@@ -249,6 +249,7 @@ class input_user_rule(ft.Card):
 
 class showRule(ft.Card):
     __name__ = "showRule"
+
     def __init__(self):
         super().__init__()
         self.content = self.__build_card()
@@ -258,9 +259,9 @@ class showRule(ft.Card):
         try:
             self.updateCard()
         except Exception as e:
-            print(f'{self.__name__} running error {e}.')
+            print(f"{self.__name__} running error {e}.")
         finally:
-            print(f'{self.__name__} running over.')
+            print(f"{self.__name__} running over.")
 
     def will_unmount(self):
         self.running = False
@@ -280,13 +281,15 @@ class showRule(ft.Card):
                 spans.append(
                     ft.TextSpan(
                         b,
-                        ft.TextStyle(color=DraculaColors.RED, weight=ft.FontWeight.W_900),
+                        ft.TextStyle(
+                            color=DraculaColors.RED, weight=ft.FontWeight.W_900
+                        ),
                     )
                 )
                 # 分隔符
                 spans.append(
                     ft.TextSpan(
-                        f' {s} ',
+                        f" {s} ",
                         ft.TextStyle(color=DraculaColors.PURPLE, weight="W_900"),
                     )
                 )
@@ -301,7 +304,9 @@ class showRule(ft.Card):
             # 情况 B: 多组数据（3组或更多）
             case [b, s, a] if s == a == "" and b != a:
                 spans.append(
-                    ft.TextSpan(b, ft.TextStyle(color=DraculaColors.RED, weight="W_900"))
+                    ft.TextSpan(
+                        b, ft.TextStyle(color=DraculaColors.RED, weight="W_900")
+                    )
                 )
         return ft.Text(
             size=20,
@@ -486,6 +491,7 @@ class DefaultSettings(ft.Card):
 
 class UserDirectory(ft.Card):
     """用户目录指示器"""
+
     __name__ = "UserDirectory"
 
     def __init__(self):
@@ -512,9 +518,9 @@ class UserDirectory(ft.Card):
         try:
             self.page.run_task(self.Checking_user_dir)
         except Exception as e:
-            print(f'{self.__name__} running error {e}.')
+            print(f"{self.__name__} running error {e}.")
         finally:
-            print(f'{self.__name__} running over.')
+            print(f"{self.__name__} running over.")
 
     def will_unmount(self):
         self.running = False

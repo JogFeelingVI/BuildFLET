@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-24 02:06:45
+# @Last Modified time: 2026-01-24 15:03:06
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
@@ -10,7 +10,7 @@ from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 import flet as ft
-import json
+import datetime
 import os
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
@@ -18,156 +18,162 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
-# class gdbug(ft.GestureDetector):
-#     def __init__(
-#         self,
-#         icon: ft.Icon,
-#         initialize=None,
-#         on_tap_handler=None,
-#         on_long_press_handler=None,
-#     ):
-#         super().__init__()
-#         # 保存回调
-#         self.initialize_task = initialize
-#         self.on_tap_handler = on_tap_handler
-#         self.on_long_press_handler = on_long_press_handler
+class serendipitousCapture(ft.Card):
+    """创建一个控件 用来使用列表拍照"""
 
-#         # 标志位防止重复初始化
-#         self._is_running = False
+    def __init__(self):
+        super().__init__()
+        self.get_exp_all = None
+        self.scshot = self.__build_exp()
+        self.tips = self.__build_tips()
+        self.content = self.__build__Container()
+        self.visible = False
 
-#         # 构建 UI
-#         self.mouse_cursor = ft.MouseCursor.CLICK
-#         self.content = self._build_content(icon)
+    def setting_get_exp_all(self, getexpall: list = None):
+        self.get_exp_all = getexpall
 
-#         # 绑定内部处理函数，实现点击动画
-#         self.on_tap = self._handle_tap
-#         self.on_long_press_start = self._handle_long_press
+    def did_mount(self):
+        self.running = True
 
-#     def _build_content(self, icon):
-#         return ft.Container(
-#             content=icon,
-#             padding=15,
-#             bgcolor=DraculaColors.ORANGE,
-#             width=56,
-#             height=56,
-#             border_radius=16,
-#             alignment=ft.Alignment.CENTER,
-#             # 增加动画属性，让按钮“活”起来
-#             animate_scale=ft.Animation(300, ft.AnimationCurve.DECELERATE),
-#             shadow=ft.BoxShadow(
-#                 spread_radius=1,
-#                 blur_radius=12,
-#                 color=ft.Colors.with_opacity(0.3, ft.Colors.BLACK),
-#                 offset=ft.Offset(0, 4),
-#             ),
-#         )
+    def will_unmount(self):
+        self.running = False
 
-#     def did_mount(self):
-#         # 只有在第一次挂载且有初始化任务时执行
-#         if self.initialize_task and not self._is_running:
-#             self.page.run_task(self.initialize_task)
-#             self._is_running = True
-#         return super().did_mount()
+    async def update_tips(self, text: str = ""):
+        self.tips.value = f"{text}"
+        self.tips.update()
+        await asyncio.sleep(1)
 
-#     # --- 内部手势处理，增加动画反馈 ---
+    async def espcap_windows(self):
+        for i in range(1, 4):
+            await self.update_tips(f"The window will close in {3 - i} seconds.")
 
-#     async def _handle_tap(self, e):
-#         # 模拟物理按压效果：缩小 -> 恢复
-#         self.content.scale = 0.85
-#         self.content.update()
+    async def add_exp(self, exp: list = None, genid: str = None):
+        if not exp:
+            return
+        exp_show = self.scshot.content.content
+        if not isinstance(exp_show, ft.Column):
+            return
+        if not genid:
+            return
+        esc = [x for x in exp_show.controls if x.data == "biaoyu"]
+        esc.append(ft.Divider(color="#f1fa8c"))
+        for i, _e in enumerate(exp):
+            esc.append(
+                ft.Text(
+                    value=f"{chr(65 + i)}: {_e}",
+                    size=18,
+                    color="#8be9fd" if i%2==0 else "#fdea8b",
+                    weight="bold",
+                )
+            )
+            if (i + 1) % 5 == 0:
+               esc.append(ft.Divider())
+        esc.append(ft.Divider(color="#f1fa8c"))
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        esc.append(
+            ft.Text(
+                value=f"{now} {genid}",
+                size=12,
+                color="#6272a4",
+            )
+        )
+        exp_show.controls = esc
+        exp_show.update()
 
-#         # 执行外部传入的点击逻辑
-#         if self.on_tap_handler:
-#             if asyncio.iscoroutinefunction(self.on_tap_handler):
-#                 await self.on_tap_handler(e)
-#             else:
-#                 self.on_tap_handler(e)
+    async def schot_exp_capture(self):
+        try:
+            self.visible = True
+            self.update()
+            if not self.running:
+                await self.update_tips("running is not.")
+                return
+            if not self.get_exp_all:
+                await self.update_tips("No data to capture.")
+                return
+            exp_all = self.get_exp_all()
+            if not exp_all:
+                await self.update_tips("No data was obtained.")
+                return
+            await self.update_tips(f"Retrieve {len(exp_all)} data entries.")
+            genid = randomData.generate_secure_string(8)
+            await self.add_exp(exp_all, genid)
+            # 2. 获取存储路径 (建议使用 page.client_storage)
+            stored_dir = await ft.SharedPreferences().get("user_dir")
+            if self.page.web:
+                stored_dir = app_data_path
+            if not stored_dir:
+                await self.update_tips("No storage directory found.")
+                return
+            await self.update_tips(f"Confirm the storage directory {stored_dir}.")
 
-#         # 弹回正常大小
-#         self.content.scale = 1.0
-#         self.content.update()
+            # 4. 【非常重要】截图控件必须先添加到页面上
+            # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
+            image = await self.scshot.capture()
+            obj_path = os.path.join(stored_dir, f"jackpot_{genid}.png")
+            await self.update_tips(f"Storage file directory {obj_path}.")
 
-#     async def _handle_long_press(self, e):
-#         # 长按反馈：轻微放大
-#         self.content.scale = 1.15
-#         self.content.update()
+            with open(obj_path, "wb") as f:
+                f.write(image)
+            await self.update_tips(f"Storage task completed.")
 
-#         # 执行长按逻辑
-#         if self.on_long_press_handler:
-#             if asyncio.iscoroutinefunction(self.on_long_press_handler):
-#                 await self.on_long_press_handler(e)
-#             else:
-#                 self.on_long_press_handler(e)
+        except Exception as e:
+            print(f"Capture error: {e}")
+        finally:
+            self.visible = False
+            await self.espcap_windows()
+            self.update()
 
-#         # 恢复大小
-#         self.content.scale = 1.0
-#         self.content.update()
+    def __build_tips(self):
+        return ft.Text("save to ...", size=16, color=DraculaColors.ORANGE)
 
+    def __build_exp(self):
+        return ft.Screenshot(
+            content=ft.Container(
+                foreground_decoration=ft.BoxDecoration(
+                    # bgcolor=DraculaColors.CURRENT_LINE,
+                    image=ft.DecorationImage(
+                        src="fa.png",
+                        fit=ft.BoxFit.NONE,
+                        repeat=ft.ImageRepeat.REPEAT,
+                        opacity=0.1,
+                    ),
+                ),
+                bgcolor=DraculaColors.CURRENT_LINE,
+                border_radius=5,
+                padding=10,
+                content=ft.Column(
+                    spacing=5,
+                    controls=[
+                        ft.Text(
+                            "In the quiet hum of the ordinary, magic often hides in plain sight. It is the unchoreographed dance of a falling leaf, the fleeting glint of a stranger`s smile, or a sudden burst of gold through a storm. A serendipitous capture is more than just a lucky shot; it is the moment life whispers its secrets, and we happen to be listening with a lens. It reminds us that beauty isn't always something we seek—sometimes, it is a gift that finds us.",
+                            size=16,
+                            color="#6272a4",
+                            italic=True,
+                            data="biaoyu",
+                        ),
+                    ],
+                ),
+            ),
+        )
 
-# class sbbdismiss(ft.Column):
-#     """自主读取savelist"""
-
-#     def __init__(self, data: list):
-#         """data = 01 02 03 | 04 05 06"""
-#         super().__init__()
-#         self.External_data = data
-#         self.items = []
-
-#     def did_mount(self):
-#         self.running = True
-#         self.load_data()
-
-#     def load_data(self):
-#         lines = []
-#         while len(lines) < 5 and len(self.External_data) > 0:
-#             item = self.External_data.pop(0)
-#             self.items.append(item)
-#             lines.append(self.__build_row(item))
-#         self.controls = lines
-#         self.update()
-
-#     def __build_row(self, item: list):
-#         return ft.Dismissible(
-#             content=ft.Container(
-#                 content=LotteryBalls(item, ball_size=29, align="LE"),
-#                 padding=2,
-#             ),
-#             background=ft.Container(
-#                 bgcolor=DraculaColors.RED,
-#                 content=ft.Row(
-#                     [
-#                         ft.Icon(
-#                             ft.Icons.DELETE_OUTLINE,
-#                             color=DraculaColors.FOREGROUND,
-#                         ),
-#                         ft.Text(
-#                             "Delete",
-#                             color=DraculaColors.FOREGROUND,
-#                             weight="bold",
-#                         ),
-#                     ],
-#                     alignment=ft.MainAxisAlignment.START,
-#                 ),
-#                 padding=ft.Padding.only(left=20),
-#                 border_radius=5,
-#             ),
-#             dismiss_direction=ft.DismissDirection.START_TO_END,
-#             on_confirm_dismiss=lambda e, lb=item: self.page.run_task(
-#                 self.handle_data_row_dismiss, e, lb
-#             ),  # 传递当前 LotteryBalls 实例
-#         )
-
-#     async def handle_data_row_dismiss(self, e, lb):
-#         await e.control.confirm_dismiss(True)
-#         self.External_data.append(lb)
-#         self.items.remove(lb)
-#         self.controls.remove(e.control)
-#         print(f"handle_data_row_dismiss {lb}")
-#         if len(self.External_data) > 0:
-#             nlb = self.External_data.pop(0)
-#             self.items.append(nlb)
-#             self.controls.append(self.__build_row(nlb))
-#         self.update()
+    def __build__Container(self):
+        # 注意：这里 self.exp_list 已经是字符串或列表，逻辑保持你的不变
+        return ft.Container(
+            padding=12,
+            width=float("inf"),
+            # width=600,
+            border=ft.Border.all(2, DraculaColors.ORANGE),
+            border_radius=10,
+            content=ft.Column(
+                controls=[
+                    self.scshot,
+                    ft.Divider(),
+                    self.tips,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                tight=True,
+            ),
+        )
 
 
 class ItemC2(ft.GestureDetector):
@@ -398,8 +404,21 @@ class itemsList(ft.Card):
             return
         itemc2_all = [x for x in control.controls if isinstance(x, ItemC2)]
         for item in itemc2_all:
-            if item.chip.selected==False:
+            if item.chip.selected == False:
                 item.refresh(name="all_refresh")
+
+    def get_item_exp(self):
+        """"""
+        control = self.content.content
+        if not isinstance(control, ft.Column):
+            print(f"all_refresh {type(control)}")
+            return
+        exp_all = [
+            x.chip_content.value
+            for x in control.controls
+            if isinstance(x, ItemC2) and x.chip.selected
+        ]
+        return exp_all
 
     def remove_item(self, item: ItemC2):
         control = self.content.content
@@ -434,6 +453,7 @@ class commandList(ft.Card):
         self.item_list_add = None
         self.itemc2remove = None
         self.all_refresh = None
+        self.shot_capture = None
 
     def did_mount(self):
         self.running = True
@@ -450,6 +470,9 @@ class commandList(ft.Card):
             border_radius=10,
             content=self.__command_button(),
         )
+
+    def setting_shot_capture(self, capture=None):
+        self.shot_capture = capture
 
     def setting_item_list_add(self, itemlistadd=None, itemc2remove=None):
         self.item_list_add = itemlistadd
@@ -479,12 +502,16 @@ class commandList(ft.Card):
                     expand=1,
                     icon=ft.Icons.SAVE_AS,
                     content="Export",
-                    # on_click=self.handle_Open,
+                    on_click=self.handle_export,
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
         )
+
+    def handle_export(self):
+        if self.shot_capture:
+            self.page.run_task(self.shot_capture)
 
     def handle_add(self):
         """执行add"""
@@ -504,8 +531,14 @@ class LotteryPage:
         self.page = page
         self.itemslist = itemsList()
         self.comandlist = commandList()
+        self.serendipitous_Capture = serendipitousCapture()
+
+        self.serendipitous_Capture.setting_get_exp_all(self.itemslist.get_item_exp)
         self.comandlist.setting_item_list_add(
             self.itemslist.add_itemc2, self.itemslist.remove_item
+        )
+        self.comandlist.setting_shot_capture(
+            self.serendipitous_Capture.schot_exp_capture
         )
         self.comandlist.setting_all_refresh(self.itemslist.all_refresh)
         self.view = self.get_data_view()
@@ -766,6 +799,7 @@ class LotteryPage:
                 ),
                 ft.Divider(),
                 self.itemslist,
+                self.serendipitous_Capture,
                 self.comandlist,
             ],
             expand=True,
