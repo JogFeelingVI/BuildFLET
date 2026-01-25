@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-24 15:03:06
+# @Last Modified time: 2026-01-25 02:22:55
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
@@ -56,25 +56,25 @@ class serendipitousCapture(ft.Card):
         if not genid:
             return
         esc = [x for x in exp_show.controls if x.data == "biaoyu"]
-        esc.append(ft.Divider(color="#f1fa8c"))
+        esc.append(ft.Divider(color="#7b0000"))
         for i, _e in enumerate(exp):
             esc.append(
                 ft.Text(
                     value=f"{chr(65 + i)}: {_e}",
                     size=18,
-                    color="#8be9fd" if i%2==0 else "#fdea8b",
+                    color="#900015" if i%2==0 else "#d7a700",
                     weight="bold",
                 )
             )
             if (i + 1) % 5 == 0:
-               esc.append(ft.Divider())
-        esc.append(ft.Divider(color="#f1fa8c"))
+               esc.append(ft.Divider(color=ft.Colors.TRANSPARENT))
+        esc.append(ft.Divider(color="#7b0000"))
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         esc.append(
             ft.Text(
                 value=f"{now} {genid}",
                 size=12,
-                color="#6272a4",
+                color="#7b0000",
             )
         )
         exp_show.controls = esc
@@ -134,20 +134,20 @@ class serendipitousCapture(ft.Card):
                     image=ft.DecorationImage(
                         src="fa.png",
                         fit=ft.BoxFit.NONE,
-                        repeat=ft.ImageRepeat.REPEAT,
+                        # repeat=ft.ImageRepeat.REPEAT,
                         opacity=0.1,
                     ),
                 ),
-                bgcolor=DraculaColors.CURRENT_LINE,
+                bgcolor="#1f1f1f",
                 border_radius=5,
                 padding=10,
                 content=ft.Column(
                     spacing=5,
                     controls=[
                         ft.Text(
-                            "In the quiet hum of the ordinary, magic often hides in plain sight. It is the unchoreographed dance of a falling leaf, the fleeting glint of a stranger`s smile, or a sudden burst of gold through a storm. A serendipitous capture is more than just a lucky shot; it is the moment life whispers its secrets, and we happen to be listening with a lens. It reminds us that beauty isn't always something we seek—sometimes, it is a gift that finds us.",
+                            "May your cup overflow with blessings and your coffers with gold.",
                             size=16,
-                            color="#6272a4",
+                            color="#7b0000",
                             italic=True,
                             data="biaoyu",
                         ),
