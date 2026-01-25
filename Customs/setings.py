@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-24 02:11:09
+# @Last Modified time: 2026-01-25 13:51:55
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -11,6 +11,7 @@ from .jackpot_core import randomData
 import flet as ft
 import json
 import os
+import stat
 import re
 import asyncio
 
@@ -360,7 +361,7 @@ class showRule(ft.Card):
             # expand=True,
             # opacity=0.65,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border=ft.Border.all(2, DraculaColors.ORANGE),
             border_radius=10,
             content=ft.Column(
                 tight=True,
@@ -505,10 +506,10 @@ class UserDirectory(ft.Card):
             # overflow=ft.TextOverflow.ELLIPSIS,
             no_wrap=False,
         )
-        self.button = ft.Button(
+        self.select_dir = ft.Button(
             "User Directory",
             icon=ft.Icons.FOLDER_OFF,
-            on_click=lambda _: self.page.run_task(self.select_user_dif),
+            on_click=lambda _: self.page.run_task(self.select_user_dir),
         )
         self.content = self.__build_card()
         self.count = 10
@@ -535,7 +536,7 @@ class UserDirectory(ft.Card):
             content=ft.Row(
                 controls=[
                     self.tips,
-                    self.button,
+                    self.select_dir,
                 ],
                 spacing=5,
                 wrap=True,
@@ -543,27 +544,52 @@ class UserDirectory(ft.Card):
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
+        
+    async def update_tips_value(self,text:str=None):
+        if not text:
+            return
+        self.tips.value = f"{text}"
+        self.tips.update()
+        await asyncio.sleep(0.5)
 
     async def Checking_user_dir(self):
         if self.running:
             await asyncio.sleep(0.5)  # 初始延迟，确保页面加载完成
 
             temp = await self.getuser_dir()
-            print(f"Checking user directory...{temp=}")
             if temp:
-                self.tips.value = f"📂 User Directory: {temp}"
-                self.button.visible = False
-                self.page.update()
+                await self.update_tips_value(f"Using directory [ {os.path.basename(os.path.normpath(temp))} ]")
+                self.select_dir.visible=False
+                self.select_dir.update()
+                await self.Checking_files(temp)
+    
+    async def Checking_files(self,path:str):
+        with os.scandir(path) as entries:
+            for entry in entries:
+                if entry.is_file():  # 仅处理文件
+                    # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
+                    can_read = os.access(entry.path, os.R_OK)
+                    if not can_read:
+                        try:
+                            current_mode = os.stat(entry.path).st_mode
+                            os.chmod(entry.path, current_mode | stat.S_IRUSR)
+                        except Exception as e:
+                            await self.update_tips_value(f'Could not obtain permissions for {entry.name}.')
+                            continue
+                        await self.update_tips_value(f'Repair read permissions for {entry.name}.')
+                    else:
+                        await self.update_tips_value(f'{entry.name} read successfully.')
 
     async def getuser_dir(self):
         """获取用户目录"""
+        await self.update_tips_value("Check the user directory.")
         temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
+            await self.update_tips_value("web mode, using system path.")
             temp = app_data_path
-        print(f"Fetched user directory: {temp=}")
         return temp
 
-    async def select_user_dif(self):
+    async def select_user_dir(self):
         if not self.page.web:
             picked_dir = await ft.FilePicker().get_directory_path(
                 dialog_title="Please select a directory?"
