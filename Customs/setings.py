@@ -2,22 +2,21 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-26 08:16:23
+# @Last Modified time: 2026-01-26 10:45:04
 
-from .lotteryballs import LotteryBalls
-from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
 import flet as ft
 import json
 import os
-import stat
 import re
 import asyncio
+import logging
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
+logging.basicConfig(level=logging.DEBUG)
 
 Lotter_Data = {
     "🔴双色球": {
@@ -562,7 +561,7 @@ class UserDirectory(ft.Card):
     async def update_tips_premiss_error(self, entrys: list[os.DirEntry] = None):
         if not entrys:
             return
-        print(f'{entrys}')
+        logging.debug(f'{entrys}')
         spans = [
             ft.TextSpan("Click to grant permission. ", style=ft.TextStyle(italic=True))
         ]
@@ -575,7 +574,7 @@ class UserDirectory(ft.Card):
                     initial_directory=os.path.dirname(path),
                     allowed_extensions=[ext] if ext else None
                 )
-                print(f'debug: {ext} {picked_name}')
+                logging.debug(f'update_tips_premiss_error: {ext} {picked_name}')
                 if len(picked_name)==0:
                     return
                 await self.Checking_files(os.path.dirname(path))
@@ -609,25 +608,25 @@ class UserDirectory(ft.Card):
 
     async def Checking_files(self, path: str):
         permisserror_files = []
-        print(f'Checking_files {path}')
+        logging.debug(f'Checking_files {path}')
         with os.scandir(path) as entries:
             for entry in entries:
                 if entry.is_file():  # 仅处理文件
                     # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
-                    print(f'{entry.name} Starting permission check.')
+                    logging.debug(f'{entry.name} Starting permission check.')
                     try:
                         # 尝试直接读取，而不是先检查权限
                         with open(entry.path, "rb") as f:
                             _ = f.read(1024)
                         await self.update_tips_value(f"{entry.name} read successfully.")
-                        print(f'{entry.name} Permission check successful.')
+                        logging.debug(f'{entry.name} Permission check successful.')
                     except PermissionError:
                         await self.update_tips_value(
                             f"Could not obtain permissions for {entry.name}."
                         )
                         permisserror_files.append(entry)
-                        print(f'{entry.name} Permission check failed. goto -> update_tips_premiss_error')
-        if permisserror_files.__len__()!=0:
+                        logging.debug(f'{entry.name} Permission check failed. goto -> update_tips_premiss_error')
+        if len(permisserror_files)!=0:
             await self.update_tips_premiss_error(permisserror_files)
 
     async def getuser_dir(self):
@@ -636,6 +635,7 @@ class UserDirectory(ft.Card):
         temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
             await self.update_tips_value("web mode, using system path.")
+            logging.debug(f'web mode, using system path. {app_data_path}')
             temp = app_data_path
         return temp
 
@@ -647,6 +647,7 @@ class UserDirectory(ft.Card):
             if picked_dir:
                 await ft.SharedPreferences().set("user_dir", picked_dir)
                 await self.Checking_user_dir()
+                logging.debug(f'select_user_dir. {picked_dir}')
 
 
 class SetingsPage:
