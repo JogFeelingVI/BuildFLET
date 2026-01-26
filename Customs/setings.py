@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-25 13:51:55
+# @Last Modified time: 2026-01-26 06:58:42
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -407,6 +407,8 @@ class DefaultSettings(ft.Card):
             await asyncio.sleep(0.5)
 
             add_rule = ft.Button(
+                bgcolor=DraculaColors.GREEN,
+                color=DraculaColors.BACKGROUND,
                 icon=ft.Icons.RULE,
                 content="new rule",
                 tooltip=ft.Tooltip(message="new game rule"),
@@ -509,15 +511,19 @@ class UserDirectory(ft.Card):
         self.select_dir = ft.Button(
             "User Directory",
             icon=ft.Icons.FOLDER_OFF,
+            bgcolor=DraculaColors.ORANGE,
+            color=DraculaColors.BACKGROUND,
             on_click=lambda _: self.page.run_task(self.select_user_dir),
         )
+        self.select_dir_done = False
         self.content = self.__build_card()
         self.count = 10
 
     def did_mount(self):
         self.running = True
         try:
-            self.page.run_task(self.Checking_user_dir)
+            if not self.select_dir_done:
+                self.page.run_task(self.Checking_user_dir)
         except Exception as e:
             print(f"{self.__name__} running error {e}.")
         finally:
@@ -544,13 +550,49 @@ class UserDirectory(ft.Card):
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
-        
-    async def update_tips_value(self,text:str=None):
+
+    async def update_tips_value(self, text: str = None):
         if not text:
             return
         self.tips.value = f"{text}"
         self.tips.update()
         await asyncio.sleep(0.5)
+
+    async def update_tips_premiss_error(self, entrys: list[os.DirEntry] = None):
+        if not entrys:
+            return
+        self.tips.value = ""
+        spans = [
+            ft.TextSpan("Click to grant permission. ", style=ft.TextStyle(italic=True))
+        ]
+        for entry in entrys:
+            spans.append(
+                ft.TextSpan(
+                    text=entry.name,
+                    style=ft.TextStyle(
+                        color=DraculaColors.RED, weight=ft.FontWeight.W_900
+                    ),
+                    on_click=lambda e,
+                    dir=os.path.dirname(entry.path),
+                    name=entry.name: self.page.run_task(
+                        self.span_cilck_function, e, dir, name
+                    ),
+                )
+            )
+        self.tips.spans = spans
+        self.tips.update()
+
+    async def span_cilck_function(self, e, dir: str = None, name: str = None):
+        name_part, extension = os.path.splitext(name)
+        clean_ext = extension.lstrip(".").lower()
+        picked_name = await ft.FilePicker().pick_files(
+            initial_directory=dir,
+            allow_multiple=False,
+            allowed_extensions=[clean_ext],
+        )
+        if picked_name.__len__() ==0:
+            return
+        await self.Checking_files(dir)
 
     async def Checking_user_dir(self):
         if self.running:
@@ -558,27 +600,31 @@ class UserDirectory(ft.Card):
 
             temp = await self.getuser_dir()
             if temp:
-                await self.update_tips_value(f"Using directory [ {os.path.basename(os.path.normpath(temp))} ]")
-                self.select_dir.visible=False
+                await self.update_tips_value(
+                    f"Using directory [ {os.path.basename(os.path.normpath(temp))} ]"
+                )
+                self.select_dir.visible = False
                 self.select_dir.update()
+                self.select_dir_done = True
                 await self.Checking_files(temp)
-    
-    async def Checking_files(self,path:str):
+
+    async def Checking_files(self, path: str):
+        permisserror_files = []
         with os.scandir(path) as entries:
             for entry in entries:
                 if entry.is_file():  # 仅处理文件
                     # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
-                    can_read = os.access(entry.path, os.R_OK)
-                    if not can_read:
-                        try:
-                            current_mode = os.stat(entry.path).st_mode
-                            os.chmod(entry.path, current_mode | stat.S_IRUSR)
-                        except Exception as e:
-                            await self.update_tips_value(f'Could not obtain permissions for {entry.name}.')
-                            continue
-                        await self.update_tips_value(f'Repair read permissions for {entry.name}.')
-                    else:
-                        await self.update_tips_value(f'{entry.name} read successfully.')
+                    try:
+                        # 尝试直接读取，而不是先检查权限
+                        with open(entry.path, "rb") as f:
+                            _ = f.read(1024)
+                        await self.update_tips_value(f"{entry.name} read successfully.")
+                    except PermissionError:
+                        await self.update_tips_value(
+                            f"Could not obtain permissions for {entry.name}."
+                        )
+                        permisserror_files.append(entry)
+            await self.update_tips_premiss_error(permisserror_files)
 
     async def getuser_dir(self):
         """获取用户目录"""

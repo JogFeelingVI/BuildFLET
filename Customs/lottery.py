@@ -62,12 +62,12 @@ class serendipitousCapture(ft.Card):
                 ft.Text(
                     value=f"{chr(65 + i)}: {_e}",
                     size=18,
-                    color="#900015" if i%2==0 else "#d7a700",
+                    color="#900015" if i % 2 == 0 else "#d7a700",
                     weight="bold",
                 )
             )
             if (i + 1) % 5 == 0:
-               esc.append(ft.Divider(color=ft.Colors.TRANSPARENT))
+                esc.append(ft.Divider(color=ft.Colors.TRANSPARENT))
         esc.append(ft.Divider(color="#7b0000"))
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         esc.append(
