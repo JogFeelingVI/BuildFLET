@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-26 06:58:42
+# @Last Modified time: 2026-01-26 08:16:23
 
 from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
@@ -499,6 +499,7 @@ class UserDirectory(ft.Card):
 
     def __init__(self):
         super().__init__()
+        self.file_picker = ft.FilePicker()
         self.stored_dir = None
         self.tips = ft.Text(
             "💡 Tip: Set the user directory to store filter files and saved images.",
@@ -561,38 +562,36 @@ class UserDirectory(ft.Card):
     async def update_tips_premiss_error(self, entrys: list[os.DirEntry] = None):
         if not entrys:
             return
-        self.tips.value = ""
+        print(f'{entrys}')
         spans = [
             ft.TextSpan("Click to grant permission. ", style=ft.TextStyle(italic=True))
         ]
         for entry in entrys:
+            async def create_click(e, path=entry.path, name=entry.name):
+                # 提取后缀
+                ext = os.path.splitext(name)[1].lstrip(".").lower()
+                # 调用预设好的 file_picker
+                picked_name = await self.file_picker.pick_files(
+                    initial_directory=os.path.dirname(path),
+                    allowed_extensions=[ext] if ext else None
+                )
+                print(f'debug: {ext} {picked_name}')
+                if len(picked_name)==0:
+                    return
+                await self.Checking_files(os.path.dirname(path))
+            # create_click over
             spans.append(
                 ft.TextSpan(
                     text=entry.name,
                     style=ft.TextStyle(
                         color=DraculaColors.RED, weight=ft.FontWeight.W_900
                     ),
-                    on_click=lambda e,
-                    dir=os.path.dirname(entry.path),
-                    name=entry.name: self.page.run_task(
-                        self.span_cilck_function, e, dir, name
-                    ),
+                    on_click=create_click
                 )
             )
+        self.tips.value = ""
         self.tips.spans = spans
         self.tips.update()
-
-    async def span_cilck_function(self, e, dir: str = None, name: str = None):
-        name_part, extension = os.path.splitext(name)
-        clean_ext = extension.lstrip(".").lower()
-        picked_name = await ft.FilePicker().pick_files(
-            initial_directory=dir,
-            allow_multiple=False,
-            allowed_extensions=[clean_ext],
-        )
-        if picked_name.__len__() ==0:
-            return
-        await self.Checking_files(dir)
 
     async def Checking_user_dir(self):
         if self.running:
@@ -601,7 +600,7 @@ class UserDirectory(ft.Card):
             temp = await self.getuser_dir()
             if temp:
                 await self.update_tips_value(
-                    f"Using directory [ {os.path.basename(os.path.normpath(temp))} ]"
+                    f"Using directory ../{os.path.basename(os.path.normpath(temp))}"
                 )
                 self.select_dir.visible = False
                 self.select_dir.update()
@@ -610,20 +609,25 @@ class UserDirectory(ft.Card):
 
     async def Checking_files(self, path: str):
         permisserror_files = []
+        print(f'Checking_files {path}')
         with os.scandir(path) as entries:
             for entry in entries:
                 if entry.is_file():  # 仅处理文件
                     # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
+                    print(f'{entry.name} Starting permission check.')
                     try:
                         # 尝试直接读取，而不是先检查权限
                         with open(entry.path, "rb") as f:
                             _ = f.read(1024)
                         await self.update_tips_value(f"{entry.name} read successfully.")
+                        print(f'{entry.name} Permission check successful.')
                     except PermissionError:
                         await self.update_tips_value(
                             f"Could not obtain permissions for {entry.name}."
                         )
                         permisserror_files.append(entry)
+                        print(f'{entry.name} Permission check failed. goto -> update_tips_premiss_error')
+        if permisserror_files.__len__()!=0:
             await self.update_tips_premiss_error(permisserror_files)
 
     async def getuser_dir(self):
@@ -637,7 +641,7 @@ class UserDirectory(ft.Card):
 
     async def select_user_dir(self):
         if not self.page.web:
-            picked_dir = await ft.FilePicker().get_directory_path(
+            picked_dir = await self.file_picker.get_directory_path(
                 dialog_title="Please select a directory?"
             )
             if picked_dir:
