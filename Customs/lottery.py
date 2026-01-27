@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-25 02:22:55
+# @Last Modified time: 2026-01-26 14:44:04
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
@@ -98,9 +98,10 @@ class serendipitousCapture(ft.Card):
             genid = randomData.generate_secure_string(8)
             await self.add_exp(exp_all, genid)
             # 2. 获取存储路径 (建议使用 page.client_storage)
-            stored_dir = await ft.SharedPreferences().get("user_dir")
             if self.page.web:
                 stored_dir = app_data_path
+            else:
+                stored_dir = await ft.SharedPreferences().get("user_dir")
             if not stored_dir:
                 await self.update_tips("No storage directory found.")
                 return

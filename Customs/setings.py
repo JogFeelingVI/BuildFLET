@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-26 10:45:04
+# @Last Modified time: 2026-01-26 14:46:02
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -11,12 +11,10 @@ import json
 import os
 import re
 import asyncio
-import logging
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-logging.basicConfig(level=logging.DEBUG)
 
 Lotter_Data = {
     "🔴双色球": {
@@ -503,7 +501,7 @@ class UserDirectory(ft.Card):
         self.tips = ft.Text(
             "💡 Tip: Set the user directory to store filter files and saved images.",
             color=DraculaColors.FOREGROUND,
-            size=12,
+            size=16,
             max_lines=2,
             # overflow=ft.TextOverflow.ELLIPSIS,
             no_wrap=False,
@@ -556,41 +554,7 @@ class UserDirectory(ft.Card):
             return
         self.tips.value = f"{text}"
         self.tips.update()
-        await asyncio.sleep(0.5)
-
-    async def update_tips_premiss_error(self, entrys: list[os.DirEntry] = None):
-        if not entrys:
-            return
-        logging.debug(f'{entrys}')
-        spans = [
-            ft.TextSpan("Click to grant permission. ", style=ft.TextStyle(italic=True))
-        ]
-        for entry in entrys:
-            async def create_click(e, path=entry.path, name=entry.name):
-                # 提取后缀
-                ext = os.path.splitext(name)[1].lstrip(".").lower()
-                # 调用预设好的 file_picker
-                picked_name = await self.file_picker.pick_files(
-                    initial_directory=os.path.dirname(path),
-                    allowed_extensions=[ext] if ext else None
-                )
-                logging.debug(f'update_tips_premiss_error: {ext} {picked_name}')
-                if len(picked_name)==0:
-                    return
-                await self.Checking_files(os.path.dirname(path))
-            # create_click over
-            spans.append(
-                ft.TextSpan(
-                    text=entry.name,
-                    style=ft.TextStyle(
-                        color=DraculaColors.RED, weight=ft.FontWeight.W_900
-                    ),
-                    on_click=create_click
-                )
-            )
-        self.tips.value = ""
-        self.tips.spans = spans
-        self.tips.update()
+        await asyncio.sleep(2)
 
     async def Checking_user_dir(self):
         if self.running:
@@ -604,40 +568,46 @@ class UserDirectory(ft.Card):
                 self.select_dir.visible = False
                 self.select_dir.update()
                 self.select_dir_done = True
-                await self.Checking_files(temp)
 
-    async def Checking_files(self, path: str):
-        permisserror_files = []
-        logging.debug(f'Checking_files {path}')
-        with os.scandir(path) as entries:
-            for entry in entries:
-                if entry.is_file():  # 仅处理文件
-                    # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
-                    logging.debug(f'{entry.name} Starting permission check.')
-                    try:
-                        # 尝试直接读取，而不是先检查权限
-                        with open(entry.path, "rb") as f:
-                            _ = f.read(1024)
-                        await self.update_tips_value(f"{entry.name} read successfully.")
-                        logging.debug(f'{entry.name} Permission check successful.')
-                    except PermissionError:
-                        await self.update_tips_value(
-                            f"Could not obtain permissions for {entry.name}."
-                        )
-                        permisserror_files.append(entry)
-                        logging.debug(f'{entry.name} Permission check failed. goto -> update_tips_premiss_error')
-        if len(permisserror_files)!=0:
-            await self.update_tips_premiss_error(permisserror_files)
+    # async def import_configs(self, path: str):
+    #     """Do you want to import the configuration file?"""
+    #     default_files = {"jackpot_settings.json":"","jackpot_filters.dict":""}
+    #     with os.scandir(path) as entries:
+    #         for entry in entries:
+    #             if entry.name.lower() in default_files and entry.is_file():
+    #                 # 使用 os.access 检查当前用户是否有读取权限 (R_OK)
+    #                 try:
+    #                     # 尝试直接读取，而不是先检查权限
+    #                     with open(entry.path, "rb") as f:
+    #                         _ = f.read(1024)
+    #                     default_files[entry.name] = entry.path
+    #                     await self.update_tips_value(f"{entry.name} read successfully.")
+    #                 except Exception as e:
+    #                     name = entry.name
+    #                     path = entry.path
+    #                     ext = os.path.splitext(name)[1].lstrip(".").lower()
+    #                     pickFile = await self.file_picker.pick_files(
+    #                         dialog_title=f'Select a "{name}" file',
+    #                         initial_directory=os.path.dirname(path),
+    #                         allowed_extensions=[ext] if ext else None
+    #                     )
+    #                     if pickFile:
+    #                         default_files[entry.name] = pickFile[0].path
+    #     if all(v!="" for _,v in default_files.items()):
+    #         await ft.SharedPreferences().set("Lotter_File", json.dumps(default_files))
+    #         await self.update_tips_value(f"File path update complete.")
 
     async def getuser_dir(self):
         """获取用户目录"""
         await self.update_tips_value("Check the user directory.")
-        temp = await ft.SharedPreferences().get("user_dir")
         if self.page.web:
-            await self.update_tips_value("web mode, using system path.")
-            logging.debug(f'web mode, using system path. {app_data_path}')
             temp = app_data_path
-        return temp
+            await self.update_tips_value("web mode, using system path.")
+            return temp
+        else:
+            temp = await ft.SharedPreferences().get("user_dir")
+            await self.update_tips_value("using SharedPreferences path.")
+            return temp
 
     async def select_user_dir(self):
         if not self.page.web:
@@ -647,7 +617,6 @@ class UserDirectory(ft.Card):
             if picked_dir:
                 await ft.SharedPreferences().set("user_dir", picked_dir)
                 await self.Checking_user_dir()
-                logging.debug(f'select_user_dir. {picked_dir}')
 
 
 class SetingsPage:
