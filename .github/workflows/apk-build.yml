@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 19:41:29
+# @Last Modified time: 2026-01-27 20:44:33
 name: APK Build
 
 on:
@@ -51,27 +51,16 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    # - name: Setup Flutter 3.38.7
-    #   uses: subosito/flutter-action@v2
-    #   with:
-    #     flutter-version: '3.38.7'
-    #     cache: true
+    - name: Setup Flutter 3.38.7
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.38.7'
+        channel: 'stable'
 
     - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
         python -m pip install --upgrade pip
         pip install flet-cli==$FLET_CLI_VERSION
-
-    # - name: Resolve Dependency Conflicts
-    #   run: |
-    #     # 1. 检查哪些包已过期（可选，用于调试日志）
-    #     flutter pub outdated
-          
-    #     # 2. 执行升级，确保编译环境使用最新补丁
-    #     flutter pub upgrade
-          
-    #     # 3. 如果项目很久没维护，建议开启下面这行强制升级
-    #     flutter pub upgrade --major-versions
 
     - name: Flet Build APK
       run: |
