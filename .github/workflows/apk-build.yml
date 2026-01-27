@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 19:07:45
+# @Last Modified time: 2026-01-27 19:11:03
 name: APK Build
 
 on:
@@ -68,7 +68,7 @@ jobs:
         flutter clean
         flutter pub get
         flutter pub upgrade
-        flutter pub cache repair
+        # flutter pub cache repair 
 
     - name: Flet Build APK
       run: |
