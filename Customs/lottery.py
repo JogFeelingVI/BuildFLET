@@ -6,7 +6,6 @@
 
 import asyncio
 from .jackpot_core import randomData, filter_for_pabc
-from .lotteryballs import LotteryBalls
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 import flet as ft
