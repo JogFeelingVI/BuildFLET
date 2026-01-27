@@ -9,8 +9,6 @@ authors = [
 
 dependencies = [
   "flet>=0.80.4",
-  "flet-desktop>=0.80.4",
-  "flet-web>=0.80.4",
 ]
 
 [tool.flet]
