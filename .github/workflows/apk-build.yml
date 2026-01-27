@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 19:11:03
+# @Last Modified time: 2026-01-27 19:15:32
 name: APK Build
 
 on:
@@ -65,8 +65,8 @@ jobs:
     - name: Clean Environment to fix FilePicker error
       run: |
         # 核心修复步骤：清理可能导致 "Member not found: 'platform'" 的旧缓存
-        flutter clean
-        flutter pub get
+        #flutter clean
+        #flutter pub get
         flutter pub upgrade
         # flutter pub cache repair 
 
