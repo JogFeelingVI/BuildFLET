@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 19:38:51
+# @Last Modified time: 2026-01-27 19:41:29
 name: APK Build
 
 on:
@@ -51,11 +51,11 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Setup Flutter 3.38.7
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.38.7'
-        cache: true
+    # - name: Setup Flutter 3.38.7
+    #   uses: subosito/flutter-action@v2
+    #   with:
+    #     flutter-version: '3.38.7'
+    #     cache: true
 
     - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
@@ -75,7 +75,6 @@ jobs:
 
     - name: Flet Build APK
       run: |
-        flutter pub upgrade --major-versions
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION --clear-cache
 
     - name: Upload APK Artifact
