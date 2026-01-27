@@ -27,8 +27,8 @@ env:
   PYTHON_VERSION: 3.12
 
   # flet-cli version to install for `flet build`
-  FLET_CLI_VERSION: 0.80.1
-  FLUTTER_VERSION: 3.38.5
+  FLET_CLI_VERSION: 0.80.4
+  FLUTTER_VERSION: 3.38.7
 
   # Ensures Python uses UTF-8 encoding by default
   PYTHONUTF8: 1
