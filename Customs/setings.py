@@ -563,7 +563,7 @@ class UserDirectory(ft.Card):
             temp = await self.getuser_dir()
             if temp:
                 await self.update_tips_value(
-                    f"Using directory ../{os.path.basename(os.path.normpath(temp))}"
+                    f"Using directory >/{os.path.basename(os.path.normpath(temp))}"
                 )
                 self.select_dir.visible = False
                 self.select_dir.update()
