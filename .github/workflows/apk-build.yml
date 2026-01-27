@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 12:27:55
+# @Last Modified time: 2026-01-27 15:07:59
 name: APK Build
 
 on:
@@ -24,7 +24,7 @@ env:
   BUILD_VERSION: "1.0.${{ github.run_number }}"
 
   # Python version to use
-  PYTHON_VERSION: 3.13.11
+  PYTHON_VERSION: 3.12.12
 
   # flet-cli version to install for `flet build`
   FLET_CLI_VERSION: 0.80.4
