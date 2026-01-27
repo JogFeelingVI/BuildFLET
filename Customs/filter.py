@@ -4,7 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-01-27 03:01:49
 
-from curses import use_default_colors
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
