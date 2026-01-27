@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 15:47:48
+# @Last Modified time: 2026-01-27 16:17:02
 name: APK Build
 
 on:
@@ -55,6 +55,11 @@ jobs:
       uses: subosito/flutter-action@v2
       with:
         flutter-version: '3.38.7'
+
+    - name: Clean Environment to fix FilePicker error
+      run: |
+        # 核心修复步骤：清理可能导致 "Member not found: 'platform'" 的旧缓存
+        flutter pub cache clean --force
 
     - name: Install flet-cli ${{ env.FLET_CLI_VERSION }}
       run: |
