@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 19:31:48
+# @Last Modified time: 2026-01-27 19:38:51
 name: APK Build
 
 on:
@@ -62,19 +62,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet-cli==$FLET_CLI_VERSION
 
-    - name: Resolve Dependency Conflicts
-      run: |
-        # 1. 检查哪些包已过期（可选，用于调试日志）
-        flutter pub outdated
+    # - name: Resolve Dependency Conflicts
+    #   run: |
+    #     # 1. 检查哪些包已过期（可选，用于调试日志）
+    #     flutter pub outdated
           
-        # 2. 执行升级，确保编译环境使用最新补丁
-        flutter pub upgrade
+    #     # 2. 执行升级，确保编译环境使用最新补丁
+    #     flutter pub upgrade
           
-        # 3. 如果项目很久没维护，建议开启下面这行强制升级
-        flutter pub upgrade --major-versions
+    #     # 3. 如果项目很久没维护，建议开启下面这行强制升级
+    #     flutter pub upgrade --major-versions
 
     - name: Flet Build APK
       run: |
+        flutter pub upgrade --major-versions
         flet build apk --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION --clear-cache
 
     - name: Upload APK Artifact
