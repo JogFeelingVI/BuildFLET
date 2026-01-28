@@ -491,27 +491,26 @@ class commandList(ft.Card):
         return ft.Row(
             controls=[
                 ft.TextButton(
-                    expand=1,
                     key="add_close",
                     icon=ft.Icons.INSERT_EMOTICON,
                     content="Add",
                     on_click=self.handle_add,
                 ),
                 ft.TextButton(
-                    expand=1,
                     icon=ft.Icons.REFRESH,
                     content="Refresh",
                     on_click=self.handle_refresh,
                 ),
                 ft.TextButton(
-                    expand=1,
                     icon=ft.Icons.SAVE_AS,
                     content="Export",
                     on_click=self.handle_export,
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.START,
+            expand=True,
+            scroll=ft.ScrollMode.HIDDEN,
         )
 
     def handle_export(self):

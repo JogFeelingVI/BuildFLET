@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-28 09:07:34
+# @Last Modified time: 2026-01-28 11:17:50
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -534,33 +534,31 @@ class CommandList(ft.Card):
         return ft.Row(
             controls=[
                 ft.TextButton(
-                    expand=1,
                     key="add_close",
                     icon=ft.Icons.ADD_CARD,
                     content="Add",
                     on_click=self.handle_add,
                 ),
                 ft.TextButton(
-                    expand=1,
                     icon=ft.Icons.FILE_OPEN,
                     content="Open",
                     on_click=self.handle_Open,
                 ),
                 ft.TextButton(
-                    expand=1,
                     icon=ft.Icons.FILE_DOWNLOAD,
                     content="Save",
                     on_click=self.handle_Save,
                 ),
                 ft.TextButton(
-                    expand=1,
                     icon=ft.Icons.FILE_UPLOAD,
-                    content="LOAD",
+                    content="Load",
                     on_click=self.handle_Load,
-                ),
+                )
             ],
             # 给这一行打个标签，方便以后提取数据
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            alignment=ft.MainAxisAlignment.START,
+            scroll=ft.ScrollMode.HIDDEN,
+            expand=True,
         )
 
     def setting_edit_stat_open(self):
@@ -681,7 +679,7 @@ class CommandList(ft.Card):
             fiter_data = []
             if self.filter_clear_all:
                 self.filter_clear_all()
-            with open(pick_result[0], "r", encoding="utf-8") as r:
+            with open(pick_result[0].path, "r", encoding="utf-8") as r:
                 for line in r:
                     # 去掉行尾换行符并确保行不为空
                     line = line.strip()
