@@ -13,7 +13,7 @@ dependencies = [
 
 [tool.flet]
 path = "main.py" # 明确指定入口文件
-bundle_id = "com.flet.lotter-app"
+bundle_id = "com.flet.lotter"
 
 [tool.uv]
 managed = true # 声明由 uv 管理

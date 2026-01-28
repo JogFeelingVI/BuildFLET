@@ -2,27 +2,28 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 04:21:27
+# @Last Modified time: 2026-01-28 09:06:15
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
 from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
+from Customs.jackpot_core import randomData
 import flet as ft
 import os
-import json
-import asyncio
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
+os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
+
 
 async def main(page: ft.Page):
     page.title = "Jackpot App"
     # page.theme = Dracula_Theme
-    # 设置移动端适配的内边距
+    # 设置移动端适配的内边距 
     page.padding = ft.Padding.only(top=20)
 
     # raw_json = await page.shared_preferences.get("save_data_list")
@@ -91,4 +92,4 @@ async def main(page: ft.Page):
 
 
 # 运行应用
-ft.run(main)
+ft.run(main, upload_dir=app_temp_path)

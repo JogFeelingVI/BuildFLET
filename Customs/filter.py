@@ -2,12 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-27 10:25:42
+# @Last Modified time: 2026-01-28 09:07:34
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
+from .jackpot_core import randomData
+from .loger import loger as logr
 import flet as ft
 import os
 import json
@@ -17,7 +19,6 @@ import hashlib
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-# jackpot_filers = os.path.join(app_data_path, "jackpot_filters.dict")
 
 
 _ = r"""_|_|_|_|  _|  _|    _|                                    _|        _|              _|      
@@ -38,6 +39,7 @@ class FiltersList(ft.Card):
         self.filtersAll_change = "none"  # add none del edit
         self.filtersAll = []
         self.filterSeed = set()
+        
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
@@ -91,7 +93,7 @@ class FiltersList(ft.Card):
     def addFilter(self, scriptd: dict):
         _scd = scriptd.copy()
         if "" in _scd.values():
-            print(f"add filter error {_scd}")
+            logr.info(f"add filter error {_scd}")
             return
         if not isinstance(self.content.content, ft.Row):
             return
@@ -133,7 +135,7 @@ class FiltersList(ft.Card):
                 return
             e_chip = e.control
             e_script = e.control.data
-            # print(f"edit {e_chip.data}")
+            # logr.info(f"edit {e_chip.data}")
             hashcode(e_script, "del")
             controls.remove(e_chip)
             self.filtersAll.remove(e_script)
@@ -201,7 +203,18 @@ class FiltersList(ft.Card):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
-
+        
+    def clear_all(self):
+        """清空 filter 设置"""
+        row = self.content.content
+        if not isinstance(row, ft.Row):
+            return
+        rows = [x for x in row.controls if isinstance(x, ft.Switch)]
+        row.controls = rows
+        self.filtersAll.clear()
+        self.filterSeed.clear()
+        row.update()
+            
     def handle_switch(self, e):
         switch = e.control
         if not isinstance(switch, ft.Switch):
@@ -230,21 +243,18 @@ class FiltersList(ft.Card):
         if self.filtersAll_change == "none":
             return
         self.page.session.store.set("filters", self.filtersAll)
-        filter_path = await ft.SharedPreferences().get("filter_path")
-        if self.page.web and not filter_path:
-            filter_path = os.path.join(app_data_path, "jackpot_filters.dict")
-        elif not filter_path:
-            user_dir_path = await ft.SharedPreferences().get("user_dir")
-            user_dir_path = user_dir_path if user_dir_path else app_data_path
-            filter_path = os.path.join(user_dir_path, "jackpot_filters.dict")
+        stored_id = await ft.SharedPreferences().get("stored_id")
+        if not stored_id:
+            logr.error("ID not found.")
+            return
         try:
-            with open(filter_path, "w", encoding="utf-8") as f:
+            with open(stored_id, "w", encoding="utf-8") as f:
                 for item in self.filtersAll:
                     f.write(json.dumps(item, ensure_ascii=False) + "\n")
-            print(f"saveTodict is run.")
+            logr.info(f"saveTodict is run.")
             self.filtersAll_change = "none"
         except Exception as ex:
-            print(f'Auto Save error {ex}')
+            logr.info(f"Auto Save error {ex}")
 
 
 class InputPad(ft.Card):
@@ -290,13 +300,13 @@ class InputPad(ft.Card):
                     self.pad_data["func"] = script["func"]
                     self.pad_data["target"] = script["target"]
                     self.pad_data["condition"] = script["condition"]
-                    # print(f"editPad {self.pad_data=} {text_spans[1].text=}")
+                    # logr.info(f"editPad {self.pad_data=} {text_spans[1].text=}")
                 case "__command_input":
                     if not isinstance(item, ft.TextField):
                         continue
                     item.value = script["condition"]
                 case "__apply_text":
-                    # print('__apply_text.')
+                    # logr.info('__apply_text.')
                     if not isinstance(item, ft.Row):
                         continue
                     if not isinstance(item.controls[0], ft.Chip):
@@ -412,7 +422,7 @@ class InputPad(ft.Card):
         if not isinstance(e.control, ft.Chip):
             return
         e.control.label = "Click to add a filter."
-        # print(f'handle_apply_click {self.pad_data=}')
+        # logr.info(f'handle_apply_click {self.pad_data=}')
         if self.applycallback:
             self.applycallback(scriptd=self.pad_data)
         e.control.update()
@@ -478,6 +488,13 @@ class InputPad(ft.Card):
         except Exception as e:
             pass
 
+# commandlist
+#
+#
+# 
+#
+#
+#
 
 class CommandList(ft.Card):
     def __init__(self):
@@ -486,14 +503,18 @@ class CommandList(ft.Card):
         self.addcallback = None
         self.filterAddItem = None
         self.give_data = None
+        self.filter_clear_all = None
         self.automatically_save = False
-        self.fileMg = ft.FilePicker()
+        self.fileMg = ft.FilePicker(on_upload=self.handle_upload)
 
     def did_mount(self):
         self.running = True
 
     def will_unmount(self):
         self.running = False
+        
+    def setting_filter_clear_all(self, cleal_all:None):
+        self.filter_clear_all = cleal_all
 
     def setting_give_data(self, give_data: None):
         self.give_data = give_data
@@ -515,21 +536,27 @@ class CommandList(ft.Card):
                 ft.TextButton(
                     expand=1,
                     key="add_close",
-                    icon=ft.Icons.FILTER,
+                    icon=ft.Icons.ADD_CARD,
                     content="Add",
                     on_click=self.handle_add,
-                ),
-                ft.TextButton(
-                    expand=1,
-                    icon=ft.Icons.SAVE,
-                    content="Save",
-                    on_click=self.handle_Save,
                 ),
                 ft.TextButton(
                     expand=1,
                     icon=ft.Icons.FILE_OPEN,
                     content="Open",
                     on_click=self.handle_Open,
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.FILE_DOWNLOAD,
+                    content="Save",
+                    on_click=self.handle_Save,
+                ),
+                ft.TextButton(
+                    expand=1,
+                    icon=ft.Icons.FILE_UPLOAD,
+                    content="LOAD",
+                    on_click=self.handle_Load,
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
@@ -570,56 +597,55 @@ class CommandList(ft.Card):
                 e.control.update()
 
     async def handle_Save(self, e):
-        if not self.give_data:
+        stored_id = await ft.SharedPreferences().get("stored_id")
+        if not stored_id:
+            logr.error("ID not found.")
             return
-        fiter_data = self.give_data()
-        if not fiter_data:
-            return
-        self.page.session.store.set("filters", fiter_data)
-        filter_path = await ft.SharedPreferences().get("filter_path")
-        if self.page.web and not filter_path:
-            filter_path = os.path.join(app_data_path, "jackpot_filters.dict")
-            print(f"web mode {filter_path}")
-        elif not filter_path:
-            user_dir_path = await ft.SharedPreferences().get("user_dir")
-            user_dir_path = user_dir_path if user_dir_path else app_data_path
-            filter_path = os.path.join(user_dir_path, "jackpot_filters.dict")
-            print(f"window linux ios android {filter_path}")
-        try:
-            with open(filter_path, "w", encoding="utf-8") as f:
-                for item in fiter_data:
-                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
-        except Exception as ex:
-            print(f"Default write error, insufficient permissions. {ex}")
-            json_lines = "\n".join(
-                [json.dumps(item, ensure_ascii=False) for item in fiter_data]
-            )
-            content_bytes = json_lines.encode("utf-8")
+        with open(stored_id, "r", encoding="utf-8") as f:
+            content = f.read()
+            content_bytes = content.encode("utf-8")
             save_path = await self.fileMg.save_file(
-                dialog_title="Select the directory to store the jackpot_filters.dict file.",
+                dialog_title="Save as jackpot_filters.dict file.",
                 allowed_extensions=["dict"],
                 file_name="jackpot_filters.dict",
-                initial_directory=await ft.SharedPreferences().get("user_dir"),
                 src_bytes=content_bytes,
             )
             if save_path:
-                await ft.SharedPreferences().set("filter_path", save_path)
-                print(f"Filter saved successfully. {save_path}")
+                with open(save_path, "wb") as f:
+                    f.write(content_bytes)
+            logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
-        filter_path = await ft.SharedPreferences().get("filter_path")
-        if self.page.web and not filter_path:
-            filter_path = os.path.join(app_data_path, "jackpot_filters.dict")
-            print(f"web mode {filter_path}")
-        elif not filter_path:
-            user_dir_path = await ft.SharedPreferences().get("user_dir")
-            user_dir_path = user_dir_path if user_dir_path else app_data_path
-            filter_path = os.path.join(user_dir_path, "jackpot_filters.dict")
-            print(f"window linux ios android {filter_path}")
+        stored_id = await ft.SharedPreferences().get("stored_id")
+        if not stored_id:
+            logr.error("ID not found.")
+            return
 
-        try:
+        fiter_data = []
+        if self.filter_clear_all:
+            self.filter_clear_all()
+        with open(stored_id, "r", encoding="utf-8") as f:
+            for line in f:
+                # 去掉行尾换行符并确保行不为空
+                line = line.strip()
+                if line:
+                    # 将每一行的 JSON 字符串转回字典对象
+                    item = json.loads(line)
+                    fiter_data.append(item)
+                    if self.filterAddItem:
+                        self.filterAddItem(item)
+        self.page.session.store.set("filters", fiter_data)
+        logr.info(f"Reading complete. {len(fiter_data)}")
+
+    def handle_upload(self, e):
+        logr.info(f"handle upload {e}")
+        if e.progress==1.0 and e.error==None:
+            filepath = os.path.join(app_temp_path, e.file_name)
+            logr.info(f'upload Fullpath {filepath}')
             fiter_data = []
-            with open(filter_path, "r", encoding="utf-8") as f:
+            if self.filter_clear_all:
+                self.filter_clear_all()
+            with open(filepath, "r", encoding="utf-8") as f:
                 for line in f:
                     # 去掉行尾换行符并确保行不为空
                     line = line.strip()
@@ -630,45 +656,43 @@ class CommandList(ft.Card):
                         if self.filterAddItem:
                             self.filterAddItem(item)
             self.page.session.store.set("filters", fiter_data)
-        except Exception as ex:
-            print(f"Default read error, insufficient permissions. {ex}")
-            select_files = await self.fileMg.pick_files(
-                dialog_title="Select the directory to store the jackpot_filters.dict file.",
-                allowed_extensions=["dict"],
-                allow_multiple=False,
-                initial_directory=await ft.SharedPreferences().get("user_dir"),
-            )
-            if select_files:
-                newPath = select_files[0].path
-                fiter_data = []
-                with open(newPath, "r", encoding="utf-8") as f:
-                    for line in f:
-                        # 去掉行尾换行符并确保行不为空
-                        line = line.strip()
-                        if line:
-                            # 将每一行的 JSON 字符串转回字典对象
-                            item = json.loads(line)
-                            fiter_data.append(item)
-                            if self.filterAddItem:
-                                self.filterAddItem(item)
-                self.page.session.store.set("filters", fiter_data)
-                await ft.SharedPreferences().set("filter_path", newPath)
-                print(f"Reading complete. {len(fiter_data)}")
-        # old code
-        # if temp:
-        #     jackpot_filters = os.path.join(temp, "jackpot_filters.dict")
-        #     fiter_data = []
-        #     with open(jackpot_filters, "r", encoding="utf-8") as f:
-        #         for line in f:
-        #             # 去掉行尾换行符并确保行不为空
-        #             line = line.strip()
-        #             if line:
-        #                 # 将每一行的 JSON 字符串转回字典对象
-        #                 item = json.loads(line)
-        #                 fiter_data.append(item)
-        #                 if self.filterAddItem:
-        #                     self.filterAddItem(item)
-        #     self.page.session.store.set("filters", fiter_data)
+            logr.info(f"Reading complete. {len(fiter_data)}")
+
+    async def handle_Load(self, e):
+        pick_result = await self.fileMg.pick_files(
+            dialog_title="",
+            allow_multiple=False,
+            allowed_extensions=["dict"],
+        )
+        if not pick_result:
+            return
+        logr.info(f"selsect file: {pick_result}")
+        if self.page.web:
+            uplpads = [
+                ft.FilePickerUploadFile(
+                    self.page.get_upload_url(pick_result[0].name, 600),
+                    "PUT",
+                    None,
+                    pick_result[0].name,
+                )
+            ]
+            await self.fileMg.upload(uplpads)
+        else:
+            fiter_data = []
+            if self.filter_clear_all:
+                self.filter_clear_all()
+            with open(pick_result[0], "r", encoding="utf-8") as r:
+                for line in r:
+                    # 去掉行尾换行符并确保行不为空
+                    line = line.strip()
+                    if line:
+                        # 将每一行的 JSON 字符串转回字典对象
+                        item = json.loads(line)
+                        fiter_data.append(item)
+                        if self.filterAddItem:
+                            self.filterAddItem(item)
+            self.page.session.store.set("filters", fiter_data)
+            logr.info(f"Reading complete. {len(fiter_data)}")
 
 
 #
@@ -697,6 +721,7 @@ class FilterPage:
         self.Command_List.setting_filte_add_item(
             filterAddItem=self.Filters_cmd_list.addFilter
         )
+        self.Command_List.setting_filter_clear_all(self.Filters_cmd_list.clear_all)
         self.Filters_cmd_list.setting_edit_Callback(self.Input_Pad.editePad)
         self.Filters_cmd_list.setting_command_stat(
             add_closed_stat=self.Command_List.setting_edit_stat_open

@@ -2,15 +2,17 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-26 14:44:04
+# @Last Modified time: 2026-01-28 09:00:01
 
-import asyncio
+
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
+from .loger import loger as logr
 import flet as ft
 import datetime
 import os
+import asyncio
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -97,27 +99,30 @@ class serendipitousCapture(ft.Card):
             genid = randomData.generate_secure_string(8)
             await self.add_exp(exp_all, genid)
             # 2. 获取存储路径 (建议使用 page.client_storage)
-            if self.page.web:
-                stored_dir = app_data_path
-            else:
-                stored_dir = await ft.SharedPreferences().get("user_dir")
-            if not stored_dir:
-                await self.update_tips("No storage directory found.")
-                return
-            await self.update_tips(f"Confirm the storage directory {stored_dir}.")
+            
 
             # 4. 【非常重要】截图控件必须先添加到页面上
             # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
             image = await self.scshot.capture()
-            obj_path = os.path.join(stored_dir, f"jackpot_{genid}.png")
-            await self.update_tips(f"Storage file directory {obj_path}.")
-
-            with open(obj_path, "wb") as f:
-                f.write(image)
+            stored_id = await ft.SharedPreferences().get("stored_id")
+            id =  os.path.splitext(os.path.basename(stored_id))[0]
+            png_name = f'{id}.png'
+            # png_path =  os.path.join(app_temp_path, png_name)
+            
+            save_png = await ft.FilePicker().save_file(
+                dialog_title=f"Save as {png_name} file.",
+                allowed_extensions=["png"],
+                file_name=png_name,
+                src_bytes=image,
+            )
+            if save_png:
+                with open(save_png, "wb") as f:
+                    f.write(image)
+            await self.update_tips(f"Storage file directory {png_name}.")
             await self.update_tips(f"Storage task completed.")
 
         except Exception as e:
-            print(f"Capture error: {e}")
+            logr.info(f"Capture error: {e}")
         finally:
             self.visible = False
             await self.espcap_windows()
@@ -244,11 +249,11 @@ class ItemC2(ft.GestureDetector):
     def refresh(self, name: str = "None"):
         if self.is_refreshing or self.chip.selected:
             return
-        # print(f"markdata is running. {name}")
+        # logr.info(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
 
     async def SearchForData(self, name: str):
-        print(f"SearchForData {name}")
+        logr.info(f"SearchForData {name}")
         self.is_refreshing = True
         count = 0
         max_retries = 100
@@ -265,7 +270,7 @@ class ItemC2(ft.GestureDetector):
                     self.chip_content.color = DraculaColors.PURPLE
                     self.state_exp = "done"
                     self.update()
-                    print("Search successful")
+                    logr.info("Search successful")
                     break  # 成功后直接跳出循环
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待
@@ -276,7 +281,7 @@ class ItemC2(ft.GestureDetector):
                     await asyncio.sleep(0.3)  # 给 CPU 喘息时间，也让 UI 有机会渲染
                 count += 1
                 if count >= max_retries:
-                    print("count is max_retries, work stoping.")
+                    logr.info("count is max_retries, work stoping.")
                     self.chip_content.value = (
                         "Please swipe right to restart."  # 显示错误/超时界面
                     )
@@ -321,12 +326,12 @@ class ItemC2(ft.GestureDetector):
 
     def refresh_data(self):
         """右滑逻辑：刷新数据"""
-        print("向右滑动：正在刷新数据...")
+        logr.info("向右滑动：正在刷新数据...")
         self.refresh(name="refresh_data")
 
     def save_item(self):
         """左滑逻辑：保存项目"""
-        print("向左滑动：项目已保存")
+        logr.info("向左滑动：项目已保存")
         # 这里执行你的保存逻辑
         self.page.show_dialog(ft.SnackBar(ft.Text("项目已保存！")))
 
@@ -353,7 +358,7 @@ class ItemC2(ft.GestureDetector):
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
         self.chip.update()
-        print("点击了删除图标")
+        logr.info("点击了删除图标")
 
 
 #
@@ -386,21 +391,21 @@ class itemsList(ft.Card):
     def add_itemc2(self, itemc2remove=None):
         control = self.content.content
         if not isinstance(control, ft.Column):
-            print(f"add_item type {type(control)}")
+            logr.info(f"add_item type {type(control)}")
             return
         itemc2_len = [x for x in control.controls if isinstance(x, ItemC2)].__len__()
         if itemc2_len < self.max_item:
             temp = ItemC2()
             temp.setting_Itemc2_Remove(itemc2remove)
             control.controls.append(temp)
-            print("Add ItemC2")
+            logr.info("Add ItemC2")
             self.update()
 
     def all_refresh(self):
         """全部刷新"""
         control = self.content.content
         if not isinstance(control, ft.Column):
-            print(f"all_refresh {type(control)}")
+            logr.info(f"all_refresh {type(control)}")
             return
         itemc2_all = [x for x in control.controls if isinstance(x, ItemC2)]
         for item in itemc2_all:
@@ -411,7 +416,7 @@ class itemsList(ft.Card):
         """"""
         control = self.content.content
         if not isinstance(control, ft.Column):
-            print(f"all_refresh {type(control)}")
+            logr.info(f"all_refresh {type(control)}")
             return
         exp_all = [
             x.chip_content.value

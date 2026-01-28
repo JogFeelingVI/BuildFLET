@@ -1,0 +1,2 @@
+{"func": "Ac", "target": "PA", "condition": "5,6,7,8,9"}
+{"func": "Sum", "target": "PA", "condition": "<116 --z"}
