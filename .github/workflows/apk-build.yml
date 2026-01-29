@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 14:19:09
+# @Last Modified time: 2026-01-29 14:24:37
 name: APK Build
 
 on:
@@ -84,10 +84,10 @@ jobs:
         flet build apk --verbose \
           --build-number=$BUILD_NUMBER \
           --build-version=$BUILD_VERSION \
-          --android-key-store release.jks \
-          --android-key-store-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
-          --android-key-alias "jogfeelingvi" \
-          --android-key-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
+          --android-signing-key-store release.jks \
+          --android-signing-key-store-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
+          --android-signing-key-alias "jogfeelingvi" \
+          --android-signing-key-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
           --clear-cache
 
     - name: Upload APK Artifact
