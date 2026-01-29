@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 14:41:50
+# @Last Modified time: 2026-01-29 15:10:53
 name: APK Build
 
 on:
@@ -86,7 +86,7 @@ jobs:
           --build-version=$BUILD_VERSION \
           --android-signing-key-store $GITHUB_WORKSPACE/release.jks \
           --android-signing-key-store-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
-          --android-signing-key-alias "jogfeelingvi" \
+          --android-signing-key-alias "my-key-alias" \
           --android-signing-key-password ${{ secrets.ANDROID_KEY_PASSWORD }} \
           --clear-cache
 
