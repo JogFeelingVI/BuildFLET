@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-28 02:12:43
+# @Last Modified time: 2026-01-29 04:17:34
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -207,7 +207,7 @@ class input_user_rule(ft.Card):
         rows = self.content.content.controls
         for _item in rows:
             if isinstance(_item, ft.TextField):
-                temp["randomData"]["note"] = _item.value or "Jackptot lotter apk"
+                temp["randomData"]["note"] = _item.value or "Jackptot lotter new game rule."
                 continue
             if isinstance(_item, ft.Row):
                 label = ""
@@ -315,14 +315,32 @@ class showRule(ft.Card):
             size=20,
             spans=spans,
         )
+    
+    async def __load_json_setting(self):
+        apply_rule = self.page.session.store.get("settings")
+        if apply_rule:
+            return apply_rule
+        json_path = pathlib.Path(jackpot_seting)
+        if not json_path.exists():
+            return
+        try:
+            with json_path.open(mode="r",encoding="UTF-8") as r:
+                temp = json.load(r)
+                # logr.info(f'temp: {temp}')
+                self.page.session.store.ser("settings", temp)
+                return temp
+        except Exception as ex:
+            logr.error(f'__load_json_setting run error, {ex}')
+            return
 
     async def __update_card(self):
         if not self.running:
             return
         await asyncio.sleep(0.5)
-        apply_rule = self.page.session.store.get("settings")
+        apply_rule = await self.__load_json_setting()
         if not apply_rule:
             return
+        #在这里添加读写 json 文件的处理方式
         randomDatax = apply_rule.get("randomData", None)
         if not randomDatax:
             return
@@ -514,8 +532,10 @@ class UserDirectory(ft.Card):
         self.clear_id = ft.Button(
             "Clean up ID",
             icon=ft.Icons.ACCOUNT_CIRCLE,
-            bgcolor=DraculaColors.ORANGE,
-            color=DraculaColors.BACKGROUND,
+            color=DraculaColors.PINK,
+            style=ft.ButtonStyle(
+                side=ft.BorderSide(width=1, color=DraculaColors.PINK),
+            ),
             on_click=lambda _: self.clean_up_id(),
         )
         self.content = self.__build_card()

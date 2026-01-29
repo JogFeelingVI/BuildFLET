@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-28 11:17:50
+# @Last Modified time: 2026-01-29 03:07:10
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -192,6 +192,15 @@ class FiltersList(ft.Card):
             wrap=True,
             controls=[
                 ft.Switch(
+                    thumb_color={
+                        ft.ControlState.DEFAULT: DraculaColors.FOREGROUND,
+                        ft.ControlState.SELECTED: DraculaColors.PINK,
+                    },
+                    track_color={
+                        ft.ControlState.DEFAULT: DraculaColors.BACKGROUND,
+                        ft.ControlState.SELECTED: DraculaColors.BACKGROUND,
+                    },
+                    track_outline_color=DraculaColors.PINK,
                     value=False,
                     on_change=self.handle_switch,
                     tooltip=ft.Tooltip(
