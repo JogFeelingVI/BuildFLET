@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 04:17:34
+# @Last Modified time: 2026-01-29 12:02:37
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -87,6 +87,12 @@ Lotter_Data = {
 
 logr.info(f"{Lotter_Data.keys()}")
 
+#
+#
+#
+#
+#
+#
 
 class input_user_rule(ft.Card):
     def __init__(self):
@@ -327,7 +333,7 @@ class showRule(ft.Card):
             with json_path.open(mode="r",encoding="UTF-8") as r:
                 temp = json.load(r)
                 # logr.info(f'temp: {temp}')
-                self.page.session.store.ser("settings", temp)
+                self.page.session.store.set("settings", temp)
                 return temp
         except Exception as ex:
             logr.error(f'__load_json_setting run error, {ex}')
@@ -341,6 +347,7 @@ class showRule(ft.Card):
         if not apply_rule:
             return
         #在这里添加读写 json 文件的处理方式
+        logr.info(f'{apply_rule is None = }')
         randomDatax = apply_rule.get("randomData", None)
         if not randomDatax:
             return

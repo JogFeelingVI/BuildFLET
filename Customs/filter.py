@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 03:07:10
+# @Last Modified time: 2026-01-29 13:15:36
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -335,6 +335,45 @@ class InputPad(ft.Card):
             border_radius=10,
             content=self.__Pad(),
         )
+    
+    def __Quick_input(self):
+        _n='3'
+        _xy='1,2'
+        _zhjo = 'z|h|j|o|w012|m3'
+        _bit = '1|1,2'
+        quick = {
+            ">":f'>{_n} ',
+            "<":f'<{_n} ',
+            "--":f'--{_zhjo}',
+            "bit":f'bit{_bit} ',
+            "range": f'range {_xy} ',
+            "mod": f'mod{_n} '
+        }
+                    
+        def handle_tap(e, k):
+            tfvp = self.cmd_field.value
+            if k not in tfvp:
+                if tfvp.endswith(" "):
+                    tfvp+=k
+                else:
+                    tfvp+= f' {k}'
+                self.cmd_field.value = tfvp
+            logr.info(f'tap {k}')
+        spans = []
+        for key,ver in quick.items():
+            spans.append(
+                ft.Container(
+                    content=ft.Text(f'{key}',size=15, color=DraculaColors.PURPLE),
+                    padding=ft.Padding(5,2,5,2),
+                    on_click=lambda e,k=key:handle_tap(e,k)
+                )
+            )
+        return ft.Row(
+            spacing=5,
+            expand=True,
+            scroll=ft.ScrollMode.HIDDEN,
+            controls=spans
+        )
 
     def __Pad(self):
         """Add, Apply, Cancel"""
@@ -349,6 +388,7 @@ class InputPad(ft.Card):
                 self.__FT_show,
                 ft.Divider(),
                 self.__command_input(),
+                self.__Quick_input(),
                 ft.Divider(),
                 self.__apply_text(),
             ],
@@ -369,6 +409,8 @@ class InputPad(ft.Card):
                 ),
             ],
         )
+        
+    
 
     def __command_input(self):
         def input_change(e):
@@ -376,14 +418,16 @@ class InputPad(ft.Card):
                 return
             self.pad_data["condition"] = f"{e.control.value}".strip()
 
-        return ft.TextField(
-            data="__command_input",
+        self.cmd_field = ft.TextField(
+            key="__command_input",
             label="Execute the script",
             hint_text="exp: bit1,2 range 1,15 --z",
             expand=1,
             border=ft.InputBorder.UNDERLINE,
             on_change=input_change,
         )
+        return self.cmd_field
+        
 
     def __load_funxtarget(self):
         """Use "avg" to calculate the target "pa"."""
