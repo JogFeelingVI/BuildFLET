@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-30 12:50:30
+# @Last Modified time: 2026-01-30 15:05:57
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -490,7 +490,6 @@ class InputPad(ft.Card):
 
             self.pad_data["condition"] = val.strip()
 
-        text_style = ft.TextStyle(size=16, font_family="monospace")  # 使用等宽字体
         self.input_field = ft.TextField(
             key="__command_input",
             label="Execute the script",
@@ -498,9 +497,9 @@ class InputPad(ft.Card):
             expand=1,
             border=ft.InputBorder.UNDERLINE,
             on_change=input_change,
-            text_style=text_style,
+            # text_style=text_style,
             # 移除默认内边距，方便对齐
-            content_padding=ft.Padding.all(12),
+            content_padding=ft.Padding.all(0),
             bgcolor=ft.Colors.TRANSPARENT,
         )
         # self.hint_text = ft.Text(
