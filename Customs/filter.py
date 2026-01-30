@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-30 12:22:43
+# @Last Modified time: 2026-01-30 12:50:30
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -415,16 +415,16 @@ class InputPad(ft.Card):
 
     def __command_dict(self):
         return {
-            re.compile("(\d+),$"): "{},",
-            re.compile("--$"): "z",
-            re.compile("--m$"): "3",
-            re.compile("--w$"): "{}{}{}",
-            re.compile("--w(\d+)$"): "{}{}{}",
-            re.compile("bi$"): "t",
-            re.compile("bit(\d+),$"): "{} ",
-            re.compile("mo$"): "d",
-            re.compile("ra$"): "nge ",
-            re.compile("ran$"): "ge ",
+            re.compile(r"(\d+),$"): "{},",
+            re.compile(r"--$"): "z",
+            re.compile(r"--m$"): "3",
+            re.compile(r"--w$"): "{}{}{}",
+            re.compile(r"--w(\d+)$"): "{}{}{}",
+            re.compile(r"bi$"): "t",
+            re.compile(r"bit(\d+),$"): "{} ",
+            re.compile(r"mo$"): "d",
+            re.compile(r"ra$"): "nge ",
+            re.compile(r"ran$"): "ge ",
         }
 
     def __Automatic_append(self, numbers: list[int], format_str: str):
@@ -500,7 +500,7 @@ class InputPad(ft.Card):
             on_change=input_change,
             text_style=text_style,
             # 移除默认内边距，方便对齐
-            content_padding=ft.padding.all(12),
+            content_padding=ft.Padding.all(12),
             bgcolor=ft.Colors.TRANSPARENT,
         )
         # self.hint_text = ft.Text(
