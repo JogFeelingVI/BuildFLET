@@ -99,16 +99,15 @@ class serendipitousCapture(ft.Card):
             genid = randomData.generate_secure_string(8)
             await self.add_exp(exp_all, genid)
             # 2. 获取存储路径 (建议使用 page.client_storage)
-            
 
             # 4. 【非常重要】截图控件必须先添加到页面上
             # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
             image = await self.scshot.capture()
             stored_id = await ft.SharedPreferences().get("stored_id")
-            id =  os.path.splitext(os.path.basename(stored_id))[0]
-            png_name = f'{id}.png'
+            id = os.path.splitext(os.path.basename(stored_id))[0]
+            png_name = f"{id}.png"
             # png_path =  os.path.join(app_temp_path, png_name)
-            
+
             save_png = await ft.FilePicker().save_file(
                 dialog_title=f"Save as {png_name} file.",
                 allowed_extensions=["png"],

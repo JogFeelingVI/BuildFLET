@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 13:16:02
+# @Last Modified time: 2026-01-30 12:17:27
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -41,7 +41,7 @@ async def main(page: ft.Page):
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
         index = e.control.selected_index
-        # 切换中间的内容区域 
+        # 切换中间的内容区域
         if index == 0:
             content_area.content = setting_class.view
         elif index == 1:
@@ -56,7 +56,7 @@ async def main(page: ft.Page):
 
     lottery_class = LotteryPage(page)
 
-    # --- 2. 界面组件定义 ---  
+    # --- 2. 界面组件定义 --- 
     # 中间显示区域容器
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页

@@ -94,6 +94,7 @@ logr.info(f"{Lotter_Data.keys()}")
 #
 #
 
+
 class input_user_rule(ft.Card):
     def __init__(self):
         super().__init__()
@@ -213,7 +214,9 @@ class input_user_rule(ft.Card):
         rows = self.content.content.controls
         for _item in rows:
             if isinstance(_item, ft.TextField):
-                temp["randomData"]["note"] = _item.value or "Jackptot lotter new game rule."
+                temp["randomData"]["note"] = (
+                    _item.value or "Jackptot lotter new game rule."
+                )
                 continue
             if isinstance(_item, ft.Row):
                 label = ""
@@ -321,7 +324,7 @@ class showRule(ft.Card):
             size=20,
             spans=spans,
         )
-    
+
     async def __load_json_setting(self):
         apply_rule = self.page.session.store.get("settings")
         if apply_rule:
@@ -330,13 +333,13 @@ class showRule(ft.Card):
         if not json_path.exists():
             return
         try:
-            with json_path.open(mode="r",encoding="UTF-8") as r:
+            with json_path.open(mode="r", encoding="UTF-8") as r:
                 temp = json.load(r)
                 # logr.info(f'temp: {temp}')
                 self.page.session.store.set("settings", temp)
                 return temp
         except Exception as ex:
-            logr.error(f'__load_json_setting run error, {ex}')
+            logr.error(f"__load_json_setting run error, {ex}")
             return
 
     async def __update_card(self):
@@ -346,8 +349,8 @@ class showRule(ft.Card):
         apply_rule = await self.__load_json_setting()
         if not apply_rule:
             return
-        #在这里添加读写 json 文件的处理方式
-        logr.info(f'{apply_rule is None = }')
+        # 在这里添加读写 json 文件的处理方式
+        logr.info(f"{apply_rule is None = }")
         randomDatax = apply_rule.get("randomData", None)
         if not randomDatax:
             return

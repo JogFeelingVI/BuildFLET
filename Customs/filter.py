@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 13:15:36
+# @Last Modified time: 2026-01-30 12:22:43
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -13,6 +13,7 @@ from .loger import loger as logr
 import flet as ft
 import os
 import json
+import re
 import asyncio
 import hashlib
 
@@ -21,13 +22,7 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
-_ = r"""_|_|_|_|  _|  _|    _|                                    _|        _|              _|      
-_|            _|  _|_|_|_|    _|_|    _|  _|_|    _|_|_|  _|              _|_|_|  _|_|_|_|  
-_|_|_|    _|  _|    _|      _|_|_|_|  _|_|      _|_|      _|        _|  _|_|        _|      
-_|        _|  _|    _|      _|        _|            _|_|  _|        _|      _|_|    _|      
-_|        _|  _|      _|_|    _|_|_|  _|        _|_|_|    _|_|_|_|  _|  _|_|_|        _|_|  """
-
-
+# region FiltersList
 class FiltersList(ft.Card):
     def __init__(
         self,
@@ -39,7 +34,6 @@ class FiltersList(ft.Card):
         self.filtersAll_change = "none"  # add none del edit
         self.filtersAll = []
         self.filterSeed = set()
-        
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
@@ -212,7 +206,7 @@ class FiltersList(ft.Card):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
-        
+
     def clear_all(self):
         """清空 filter 设置"""
         row = self.content.content
@@ -223,7 +217,7 @@ class FiltersList(ft.Card):
         self.filtersAll.clear()
         self.filterSeed.clear()
         row.update()
-            
+
     def handle_switch(self, e):
         switch = e.control
         if not isinstance(switch, ft.Switch):
@@ -266,6 +260,10 @@ class FiltersList(ft.Card):
             logr.info(f"Auto Save error {ex}")
 
 
+# endregion
+
+
+# region InputPad
 class InputPad(ft.Card):
     def __init__(self):
         super().__init__()
@@ -276,6 +274,7 @@ class InputPad(ft.Card):
         self.funcs_dc = {}
         self.target_pn = ["all"]
         self.pad_data = {"func": "", "target": "", "condition": ""}
+        self.search_pos = 0
 
     def did_mount(self):
         self.running = True
@@ -335,45 +334,46 @@ class InputPad(ft.Card):
             border_radius=10,
             content=self.__Pad(),
         )
-    
-    def __Quick_input(self):
-        _n='3'
-        _xy='1,2'
-        _zhjo = 'z|h|j|o|w012|m3'
-        _bit = '1|1,2'
-        quick = {
-            ">":f'>{_n} ',
-            "<":f'<{_n} ',
-            "--":f'--{_zhjo}',
-            "bit":f'bit{_bit} ',
-            "range": f'range {_xy} ',
-            "mod": f'mod{_n} '
-        }
-                    
-        def handle_tap(e, k):
-            tfvp = self.cmd_field.value
-            if k not in tfvp:
+
+    # region quick input
+    def __quick_input(self):
+        quick = [
+            ">",
+            "<",
+            "--",
+            "bit",
+            "range",
+            "mod",
+        ]
+
+        def handle_tap(e, k: str):
+            tfvp = self.input_field.value
+            
+            if k.lower() not in tfvp:
                 if tfvp.endswith(" "):
-                    tfvp+=k
+                    self.input_field.value += f"{k}"
+                elif tfvp == "":
+                    self.input_field.value += f"{k}"
                 else:
-                    tfvp+= f' {k}'
-                self.cmd_field.value = tfvp
-            logr.info(f'tap {k}')
+                    self.input_field.value += f" {k}"
+
+            logr.info(f"tap {k}")
+
         spans = []
-        for key,ver in quick.items():
+        for key in quick:
             spans.append(
                 ft.Container(
-                    content=ft.Text(f'{key}',size=15, color=DraculaColors.PURPLE),
-                    padding=ft.Padding(5,2,5,2),
-                    on_click=lambda e,k=key:handle_tap(e,k)
+                    key=f"quick_{key}",
+                    content=ft.Text(f"{key}", size=15, color=DraculaColors.PURPLE),
+                    padding=ft.Padding(5, 2, 5, 2),
+                    on_click=lambda e, k=key: handle_tap(e, k),
                 )
             )
-        return ft.Row(
-            spacing=5,
-            expand=True,
-            scroll=ft.ScrollMode.HIDDEN,
-            controls=spans
+        self.quick_input = ft.Row(
+            spacing=5, expand=True, scroll=ft.ScrollMode.HIDDEN, controls=spans
         )
+        return self.quick_input
+        # endregion
 
     def __Pad(self):
         """Add, Apply, Cancel"""
@@ -387,8 +387,9 @@ class InputPad(ft.Card):
                 self.__load_funxtarget(),
                 self.__FT_show,
                 ft.Divider(),
-                self.__command_input(),
-                self.__Quick_input(),
+                # self.__command_input(),
+                self.__shadow_input(),
+                self.__quick_input(),
                 ft.Divider(),
                 self.__apply_text(),
             ],
@@ -409,9 +410,115 @@ class InputPad(ft.Card):
                 ),
             ],
         )
-        
-    
 
+    # region __Shadow_input
+
+    def __command_dict(self):
+        return {
+            re.compile("(\d+),$"): "{},",
+            re.compile("--$"): "z",
+            re.compile("--m$"): "3",
+            re.compile("--w$"): "{}{}{}",
+            re.compile("--w(\d+)$"): "{}{}{}",
+            re.compile("bi$"): "t",
+            re.compile("bit(\d+),$"): "{} ",
+            re.compile("mo$"): "d",
+            re.compile("ra$"): "nge ",
+            re.compile("ran$"): "ge ",
+        }
+
+    def __Automatic_append(self, numbers: list[int], format_str: str):
+        
+        try:
+            if not numbers:
+                numbers = [0,1,2]
+                return format_str.format(*numbers)
+            else:
+                return format_str.format(*[x+1 for x in numbers])
+        except:
+            numbers.append(numbers[-1] + 1)
+            return self.__Automatic_append(numbers, format_str)
+
+    def __shadow_input(self):
+        def add_quick(hint: str):
+            defquick = [x for x in self.quick_input.controls if x.key != "hint"]
+
+            new_hint = ft.Container(
+                key="hint",
+                content=ft.Text(f"{hint}", size=15, color=DraculaColors.PURPLE),
+                padding=ft.Padding(8, 2, 8, 2),
+                bgcolor=DraculaColors.CURRENT_LINE,
+                on_click=lambda _, k=hint: (
+                    setattr(
+                        self.input_field, "value", (self.input_field.value or "") + k
+                    ),
+                    self.input_field.update(),
+                ),
+            )
+            defquick.insert(0, new_hint)
+            self.quick_input.controls = defquick
+            self.quick_input.update()
+
+        def input_change(e):
+            val = self.input_field.value
+
+            # 1. 必须重置搜索位置和初始提示
+            self.search_pos = 0
+            # 2. 遍历命令库
+            for cmd_pattern, hint_template in self.__command_dict().items():
+                # 注意：cmd_pattern 应该是编译好的正则对象
+                search = cmd_pattern.search(val, pos=self.search_pos)
+
+                if search:
+                    start, end = search.span()
+                    # 3. 提取该匹配项内部或周边的数字 (根据需要调整)
+                    self.search_pos=end
+                    numbers = [int(x) for x in re.findall(r"\d+", val[start:end])]
+
+                    # 4. 尝试格式化提示
+                    try:
+                        formatted_hint = self.__Automatic_append(numbers, hint_template)
+                        # 5. 组合影子文字 (Prefix + Hint + Suffix)
+                        # self.hint_text.value = val[:start] + formatted_hint + val[end:]
+                        # self.input_field.suffix = formatted_hint
+                        logr.info(f"{formatted_hint=}")
+                        add_quick(formatted_hint)
+                        break  # 找到第一个匹配就退出，避免冲突
+                    except Exception as ex:
+                        logr.error(f"Format error: {ex}")
+
+
+            self.pad_data["condition"] = val.strip()
+
+        text_style = ft.TextStyle(size=16, font_family="monospace")  # 使用等宽字体
+        self.input_field = ft.TextField(
+            key="__command_input",
+            label="Execute the script",
+            hint_text="exp: bit1,2 range 1,15 --z",
+            expand=1,
+            border=ft.InputBorder.UNDERLINE,
+            on_change=input_change,
+            text_style=text_style,
+            # 移除默认内边距，方便对齐
+            content_padding=ft.padding.all(12),
+            bgcolor=ft.Colors.TRANSPARENT,
+        )
+        # self.hint_text = ft.Text(
+        #     value="Execute the script",
+        #     color=ft.Colors.GREY_700,
+        #     style=text_style,
+        # )
+        return ft.Stack(
+            expand=True,
+            controls=[
+                # ft.Container(content=self.hint_text, padding=ft.padding.only(top=24)),
+                self.input_field,
+            ],
+        )
+
+    # endregion
+
+    # region TextField
     def __command_input(self):
         def input_change(e):
             if not isinstance(e.control, ft.TextField):
@@ -427,7 +534,8 @@ class InputPad(ft.Card):
             on_change=input_change,
         )
         return self.cmd_field
-        
+
+    # endregion
 
     def __load_funxtarget(self):
         """Use "avg" to calculate the target "pa"."""
@@ -541,14 +649,11 @@ class InputPad(ft.Card):
         except Exception as e:
             pass
 
-# commandlist
-#
-#
-# 
-#
-#
-#
 
+# endregion
+
+
+# region CommandList
 class CommandList(ft.Card):
     def __init__(self):
         super().__init__()
@@ -565,8 +670,8 @@ class CommandList(ft.Card):
 
     def will_unmount(self):
         self.running = False
-        
-    def setting_filter_clear_all(self, cleal_all:None):
+
+    def setting_filter_clear_all(self, cleal_all: None):
         self.filter_clear_all = cleal_all
 
     def setting_give_data(self, give_data: None):
@@ -606,7 +711,7 @@ class CommandList(ft.Card):
                     icon=ft.Icons.FILE_UPLOAD,
                     content="Load",
                     on_click=self.handle_Load,
-                )
+                ),
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
@@ -690,9 +795,9 @@ class CommandList(ft.Card):
 
     def handle_upload(self, e):
         logr.info(f"handle upload {e}")
-        if e.progress==1.0 and e.error==None:
+        if e.progress == 1.0 and e.error == None:
             filepath = os.path.join(app_temp_path, e.file_name)
-            logr.info(f'upload Fullpath {filepath}')
+            logr.info(f"upload Fullpath {filepath}")
             fiter_data = []
             if self.filter_clear_all:
                 self.filter_clear_all()
@@ -746,13 +851,10 @@ class CommandList(ft.Card):
             logr.info(f"Reading complete. {len(fiter_data)}")
 
 
-#
-#
-# FilterPage
-#
-#
+# endregion
 
 
+# region FilterPage
 class FilterPage:
     """筛选页面类"""
 
@@ -800,3 +902,6 @@ class FilterPage:
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
         )
+
+
+# endregion
