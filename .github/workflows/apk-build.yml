@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 21:32:40
+# @Last Modified time: 2026-01-31 22:25:36
 name: APK Build
 
 on:
@@ -72,16 +72,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # 替换你之前的手动 sdkmanager 步骤
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        log-accepted-android-sdk-licenses: false
+    # # 替换你之前的手动 sdkmanager 步骤
+    # - name: Setup Android SDK
+    #   uses: android-actions/setup-android@v3
+    #   with:
+    #     log-accepted-android-sdk-licenses: false
 
-    - name: Install Specific SDK Version
-      run: |
-        # 现在可以直接用 sdkmanager 了，因为 setup-android 把它加进了 PATH
-        sdkmanager "platforms;android-35" "build-tools;35.0.0"
+    # - name: Install Specific SDK Version
+    #   run: |
+    #     # 现在可以直接用 sdkmanager 了，因为 setup-android 把它加进了 PATH
+    #     sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
     - name: Decode Keystore
       run: |
