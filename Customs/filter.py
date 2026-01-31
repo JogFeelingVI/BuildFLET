@@ -348,7 +348,7 @@ class InputPad(ft.Card):
 
         def handle_tap(e, k: str):
             tfvp = self.input_field.value
-            
+
             if k.lower() not in tfvp:
                 if tfvp.endswith(" "):
                     self.input_field.value += f"{k}"
@@ -428,13 +428,12 @@ class InputPad(ft.Card):
         }
 
     def __Automatic_append(self, numbers: list[int], format_str: str):
-        
         try:
             if not numbers:
-                numbers = [0,1,2]
+                numbers = [0, 1, 2]
                 return format_str.format(*numbers)
             else:
-                return format_str.format(*[x+1 for x in numbers])
+                return format_str.format(*[x + 1 for x in numbers])
         except:
             numbers.append(numbers[-1] + 1)
             return self.__Automatic_append(numbers, format_str)
@@ -472,7 +471,7 @@ class InputPad(ft.Card):
                 if search:
                     start, end = search.span()
                     # 3. 提取该匹配项内部或周边的数字 (根据需要调整)
-                    self.search_pos=end
+                    self.search_pos = end
                     numbers = [int(x) for x in re.findall(r"\d+", val[start:end])]
 
                     # 4. 尝试格式化提示
@@ -486,7 +485,6 @@ class InputPad(ft.Card):
                         break  # 找到第一个匹配就退出，避免冲突
                     except Exception as ex:
                         logr.error(f"Format error: {ex}")
-
 
             self.pad_data["condition"] = val.strip()
 
