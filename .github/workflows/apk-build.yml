@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 11:08:18
+# @Last Modified time: 2026-01-31 20:13:12
 name: APK Build
 
 on:
@@ -79,6 +79,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install flet==$FLET_CLI_VERSION
         pip install flet-cli==$FLET_CLI_VERSION
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        build-tools: 35.0.0
 
 
     # 【修改】使用签名参数进行编译

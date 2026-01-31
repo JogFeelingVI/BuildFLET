@@ -387,8 +387,8 @@ class InputPad(ft.Card):
                 self.__load_funxtarget(),
                 self.__FT_show,
                 ft.Divider(),
-                # self.__command_input(),
-                self.__shadow_input(),
+                self.__command_input(),
+                # self.__shadow_input(),
                 self.__quick_input(),
                 ft.Divider(),
                 self.__apply_text(),
@@ -505,7 +505,13 @@ class InputPad(ft.Card):
         #     color=ft.Colors.GREY_700,
         #     style=text_style,
         # )
-        return self.input_field
+        return ft.Stack(
+            expand=True,
+            controls=[
+                # ft.Container(content=self.hint_text, padding=ft.padding.only(top=24)),
+                self.input_field,
+            ],
+        )
 
     # endregion
 
@@ -516,15 +522,15 @@ class InputPad(ft.Card):
                 return
             self.pad_data["condition"] = f"{e.control.value}".strip()
 
-        self.cmd_field = ft.TextField(
-            key="__command_input",
+        self.input_field = ft.TextField(
+            data="__command_input",
             label="Execute the script",
             hint_text="exp: bit1,2 range 1,15 --z",
             expand=1,
             border=ft.InputBorder.UNDERLINE,
             on_change=input_change,
         )
-        return self.cmd_field
+        return self.input_field
 
     # endregion
 
