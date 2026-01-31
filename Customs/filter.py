@@ -505,13 +505,7 @@ class InputPad(ft.Card):
         #     color=ft.Colors.GREY_700,
         #     style=text_style,
         # )
-        return ft.Stack(
-            expand=True,
-            controls=[
-                # ft.Container(content=self.hint_text, padding=ft.padding.only(top=24)),
-                self.input_field,
-            ],
-        )
+        return self.input_field
 
     # endregion
 
