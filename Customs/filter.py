@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-30 15:05:57
+# @Last Modified time: 2026-01-31 22:11:53
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -660,7 +660,7 @@ class CommandList(ft.Card):
         self.give_data = None
         self.filter_clear_all = None
         self.automatically_save = False
-        self.fileMg = ft.FilePicker(on_upload=self.handle_upload)
+        
 
     def did_mount(self):
         self.running = True
@@ -757,7 +757,7 @@ class CommandList(ft.Card):
         with open(stored_id, "r", encoding="utf-8") as f:
             content = f.read()
             content_bytes = content.encode("utf-8")
-            save_path = await self.fileMg.save_file(
+            save_path = await ft.FilePicker().save_file(
                 dialog_title="Save as jackpot_filters.dict file.",
                 allowed_extensions=["dict"],
                 file_name="jackpot_filters.dict",
@@ -812,7 +812,8 @@ class CommandList(ft.Card):
             logr.info(f"Reading complete. {len(fiter_data)}")
 
     async def handle_Load(self, e):
-        pick_result = await self.fileMg.pick_files(
+        uploadfile = ft.FilePicker(on_upload=self.handle_upload)
+        pick_result = await uploadfile.pick_files(
             dialog_title="",
             allow_multiple=False,
             allowed_extensions=["dict"],

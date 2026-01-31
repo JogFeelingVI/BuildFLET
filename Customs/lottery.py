@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 02:56:36
+# @Last Modified time: 2026-01-31 14:18:59
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -115,6 +115,7 @@ class serendipitousCapture(ft.Card):
                 file_name=png_name,
                 src_bytes=image,
             )
+            # self.page.update()
             if save_png:
                 with open(save_png, "wb") as f:
                     f.write(image)

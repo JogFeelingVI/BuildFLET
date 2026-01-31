@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 22:25:36
+# @Last Modified time: 2026-02-01 06:19:30
 name: APK Build
 
 on:
@@ -60,10 +60,10 @@ jobs:
         flutter-version: ${{ env.FLUTTER_VERSION }}
         channel: 'stable'
 
-    - name: install zenity
+    - name: update ubuntu
       run: |
         sudo apt-get update
-        sudo apt-get install zenity
+        # sudo apt-get install zenity
 
     # 【新增】设置 Java 环境，签名 APK 必须
     - name: Setup Java 17
@@ -71,17 +71,6 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-
-    # # 替换你之前的手动 sdkmanager 步骤
-    # - name: Setup Android SDK
-    #   uses: android-actions/setup-android@v3
-    #   with:
-    #     log-accepted-android-sdk-licenses: false
-
-    # - name: Install Specific SDK Version
-    #   run: |
-    #     # 现在可以直接用 sdkmanager 了，因为 setup-android 把它加进了 PATH
-    #     sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
     - name: Decode Keystore
       run: |

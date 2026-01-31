@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-29 12:02:37
+# @Last Modified time: 2026-01-31 22:16:53
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -18,7 +18,7 @@ app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
-
+#region Lotter_Data
 Lotter_Data = {
     "🔴双色球": {
         "description": "🇨🇳百万富翁缔造者",
@@ -86,15 +86,9 @@ Lotter_Data = {
 }
 
 logr.info(f"{Lotter_Data.keys()}")
+#endregion
 
-#
-#
-#
-#
-#
-#
-
-
+#region input_user_rule
 class input_user_rule(ft.Card):
     def __init__(self):
         super().__init__()
@@ -257,8 +251,9 @@ class input_user_rule(ft.Card):
                 range_start = 0
             return {"range_start": range_start, "range_end": range_end, "enabled": True}
         return {"enabled": False}
+#endregion
 
-
+#region showRule
 class showRule(ft.Card):
     __name__ = "showRule"
 
@@ -405,8 +400,9 @@ class showRule(ft.Card):
                 ],
             ),
         )
+#endregion
 
-
+#region DefaultSettings
 class DefaultSettings(ft.Card):
     """默认设置指示器"""
 
@@ -520,8 +516,9 @@ class DefaultSettings(ft.Card):
                 alignment=ft.MainAxisAlignment.START,
             ),
         )
+#endregion
 
-
+#region UserDirectory
 class UserDirectory(ft.Card):
     """用户目录指示器"""
 
@@ -611,8 +608,9 @@ class UserDirectory(ft.Card):
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
         logr.info(f"clean_up_id is over.")
+#endregion
 
-
+#region SetingsPage
 class SetingsPage:
     """设置页面类"""
 
@@ -685,3 +683,4 @@ class SetingsPage:
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
         )
+#endregion
