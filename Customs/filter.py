@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 22:11:53
+# @Last Modified time: 2026-01-31 23:03:11
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -660,7 +660,6 @@ class CommandList(ft.Card):
         self.give_data = None
         self.filter_clear_all = None
         self.automatically_save = False
-        
 
     def did_mount(self):
         self.running = True
@@ -757,15 +756,18 @@ class CommandList(ft.Card):
         with open(stored_id, "r", encoding="utf-8") as f:
             content = f.read()
             content_bytes = content.encode("utf-8")
-            save_path = await ft.FilePicker().save_file(
-                dialog_title="Save as jackpot_filters.dict file.",
-                allowed_extensions=["dict"],
-                file_name="jackpot_filters.dict",
-                src_bytes=content_bytes,
-            )
-            if save_path:
-                with open(save_path, "wb") as f:
-                    f.write(content_bytes)
+            try:
+                save_path = await ft.FilePicker().save_file(
+                    dialog_title="Save as jackpot_filters.dict file.",
+                    allowed_extensions=["dict"],
+                    file_name="jackpot_filters.dict",
+                    src_bytes=content_bytes,
+                )
+                if save_path:
+                    with open(save_path, "wb") as f:
+                        f.write(content_bytes)
+            except Exception as ex:
+                   logr.error(f"FP Save error. {ex} {save_path}")
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
@@ -812,41 +814,44 @@ class CommandList(ft.Card):
             logr.info(f"Reading complete. {len(fiter_data)}")
 
     async def handle_Load(self, e):
-        uploadfile = ft.FilePicker(on_upload=self.handle_upload)
-        pick_result = await uploadfile.pick_files(
-            dialog_title="",
-            allow_multiple=False,
-            allowed_extensions=["dict"],
-        )
-        if not pick_result:
-            return
-        logr.info(f"selsect file: {pick_result}")
-        if self.page.web:
-            uplpads = [
-                ft.FilePickerUploadFile(
-                    self.page.get_upload_url(pick_result[0].name, 600),
-                    "PUT",
-                    None,
-                    pick_result[0].name,
-                )
-            ]
-            await self.fileMg.upload(uplpads)
-        else:
-            fiter_data = []
-            if self.filter_clear_all:
-                self.filter_clear_all()
-            with open(pick_result[0].path, "r", encoding="utf-8") as r:
-                for line in r:
-                    # 去掉行尾换行符并确保行不为空
-                    line = line.strip()
-                    if line:
-                        # 将每一行的 JSON 字符串转回字典对象
-                        item = json.loads(line)
-                        fiter_data.append(item)
-                        if self.filterAddItem:
-                            self.filterAddItem(item)
-            self.page.session.store.set("filters", fiter_data)
-            logr.info(f"Reading complete. {len(fiter_data)}")
+        try:
+            uploadfile = ft.FilePicker(on_upload=self.handle_upload)
+            pick_result = await uploadfile.pick_files(
+                dialog_title="",
+                allow_multiple=False,
+                allowed_extensions=["dict"],
+            )
+            if not pick_result:
+                return
+            logr.info(f"selsect file: {pick_result}")
+            if self.page.web:
+                uplpads = [
+                    ft.FilePickerUploadFile(
+                        self.page.get_upload_url(pick_result[0].name, 600),
+                        "PUT",
+                        None,
+                        pick_result[0].name,
+                    )
+                ]
+                await uploadfile.upload(uplpads)
+            else:
+                fiter_data = []
+                if self.filter_clear_all:
+                    self.filter_clear_all()
+                with open(pick_result[0].path, "r", encoding="utf-8") as r:
+                    for line in r:
+                        # 去掉行尾换行符并确保行不为空
+                        line = line.strip()
+                        if line:
+                            # 将每一行的 JSON 字符串转回字典对象
+                            item = json.loads(line)
+                            fiter_data.append(item)
+                            if self.filterAddItem:
+                                self.filterAddItem(item)
+                self.page.session.store.set("filters", fiter_data)
+                logr.info(f"Reading complete. {len(fiter_data)}")
+        except Exception as ex:
+            logr.error(f'Fp_load error {ex}')
 
 
 # endregion

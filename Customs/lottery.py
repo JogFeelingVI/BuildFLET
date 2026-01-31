@@ -108,17 +108,18 @@ class serendipitousCapture(ft.Card):
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
             # png_path =  os.path.join(app_temp_path, png_name)
-
-            save_png = await ft.FilePicker().save_file(
-                dialog_title=f"Save as {png_name} file.",
-                allowed_extensions=["png"],
-                file_name=png_name,
-                src_bytes=image,
-            )
-            # self.page.update()
-            if save_png:
-                with open(save_png, "wb") as f:
-                    f.write(image)
+            try:
+                save_png = await ft.FilePicker().save_file(
+                    dialog_title=f"Save as {png_name} file.",
+                    allowed_extensions=["png"],
+                    file_name=png_name,
+                    src_bytes=image,
+                )
+                if save_png:
+                    with open(save_png, "wb") as f:
+                        f.write(image)
+            except Exception as ex:
+                logr.error(f'schot_exp_capture error {ex}')
             await self.update_tips(f"Storage file directory {png_name}.")
             await self.update_tips(f"Storage task completed.")
 
@@ -360,7 +361,7 @@ class ItemC2(ft.GestureDetector):
             ),
             radius=8,
         )
-        
+
         self.update()
 
     def handle_delete(self, e):
