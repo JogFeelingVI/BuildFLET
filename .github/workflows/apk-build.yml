@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 20:24:47
+# @Last Modified time: 2026-01-31 21:28:03
 name: APK Build
 
 on:
@@ -38,6 +38,8 @@ env:
 
   # Disables progress bars when using UV
   UV_NO_PROGRESS: 1
+  
+  ANDROID_COMPILE_SDK: 35
 
 jobs:
   build:
@@ -62,6 +64,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install zenity
+        yes | sdkmanager --install "platforms;android-35" "build-tools;35.0.0"
 
     # 【新增】设置 Java 环境，签名 APK 必须
     - name: Setup Java 17
@@ -80,18 +83,8 @@ jobs:
         pip install flet==$FLET_CLI_VERSION
         pip install flet-cli==$FLET_CLI_VERSION
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        # 修正输入参数，使用 packages 安装特定版本
-        packages: 'platforms;android-35 build-tools;35.0.0'
-
-
     # 【修改】使用签名参数进行编译
-    - name: Flet Build APK
-      env:
-        # 某些构建环境会读取这些变量
-        ANDROID_COMPILE_SDK: "35"
+    - name: Flet Build APK    
       run: |
         flet build apk --verbose \
           --build-number=$BUILD_NUMBER \
