@@ -1,0 +1,29 @@
+{"func": "bit", "target": "PA", "condition": "bit1 <9"}
+{"func": "bit", "target": "PA", "condition": "bit2 <13"}
+{"func": "bit", "target": "PA", "condition": "bit3 <17"}
+{"func": "bit", "target": "PA", "condition": "bit4 <24"}
+{"func": "bit", "target": "PA", "condition": "bit6 >20 --o"}
+{"func": "Ac", "target": "PA", "condition": ">5 --o"}
+{"func": "Sum", "target": "PA", "condition": ">75"}
+{"func": "avg", "target": "PA", "condition": ">13"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,2 <23"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,3 <28"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,4 <33 --o"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,5 <37 --h"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit1,6 >24"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit2,3 >13"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit2,4 <37"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit3,4 <40 --o"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit2,6 >29"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit2,5 >25"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit3,5 >27"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit3,6 >31"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit4,5 <50"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit4,6 <55"}
+{"func": "sum_bit_xy", "target": "PA", "condition": "bit5,6 >44"}
+{"func": "mod_x", "target": "PA", "condition": "mod11 <36"}
+{"func": "mod_x", "target": "PA", "condition": "mod9 <30"}
+{"func": "mod_x", "target": "PA", "condition": "mod8 <28"}
+{"func": "mod_x", "target": "PA", "condition": "mod6 <21"}
+{"func": "mod_x", "target": "PA", "condition": "mod5 <17"}
+{"func": "mod_x", "target": "PA", "condition": "mod4 >6"}

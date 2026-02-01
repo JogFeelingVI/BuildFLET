@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 01:07:33
+# @Last Modified time: 2026-02-01 01:52:56
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -30,6 +30,7 @@ class serendipitousCapture(ft.Card):
         self.tips = self.__build_tips()
         self.content = self.__build__Container()
         self.visible = False
+        self.savePng = ft.FilePicker()
 
     def setting_get_exp_all(self, getexpall: list = None):
         self.get_exp_all = getexpall
@@ -99,7 +100,6 @@ class serendipitousCapture(ft.Card):
             await self.update_tips(f"Retrieve {len(exp_all)} data entries.")
             genid = randomData.generate_secure_string(8)
             await self.add_exp(exp_all, genid)
-            # 2. 获取存储路径 (建议使用 page.client_storage)
 
             # 4. 【非常重要】截图控件必须先添加到页面上
             # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
@@ -108,9 +108,7 @@ class serendipitousCapture(ft.Card):
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
             # png_path =  os.path.join(app_temp_path, png_name)
-        
-            savepng = ft.FilePicker()
-            save_png = await savepng.save_file(
+            save_png = await self.savePng.save_file(
                 dialog_title=f"Save as {png_name} file.",
                 allowed_extensions=["png"],
                 file_name=png_name,
