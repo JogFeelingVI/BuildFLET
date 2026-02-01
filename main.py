@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 13:20:53
+# @Last Modified time: 2026-02-01 22:08:05
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -40,7 +40,7 @@ async def main(page: ft.Page):
     
     # --- Filepicker ---
     fp = ft.FilePicker()
-    # page.services =[fp]
+    page.services =[fp]
     page.filepick= fp
     
     logr.info(f'{page.filepick=}')
