@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 02:22:45
+# @Last Modified time: 2026-02-01 05:40:24
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -734,10 +734,6 @@ class CommandList(ft.Card):
         self.filterAddItem = filterAddItem
 
     def handle_add(self, e):
-        # self.row_name_char += 1
-        # new_row = self.__get_range_count(f"{chr(self.row_name_char)}")
-        # temp_len = len(self.content.content.controls)
-        # self.content.content.controls.insert(temp_len - 1, new_row)
         if self.running and self.addcallback:
             self.addcallback()
             if isinstance(e.control, ft.TextButton):
@@ -751,11 +747,13 @@ class CommandList(ft.Card):
 
     async def handle_Save(self, e):
         try:
+            self.page.services.append(self.filemg)
             stored_id = await ft.SharedPreferences().get("stored_id")
             logr.info(f"stored_id: {stored_id}")
             if not stored_id:
                 logr.error("ID not found.")
                 return
+            save_path = None
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
@@ -764,15 +762,16 @@ class CommandList(ft.Card):
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
-                    src_bytes=content_bytes,
+                    src_bytes=content_bytes if self.page.web else None,
                 )
                 logr.info(f"save_path: {save_path}")
-                if save_path:
-                    with open(save_path, "wb") as f:
-                        f.write(content_bytes)
+            if save_path:
+                with open(save_path, "wb") as f:
+                    f.write(content_bytes)
         except Exception as ex:
             logr.error(f"handle_Save error: {save_path}.", ex)
         finally:
+            self.page.services.remove(self.filemg)
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
@@ -825,9 +824,9 @@ class CommandList(ft.Card):
                 allow_multiple=False,
                 allowed_extensions=["dict"],
             )
+            logr.info(f"selsect file: {pick_result}")
             if not pick_result:
                 return
-            logr.info(f"selsect file: {pick_result}")
             if self.page.web:
                 uplpads = [
                     ft.FilePickerUploadFile(
