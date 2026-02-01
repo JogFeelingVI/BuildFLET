@@ -9,7 +9,7 @@ from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
-from .loger import loger as logr
+from .loger import logr
 import flet as ft
 import os
 import json
@@ -87,7 +87,7 @@ class FiltersList(ft.Card):
     def addFilter(self, scriptd: dict):
         _scd = scriptd.copy()
         if "" in _scd.values():
-            logr.info(f"add filter error {_scd}")
+            logr.info(f"add filter error {_scd}.")
             return
         if not isinstance(self.content.content, ft.Row):
             return
@@ -257,7 +257,7 @@ class FiltersList(ft.Card):
             logr.info(f"saveTodict is run.")
             self.filtersAll_change = "none"
         except Exception as ex:
-            logr.info(f"Auto Save error {ex}")
+            logr.info(f"Auto Save error.", ex)
 
 
 # endregion
@@ -484,7 +484,7 @@ class InputPad(ft.Card):
                         add_quick(formatted_hint)
                         break  # 找到第一个匹配就退出，避免冲突
                     except Exception as ex:
-                        logr.error(f"Format error: {ex}")
+                        logr.error(f"Format error.", ex)
 
             self.pad_data["condition"] = val.strip()
 
@@ -752,26 +752,26 @@ class CommandList(ft.Card):
     async def handle_Save(self, e):
         try:
             stored_id = await ft.SharedPreferences().get("stored_id")
-            logr.info(f'stored_id: {stored_id}')
+            logr.info(f"stored_id: {stored_id}")
             if not stored_id:
                 logr.error("ID not found.")
                 return
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
-                logr.info(f'content_bytes: {content_bytes}')
+                logr.info(f"content_bytes: {content_bytes}")
                 save_path = await self.filemg.save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
                     src_bytes=content_bytes,
                 )
-                logr.info(f'save_path: {save_path}')
+                logr.info(f"save_path: {save_path}")
                 if save_path:
                     with open(save_path, "wb") as f:
                         f.write(content_bytes)
-        except Exception as er:
-            logr.error(f"handle_Save error: {er}. {save_path}")
+        except Exception as ex:
+            logr.error(f"handle_Save error: {save_path}.", ex)
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -855,7 +855,7 @@ class CommandList(ft.Card):
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as er:
-            logr.error(f'handle_Load error: {er}')
+            logr.error(f"handle_Load error,", er)
 
 
 # endregion

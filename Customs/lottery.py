@@ -2,13 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 02:20:41
+# @Last Modified time: 2026-02-01 04:45:08
 
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
-from .loger import loger as logr
+from .loger import logr
 import flet as ft
 import datetime
 import os
@@ -121,7 +121,7 @@ class serendipitousCapture(ft.Card):
             await self.update_tips(f"Storage task completed.")
 
         except Exception as er:
-            logr.info(f"Capture error: {er}")
+            logr.info(f"Capture error.", er)
         finally:
             self.visible = False
             await self.espcap_windows()

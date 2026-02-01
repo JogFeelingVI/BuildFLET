@@ -2,11 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 22:16:53
+# @Last Modified time: 2026-02-01 04:41:51
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
-from .loger import loger as logr
+from .loger import logr
 import flet as ft
 import json
 import os
@@ -269,8 +269,8 @@ class showRule(ft.Card):
         self.running = True
         try:
             self.updateCard()
-        except Exception as e:
-            logr.info(f"{self.__name__} running error {e}.")
+        except Exception as ex:
+            logr.error(f"{self.__name__} running error.", ex)
         finally:
             logr.info(f"{self.__name__} running over.")
 
@@ -338,7 +338,7 @@ class showRule(ft.Card):
                 self.page.session.store.set("settings", temp)
                 return temp
         except Exception as ex:
-            logr.error(f"__load_json_setting run error, {ex}")
+            logr.error(f"__load_json_setting run error.", ex)
             return
 
     async def __update_card(self):
@@ -563,8 +563,8 @@ class UserDirectory(ft.Card):
         try:
             if not self.stored_id:
                 self.page.run_task(self.Checking_user_id)
-        except Exception as e:
-            logr.error(f"{self.__name__} running error {e}.")
+        except Exception as ex:
+            logr.error(f"{self.__name__} running error.", ex)
         finally:
             logr.info(f"{self.__name__} running over.")
 
