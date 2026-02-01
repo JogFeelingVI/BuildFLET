@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 06:37:02
+# @Last Modified time: 2026-02-01 13:44:40
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -752,20 +752,29 @@ class CommandList(ft.Card):
                 logr.error("ID not found.")
                 return
             save_path = None
+            pick = self.page.filepick
+            if not isinstance(pick, ft.FilePicker):
+                return
+            is_mobile_or_web = self.page.web or self.page.platform in [
+                ft.PagePlatform.ANDROID,
+                ft.PagePlatform.IOS,
+            ]
+            
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
                 logr.info(f"content_bytes: {content_bytes}")
-                save_path = await ft.FilePicker().save_file(
+                save_path = await pick.save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
-                    src_bytes=content_bytes if self.page.web else None,
+                    src_bytes=content_bytes,
                 )
                 logr.info(f"save_path: {save_path}")
-            if save_path:
+            if save_path and not is_mobile_or_web:
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
+                logr.info("Desktop file save complete.")
         except Exception as er:
             logr.error(f"handle_Save error: {save_path}. {er}")
         finally:
@@ -815,9 +824,11 @@ class CommandList(ft.Card):
             logr.info(f"Reading complete. {len(fiter_data)}")
 
     async def handle_Load(self, e):
+        pick = self.page.filepick
+        if not isinstance(pick, ft.FilePicker):
+            return
         try:
-            uploadfile = ft.FilePicker(on_upload=self.handle_upload)
-            pick_result = await uploadfile.pick_files(
+            pick_result = await pick.pick_files(
                 dialog_title="",
                 allow_multiple=False,
                 allowed_extensions=["dict"],
@@ -826,6 +837,7 @@ class CommandList(ft.Card):
             if not pick_result:
                 return
             if self.page.web:
+                pick.on_upload=self.handle_upload
                 uplpads = [
                     ft.FilePickerUploadFile(
                         self.page.get_upload_url(pick_result[0].name, 600),
@@ -834,7 +846,7 @@ class CommandList(ft.Card):
                         pick_result[0].name,
                     )
                 ]
-                await uploadfile.upload(uplpads)
+                await pick.upload(uplpads)
             else:
                 fiter_data = []
                 if self.filter_clear_all:
@@ -853,6 +865,8 @@ class CommandList(ft.Card):
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as er:
             logr.error(f"handle_Load error. {er}")
+
+
 # endregion
 
 

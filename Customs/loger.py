@@ -21,12 +21,13 @@ logging.basicConfig(
     format=LOG_FORMAT,
     datefmt=DATE_FORMAT,
     handlers=[
-        logging.StreamHandler(sys.stdout) # 确保输出到标准输出，方便 adb logcat 查看
-    ]
+        logging.StreamHandler(sys.stdout)  # 确保输出到标准输出，方便 adb logcat 查看
+    ],
 )
 
 logr = logging.getLogger(__name__)
 # loger = logging.getLogger(__name__)
+
 
 # regiong loginfo
 class LogInfo:

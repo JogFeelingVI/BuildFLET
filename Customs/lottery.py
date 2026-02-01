@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 06:40:22
+# @Last Modified time: 2026-02-01 13:44:16
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -82,6 +82,7 @@ class serendipitousCapture(ft.Card):
         exp_show.controls = esc
         exp_show.update()
 
+    # region save image
     async def schot_exp_capture(self):
         try:
             self.visible = True
@@ -100,23 +101,30 @@ class serendipitousCapture(ft.Card):
             genid = randomData.generate_secure_string(8)
             await self.add_exp(exp_all, genid)
 
-            # 4. 【非常重要】截图控件必须先添加到页面上
+            is_mobile_or_web = self.page.web or self.page.platform in [
+                ft.PagePlatform.ANDROID,
+                ft.PagePlatform.IOS,
+            ]
+            pick = self.page.filepick
+            if not isinstance(pick, ft.FilePicker):
+                return
             # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
             image = await self.scshot.capture()
             stored_id = await ft.SharedPreferences().get("stored_id")
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
+            logr.info(f"{image.__sizeof__()=} {png_name=}")
             # png_path =  os.path.join(app_temp_path, png_name)
-            save_png = await ft.FilePicker().save_file(
+            save_png = await pick.save_file(
                 dialog_title=f"Save as {png_name} file.",
                 allowed_extensions=["png"],
                 file_name=png_name,
                 src_bytes=image,
             )
-            if save_png:
+            if save_png and not is_mobile_or_web:
                 with open(save_png, "wb") as f:
                     f.write(image)
-            await self.update_tips(f"Storage file directory {png_name}.")
+                await self.update_tips(f"Storage file directory {png_name}.")
             await self.update_tips(f"Storage task completed.")
 
         except Exception as er:
@@ -125,6 +133,8 @@ class serendipitousCapture(ft.Card):
             self.visible = False
             await self.espcap_windows()
             self.update()
+
+    # endregion
 
     def __build_tips(self):
         return ft.Text("save to ...", size=16, color=DraculaColors.ORANGE)
