@@ -120,7 +120,7 @@ class serendipitousCapture(ft.Card):
             await self.update_tips(f"Storage task completed.")
 
         except Exception as er:
-            logr.info(f"Capture error.", er)
+            logr.info(f"Capture error. {er}")
         finally:
             self.visible = False
             await self.espcap_windows()
@@ -276,7 +276,7 @@ class ItemC2(ft.GestureDetector):
                     self.chip_content.color = DraculaColors.PURPLE
                     self.state_exp = "done"
                     self.update()
-                    logr.info("Search successful")
+                    logr.info("Search successful.")
                     break  # 成功后直接跳出循环
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待

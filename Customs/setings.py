@@ -269,8 +269,8 @@ class showRule(ft.Card):
         self.running = True
         try:
             self.updateCard()
-        except Exception as ex:
-            logr.error(f"{self.__name__} running error.", ex)
+        except Exception as er:
+            logr.error(f"{self.__name__} running error. {er}")
         finally:
             logr.info(f"{self.__name__} running over.")
 
@@ -337,8 +337,8 @@ class showRule(ft.Card):
                 # logr.info(f'temp: {temp}')
                 self.page.session.store.set("settings", temp)
                 return temp
-        except Exception as ex:
-            logr.error(f"__load_json_setting run error.", ex)
+        except Exception as er:
+            logr.error(f"__load_json_setting run error. {er}")
             return
 
     async def __update_card(self):
@@ -563,8 +563,8 @@ class UserDirectory(ft.Card):
         try:
             if not self.stored_id:
                 self.page.run_task(self.Checking_user_id)
-        except Exception as ex:
-            logr.error(f"{self.__name__} running error.", ex)
+        except Exception as er:
+            logr.error(f"{self.__name__} running error. {er}")
         finally:
             logr.info(f"{self.__name__} running over.")
 

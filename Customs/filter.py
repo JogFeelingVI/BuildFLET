@@ -766,8 +766,8 @@ class CommandList(ft.Card):
             if save_path:
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
-        except Exception as ex:
-            logr.error(f"handle_Save error: {save_path}.", ex)
+        except Exception as er:
+            logr.error(f"handle_Save error: {save_path}. {er}")
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -852,9 +852,7 @@ class CommandList(ft.Card):
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as er:
-            logr.error(f"handle_Load error,", er)
-
-
+            logr.error(f"handle_Load error. {er}")
 # endregion
 
 

@@ -2,11 +2,30 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-28 01:18:11
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 04:40:14
+# @Last Modified time: 2026-02-01 10:57:15
 
 import traceback
 import datetime
+import logging
+import sys
 
+# 1. 配置日志格式
+# %(asctime)s 自动处理 datetime
+# %(levelname)s 自动处理级别名称
+# %(message)s 自动处理消息内容
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format=LOG_FORMAT,
+    datefmt=DATE_FORMAT,
+    handlers=[
+        logging.StreamHandler(sys.stdout) # 确保输出到标准输出，方便 adb logcat 查看
+    ]
+)
+
+logr = logging.getLogger(__name__)
 # loger = logging.getLogger(__name__)
 
 # regiong loginfo
@@ -55,4 +74,4 @@ class LogInfo:
 
 # endregion
 
-logr = LogInfo(show_time=True)
+# logr = LogInfo(show_time=True)
