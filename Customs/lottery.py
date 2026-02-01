@@ -2,13 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 00:10:06
+# @Last Modified time: 2026-02-01 01:07:33
 
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
-from .loger import loger as logr
+from .loger import loger as logr, tbackexec as tbc
 import flet as ft
 import datetime
 import os
@@ -108,27 +108,23 @@ class serendipitousCapture(ft.Card):
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
             # png_path =  os.path.join(app_temp_path, png_name)
-            try:
-                savepng = ft.FilePicker()
-                self.page.services.append(savepng)
-                save_png = await savepng.save_file(
-                    dialog_title=f"Save as {png_name} file.",
-                    allowed_extensions=["png"],
-                    file_name=png_name,
-                    src_bytes=image,
-                )
-                if save_png:
-                    with open(save_png, "wb") as f:
-                        f.write(image)
-            except Exception as ex:
-                logr.error(f'schot_exp_capture error {ex}')
-            finally:
-                self.page.services.remove(savepng)
+        
+            savepng = ft.FilePicker()
+            save_png = await savepng.save_file(
+                dialog_title=f"Save as {png_name} file.",
+                allowed_extensions=["png"],
+                file_name=png_name,
+                src_bytes=image,
+            )
+            if save_png:
+                with open(save_png, "wb") as f:
+                    f.write(image)
             await self.update_tips(f"Storage file directory {png_name}.")
             await self.update_tips(f"Storage task completed.")
 
-        except Exception as e:
-            logr.info(f"Capture error: {e}")
+        except Exception:
+            tbc_str = tbc()
+            logr.info(f"Capture error: {tbc_str}")
         finally:
             self.visible = False
             await self.espcap_windows()

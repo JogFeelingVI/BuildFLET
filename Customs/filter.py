@@ -2,14 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 00:11:24
+# @Last Modified time: 2026-02-01 01:16:16
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
-from .loger import loger as logr
+from .loger import loger as logr, tbackexec as tbc
 import flet as ft
 import os
 import json
@@ -749,16 +749,16 @@ class CommandList(ft.Card):
                 e.control.update()
 
     async def handle_Save(self, e):
-        stored_id = await ft.SharedPreferences().get("stored_id")
-        if not stored_id:
-            logr.error("ID not found.")
-            return
-        with open(stored_id, "r", encoding="utf-8") as f:
-            content = f.read()
-            content_bytes = content.encode("utf-8")
-            try:
+        try:
+            stored_id = await ft.SharedPreferences().get("stored_id")
+            if not stored_id:
+                logr.error("ID not found.")
+                return
+            with open(stored_id, "r", encoding="utf-8") as f:
+                content = f.read()
+                content_bytes = content.encode("utf-8")
+                
                 savefile = ft.FilePicker()
-                self.page.services.append(savefile)
                 save_path = await savefile.save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
@@ -768,10 +768,10 @@ class CommandList(ft.Card):
                 if save_path:
                     with open(save_path, "wb") as f:
                         f.write(content_bytes)
-            except Exception as ex:
-                   logr.error(f"FP Save error. {ex} {save_path}")
-            finally:
-                self.page.services.remove(savefile)
+        except Exception:
+            _tbc_str = tbc()
+            logr.error(f"FP Save error: {_tbc_str} {save_path}")
+        finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
@@ -820,7 +820,6 @@ class CommandList(ft.Card):
     async def handle_Load(self, e):
         try:
             uploadfile = ft.FilePicker(on_upload=self.handle_upload)
-            self.page.services.append(uploadfile)
             pick_result = await uploadfile.pick_files(
                 dialog_title="",
                 allow_multiple=False,
@@ -855,10 +854,9 @@ class CommandList(ft.Card):
                                 self.filterAddItem(item)
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
-        except Exception as ex:
-            logr.error(f'Fp_load error {ex}')
-        finally:
-            self.page.services.remove(uploadfile)
+        except Exception:
+            tbc_str = tbc()
+            logr.error(f'Fp_load error: {tbc_str}')
 
 
 # endregion
