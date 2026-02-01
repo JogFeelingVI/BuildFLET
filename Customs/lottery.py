@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 14:18:59
+# @Last Modified time: 2026-02-01 00:10:06
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -109,7 +109,9 @@ class serendipitousCapture(ft.Card):
             png_name = f"{id}.png"
             # png_path =  os.path.join(app_temp_path, png_name)
             try:
-                save_png = await ft.FilePicker().save_file(
+                savepng = ft.FilePicker()
+                self.page.services.append(savepng)
+                save_png = await savepng.save_file(
                     dialog_title=f"Save as {png_name} file.",
                     allowed_extensions=["png"],
                     file_name=png_name,
@@ -120,6 +122,8 @@ class serendipitousCapture(ft.Card):
                         f.write(image)
             except Exception as ex:
                 logr.error(f'schot_exp_capture error {ex}')
+            finally:
+                self.page.services.remove(savepng)
             await self.update_tips(f"Storage file directory {png_name}.")
             await self.update_tips(f"Storage task completed.")
 

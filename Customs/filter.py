@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-31 23:03:11
+# @Last Modified time: 2026-02-01 00:11:24
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -757,7 +757,9 @@ class CommandList(ft.Card):
             content = f.read()
             content_bytes = content.encode("utf-8")
             try:
-                save_path = await ft.FilePicker().save_file(
+                savefile = ft.FilePicker()
+                self.page.services.append(savefile)
+                save_path = await savefile.save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
@@ -768,6 +770,8 @@ class CommandList(ft.Card):
                         f.write(content_bytes)
             except Exception as ex:
                    logr.error(f"FP Save error. {ex} {save_path}")
+            finally:
+                self.page.services.remove(savefile)
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
@@ -816,6 +820,7 @@ class CommandList(ft.Card):
     async def handle_Load(self, e):
         try:
             uploadfile = ft.FilePicker(on_upload=self.handle_upload)
+            self.page.services.append(uploadfile)
             pick_result = await uploadfile.pick_files(
                 dialog_title="",
                 allow_multiple=False,
@@ -852,6 +857,8 @@ class CommandList(ft.Card):
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as ex:
             logr.error(f'Fp_load error {ex}')
+        finally:
+            self.page.services.remove(uploadfile)
 
 
 # endregion
