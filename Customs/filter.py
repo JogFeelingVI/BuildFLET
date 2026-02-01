@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 05:40:24
+# @Last Modified time: 2026-02-01 06:37:02
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -660,7 +660,6 @@ class CommandList(ft.Card):
         self.give_data = None
         self.filter_clear_all = None
         self.automatically_save = False
-        self.filemg = ft.FilePicker(on_upload=self.handle_upload)
 
     def did_mount(self):
         self.running = True
@@ -747,7 +746,6 @@ class CommandList(ft.Card):
 
     async def handle_Save(self, e):
         try:
-            self.page.services.append(self.filemg)
             stored_id = await ft.SharedPreferences().get("stored_id")
             logr.info(f"stored_id: {stored_id}")
             if not stored_id:
@@ -758,7 +756,7 @@ class CommandList(ft.Card):
                 content = f.read()
                 content_bytes = content.encode("utf-8")
                 logr.info(f"content_bytes: {content_bytes}")
-                save_path = await self.filemg.save_file(
+                save_path = await ft.FilePicker().save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
@@ -771,7 +769,6 @@ class CommandList(ft.Card):
         except Exception as ex:
             logr.error(f"handle_Save error: {save_path}.", ex)
         finally:
-            self.page.services.remove(self.filemg)
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
@@ -819,7 +816,8 @@ class CommandList(ft.Card):
 
     async def handle_Load(self, e):
         try:
-            pick_result = await self.filemg.pick_files(
+            uploadfile = ft.FilePicker(on_upload=self.handle_upload)
+            pick_result = await uploadfile.pick_files(
                 dialog_title="",
                 allow_multiple=False,
                 allowed_extensions=["dict"],
@@ -836,7 +834,7 @@ class CommandList(ft.Card):
                         pick_result[0].name,
                     )
                 ]
-                await self.filemg.upload(uplpads)
+                await uploadfile.upload(uplpads)
             else:
                 fiter_data = []
                 if self.filter_clear_all:

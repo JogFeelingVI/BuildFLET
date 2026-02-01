@@ -10,8 +10,6 @@ import datetime
 # loger = logging.getLogger(__name__)
 
 # regiong loginfo
-
-
 class LogInfo:
     def __init__(self, show_time: bool = True):
         # 使用常量定义格式，避免实例属性被误改
