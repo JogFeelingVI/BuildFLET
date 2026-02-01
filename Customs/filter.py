@@ -2,14 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 01:51:31
+# @Last Modified time: 2026-02-01 02:22:45
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
-from .loger import loger as logr, tbackexec as tbc
+from .loger import loger as logr
 import flet as ft
 import os
 import json
@@ -752,25 +752,26 @@ class CommandList(ft.Card):
     async def handle_Save(self, e):
         try:
             stored_id = await ft.SharedPreferences().get("stored_id")
+            logr.info(f'stored_id: {stored_id}')
             if not stored_id:
                 logr.error("ID not found.")
                 return
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
-                
+                logr.info(f'content_bytes: {content_bytes}')
                 save_path = await self.filemg.save_file(
                     dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
                     src_bytes=content_bytes,
                 )
+                logr.info(f'save_path: {save_path}')
                 if save_path:
                     with open(save_path, "wb") as f:
                         f.write(content_bytes)
-        except Exception:
-            _tbc_str = tbc()
-            logr.error(f"FP Save error: {_tbc_str} {save_path}")
+        except Exception as er:
+            logr.error(f"handle_Save error: {er}. {save_path}")
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -853,9 +854,8 @@ class CommandList(ft.Card):
                                 self.filterAddItem(item)
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
-        except Exception:
-            tbc_str = tbc()
-            logr.error(f'Fp_load error: {tbc_str}')
+        except Exception as er:
+            logr.error(f'handle_Load error: {er}')
 
 
 # endregion

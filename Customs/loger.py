@@ -6,7 +6,6 @@
 
 import logging
 import sys
-import traceback
 
 # 显式添加一个流处理器，指向 sys.stdout（标准输出）
 handler = logging.StreamHandler(sys.stdout)
@@ -19,5 +18,3 @@ logging.basicConfig(
 )
 
 loger = logging.getLogger(__name__)
-
-tbackexec = traceback.format_exc
