@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-18 13:51:07
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 19:37:04
+# @Last Modified time: 2026-02-01 19:39:25
 name: APK Build
 
 on:
@@ -28,7 +28,7 @@ env:
 
   # flet-cli version to install for `flet build`
   FLET_CLI_VERSION: 0.80.5
-  FLUTTER_VERSION: 3.38.9
+  FLUTTER_VERSION: 3.38.7
 
   # Ensures Python uses UTF-8 encoding by default
   PYTHONUTF8: 1
@@ -38,8 +38,6 @@ env:
 
   # Disables progress bars when using UV
   UV_NO_PROGRESS: 1
-  
-  ANDROID_COMPILE_SDK: 35
 
 jobs:
   build:
@@ -54,11 +52,11 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    # - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
-    #   uses: subosito/flutter-action@v2
-    #   with:
-    #     flutter-version: ${{ env.FLUTTER_VERSION }}
-    #     channel: 'stable'
+    - name: Setup Flutter ${{ env.FLUTTER_VERSION }}
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
 
     - name: update ubuntu
       run: |
