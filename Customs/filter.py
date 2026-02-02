@@ -234,7 +234,7 @@ class FiltersList(ft.Card):
             _time -= 1
             sw.badge = f"{_time}"
             if self.filtersAll:
-                self.page.run_task(self.saveTodict)
+                await self.saveTodict()
             if _time == 0:
                 _time = time
             if not sw.value:
@@ -256,8 +256,8 @@ class FiltersList(ft.Card):
                     f.write(json.dumps(item, ensure_ascii=False) + "\n")
             logr.info(f"saveTodict is run.")
             self.filtersAll_change = "none"
-        except Exception as ex:
-            logr.info(f"Auto Save error.", ex)
+        except Exception as er:
+            logr.info(f"Auto Save error. {er}", exc_info=True)
 
 
 # endregion
@@ -483,8 +483,8 @@ class InputPad(ft.Card):
                         logr.info(f"{formatted_hint=}")
                         add_quick(formatted_hint)
                         break  # 找到第一个匹配就退出，避免冲突
-                    except Exception as ex:
-                        logr.error(f"Format error.", ex)
+                    except Exception as er:
+                        logr.error(f"Format error. {er}",exc_info=True)
 
             self.pad_data["condition"] = val.strip()
 
@@ -775,7 +775,7 @@ class CommandList(ft.Card):
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
         except Exception as er:
-            logr.error(f"handle_Save error: {save_path}.",{er})
+            logr.error(f"handle_Save error: {save_path}. {er}",exc_info=True)
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -836,7 +836,11 @@ class CommandList(ft.Card):
             logr.info(f"selsect file: {pick_result}")
             if not pick_result:
                 return
-            if self.page.web:
+            is_mobile_or_web = self.page.web or self.page.platform in [
+                ft.PagePlatform.ANDROID,
+                ft.PagePlatform.IOS,
+            ]
+            if is_mobile_or_web:
                 uplpads = [
                     ft.FilePickerUploadFile(
                         self.page.get_upload_url(pick_result[0].name, 600),
@@ -847,6 +851,7 @@ class CommandList(ft.Card):
                 ]
                 await pick.upload(uplpads)
             else:
+                logr.info(f'{pick_result[0]}')
                 fiter_data = []
                 if self.filter_clear_all:
                     self.filter_clear_all()
@@ -863,7 +868,7 @@ class CommandList(ft.Card):
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as er:
-            logr.error(f"handle_Load error.",{er})
+            logr.error(f"handle_Load error. {er}", exc_info=True)
 
 
 # endregion

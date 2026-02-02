@@ -389,6 +389,7 @@ class itemsList(ft.Card):
 
     def did_mount(self):
         self.running = True
+        self.find_the_maximum()
 
     def will_unmount(self):
         self.running = False
@@ -402,6 +403,13 @@ class itemsList(ft.Card):
             border_radius=10,
             content=self.__command_button(),
         )
+
+    def find_the_maximum(self):
+        is_mobile_or_web = self.page.web or self.page.platform in [
+                ft.PagePlatform.ANDROID,
+                ft.PagePlatform.IOS,
+        ]
+        self.max_item = 10 if is_mobile_or_web else 1000
 
     def add_itemc2(self, itemc2remove=None):
         control = self.content.content

@@ -22,9 +22,10 @@ os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
 
 
 async def main(page: ft.Page):
-    page.title = "Jackpot App"
+    page.title = "Jackpot App --- lotter"
     # page.theme = Dracula_Theme
     # 设置移动端适配的内边距
+    page.theme_mode = ft.ThemeMode.DARK
     page.padding = ft.Padding.only(top=20)
 
     # raw_json = await page.shared_preferences.get("save_data_list")
