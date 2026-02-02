@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 22:08:05
+# @Last Modified time: 2026-02-02 03:00:13
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -40,8 +40,10 @@ async def main(page: ft.Page):
     
     # --- Filepicker ---
     fp = ft.FilePicker()
-    page.services =[fp]
+    page.services.append(fp)
     page.filepick= fp
+    logr.info(f'{fp} Initialization complete.')
+    # download = await page.storage_paths.get_downloads_directory() 
     
     logr.info(f'{page.filepick=}')
 

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-28 01:18:11
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 10:57:15
+# @Last Modified time: 2026-02-02 02:22:45
 
 import traceback
 import datetime
@@ -25,9 +25,8 @@ logging.basicConfig(
     ],
 )
 
-logr = logging.getLogger(__name__)
+logr = logging.getLogger('flet_core')
 # loger = logging.getLogger(__name__)
-
 
 # regiong loginfo
 class LogInfo:

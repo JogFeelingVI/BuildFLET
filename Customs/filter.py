@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 13:44:40
+# @Last Modified time: 2026-02-02 02:17:39
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -763,9 +763,8 @@ class CommandList(ft.Card):
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
-                logr.info(f"content_bytes: {content_bytes}")
+                logr.info(f"content_bytes: {content_bytes.__sizeof__()} open pick -> save_file.")
                 save_path = await pick.save_file(
-                    dialog_title="Save as jackpot_filters.dict file.",
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
                     src_bytes=content_bytes,
@@ -828,8 +827,8 @@ class CommandList(ft.Card):
         if not isinstance(pick, ft.FilePicker):
             return
         try:
+            logr.info('open pick -> pick_files')
             pick_result = await pick.pick_files(
-                dialog_title="",
                 allow_multiple=False,
                 allowed_extensions=["dict"],
             )

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 13:44:16
+# @Last Modified time: 2026-02-02 02:05:10
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -106,9 +106,9 @@ class serendipitousCapture(ft.Card):
                 ft.PagePlatform.IOS,
             ]
             pick = self.page.filepick
+            logr.info(f'{is_mobile_or_web} {pick}')
             if not isinstance(pick, ft.FilePicker):
                 return
-            # 我们把它放到 overlay 中，这样它就存在于页面树中，但不会破坏现有布局
             image = await self.scshot.capture()
             stored_id = await ft.SharedPreferences().get("stored_id")
             id = os.path.splitext(os.path.basename(stored_id))[0]
@@ -116,11 +116,11 @@ class serendipitousCapture(ft.Card):
             logr.info(f"{image.__sizeof__()=} {png_name=}")
             # png_path =  os.path.join(app_temp_path, png_name)
             save_png = await pick.save_file(
-                dialog_title=f"Save as {png_name} file.",
                 allowed_extensions=["png"],
                 file_name=png_name,
                 src_bytes=image,
             )
+            logr.info(f"save_path: {save_png}")
             if save_png and not is_mobile_or_web:
                 with open(save_png, "wb") as f:
                     f.write(image)
