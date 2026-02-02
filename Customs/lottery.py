@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 02:05:10
+# @Last Modified time: 2026-02-02 05:45:52
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -105,17 +105,15 @@ class serendipitousCapture(ft.Card):
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
-            pick = self.page.filepick
-            logr.info(f'{is_mobile_or_web} {pick}')
-            if not isinstance(pick, ft.FilePicker):
-                return
+            
             image = await self.scshot.capture()
             stored_id = await ft.SharedPreferences().get("stored_id")
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
             logr.info(f"{image.__sizeof__()=} {png_name=}")
-            # png_path =  os.path.join(app_temp_path, png_name)
-            save_png = await pick.save_file(
+            
+            save_png = await ft.FilePicker().save_file(
+                file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["png"],
                 file_name=png_name,
                 src_bytes=image,

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-01 04:41:51
+# @Last Modified time: 2026-02-02 06:59:32
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -84,8 +84,6 @@ Lotter_Data = {
         "PB_K": 1,
     },
 }
-
-logr.info(f"{Lotter_Data.keys()}")
 # endregion
 
 
@@ -270,7 +268,7 @@ class showRule(ft.Card):
         try:
             self.updateCard()
         except Exception as er:
-            logr.error(f"{self.__name__} running error. {er}")
+            logr.error(f"{self.__name__} running error.",  {er})
         finally:
             logr.info(f"{self.__name__} running over.")
 
@@ -338,7 +336,7 @@ class showRule(ft.Card):
                 self.page.session.store.set("settings", temp)
                 return temp
         except Exception as er:
-            logr.error(f"__load_json_setting run error. {er}")
+            logr.error(f"__load_json_setting run error.",{er})
             return
 
     async def __update_card(self):
@@ -564,7 +562,7 @@ class UserDirectory(ft.Card):
             if not self.stored_id:
                 self.page.run_task(self.Checking_user_id)
         except Exception as er:
-            logr.error(f"{self.__name__} running error. {er}")
+            logr.error(f"{self.__name__} running error.", {er})
         finally:
             logr.info(f"{self.__name__} running over.")
 
@@ -609,7 +607,8 @@ class UserDirectory(ft.Card):
                 self.stored_id = os.path.join(app_temp_path, f"{id}.dict")
                 await ft.SharedPreferences().set("stored_id", self.stored_id)
                 self.clean_up_id()
-            await self.update_tips_value(f"Using configuration files {self.stored_id}")
+            showid = os.path.splitext(os.path.basename(self.stored_id))[0]
+            await self.update_tips_value(f"Using {showid}")
 
     def clean_up_id(self):
         if not self.stored_id:

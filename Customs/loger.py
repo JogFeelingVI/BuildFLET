@@ -2,12 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-28 01:18:11
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 02:22:45
+# @Last Modified time: 2026-02-02 05:28:49
 
 import traceback
 import datetime
 import logging
 import sys
+import os
 
 # 1. 配置日志格式
 # %(asctime)s 自动处理 datetime
@@ -28,22 +29,37 @@ logging.basicConfig(
 logr = logging.getLogger('flet_core')
 # loger = logging.getLogger(__name__)
 
+
 # regiong loginfo
 class LogInfo:
     def __init__(self, show_time: bool = True):
         # 使用常量定义格式，避免实例属性被误改
         self.show_time = show_time
-        # {level} 和 {message} 是占位符
+        self.logpath = None
         self.log_format = (
             "[{time}] {level}: {message}" if show_time else "{level}: {message}"
         )
+
+    def set_log_path(self, path: str):
+        """
+        设置日志文件的保存路径
+        :param path: 完整的路径字符串，例如 /data/user/0/.../app_log.txt
+        """
+        self.info(f'set log path: {path}')
+        try:
+            # 自动创建不存在的目录
+            directory = os.path.dirname(path)
+            if directory and not os.path.exists(directory):
+                os.makedirs(directory, exist_ok=True)
+            self.logpath = path
+            self.info(f"The log path has been set to: {path}")
+        except Exception as er:
+            self.error(f"Failed to set log path: {er}")
 
     def __emit(self, level: str, message: str, ex: Exception = None):
         """内部统一处理日志输出"""
         # 1. 处理时间
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # 2. 处理错误堆栈 (针对你之前的 traceback 需求)
         full_message = str(message)
         if ex is not None:
             # 获取完整堆栈并拼接到消息后面
@@ -58,6 +74,15 @@ class LogInfo:
         )
 
         # 4. 实际执行打印 (或者写入文件)
+        if self.logpath:
+            try:
+                # 使用 'a' 模式表示追加 (append)
+                # encoding="utf-8" 确保安卓端中文不乱码
+                with open(self.logpath, "a", encoding="utf-8") as f:
+                    f.write(log_str + "\n")
+            except Exception as e:
+                # 如果写文件失败，仅在控制台提示，不要让 App 崩溃
+                print(f"Unable to write to log file: {e}")
         print(log_str)
         return log_str
 

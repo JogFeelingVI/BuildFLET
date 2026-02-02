@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 02:17:39
+# @Last Modified time: 2026-02-02 06:44:06
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -752,19 +752,19 @@ class CommandList(ft.Card):
                 logr.error("ID not found.")
                 return
             save_path = None
-            pick = self.page.filepick
-            if not isinstance(pick, ft.FilePicker):
-                return
             is_mobile_or_web = self.page.web or self.page.platform in [
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
-            
+
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
-                logr.info(f"content_bytes: {content_bytes.__sizeof__()} open pick -> save_file.")
-                save_path = await pick.save_file(
+                logr.info(
+                    f"content_bytes: {content_bytes.__sizeof__()} open pick -> save_file."
+                )
+                save_path = await ft.FilePicker().save_file(
+                    file_type=ft.FilePickerFileType.CUSTOM,
                     allowed_extensions=["dict"],
                     file_name="jackpot_filters.dict",
                     src_bytes=content_bytes,
@@ -775,7 +775,7 @@ class CommandList(ft.Card):
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
         except Exception as er:
-            logr.error(f"handle_Save error: {save_path}. {er}")
+            logr.error(f"handle_Save error: {save_path}.",{er})
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -801,7 +801,8 @@ class CommandList(ft.Card):
         self.page.session.store.set("filters", fiter_data)
         logr.info(f"Reading complete. {len(fiter_data)}")
 
-    def handle_upload(self, e):
+    async def handle_upload(self, e):
+        await asyncio.sleep(0.5)
         logr.info(f"handle upload {e}")
         if e.progress == 1.0 and e.error == None:
             filepath = os.path.join(app_temp_path, e.file_name)
@@ -821,14 +822,14 @@ class CommandList(ft.Card):
                             self.filterAddItem(item)
             self.page.session.store.set("filters", fiter_data)
             logr.info(f"Reading complete. {len(fiter_data)}")
+            os.remove(filepath)
 
     async def handle_Load(self, e):
-        pick = self.page.filepick
-        if not isinstance(pick, ft.FilePicker):
-            return
         try:
-            logr.info('open pick -> pick_files')
+            pick = ft.FilePicker(on_upload=self.handle_upload)
+            logr.info("open pick -> pick_files")
             pick_result = await pick.pick_files(
+                file_type=ft.FilePickerFileType.CUSTOM,
                 allow_multiple=False,
                 allowed_extensions=["dict"],
             )
@@ -836,7 +837,6 @@ class CommandList(ft.Card):
             if not pick_result:
                 return
             if self.page.web:
-                pick.on_upload=self.handle_upload
                 uplpads = [
                     ft.FilePickerUploadFile(
                         self.page.get_upload_url(pick_result[0].name, 600),
@@ -863,7 +863,7 @@ class CommandList(ft.Card):
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
         except Exception as er:
-            logr.error(f"handle_Load error. {er}")
+            logr.error(f"handle_Load error.",{er})
 
 
 # endregion

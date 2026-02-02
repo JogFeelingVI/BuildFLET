@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 03:00:13
+# @Last Modified time: 2026-02-02 07:03:00
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -19,6 +19,7 @@ app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
+
 
 async def main(page: ft.Page):
     page.title = "Jackpot App"
@@ -37,17 +38,10 @@ async def main(page: ft.Page):
         # 初始赋值：如果大于 0 就显示，否则 None
         # badge=str(initial_count) if initial_count > 0 else None,
     )
-    
-    # --- Filepicker ---
-    fp = ft.FilePicker()
-    page.services.append(fp)
-    page.filepick= fp
-    logr.info(f'{fp} Initialization complete.')
-    # download = await page.storage_paths.get_downloads_directory() 
-    
-    logr.info(f'{page.filepick=}')
 
-    # --- 页面逻辑控制 ---
+    logr.info(f"Initialization complete.")
+    
+    # --- 页面逻辑控制 --- 
     def on_navigation_change(e):
         index = e.control.selected_index
         # 切换中间的内容区域
