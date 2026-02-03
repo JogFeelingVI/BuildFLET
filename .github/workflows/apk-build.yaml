@@ -1,3 +1,7 @@
+# @Author: JogFeelingVI
+# @Date:   2026-02-03 21:33:23
+# @Last Modified by:   JogFeelingVI
+# @Last Modified time: 2026-02-03 21:40:53
 name: Flet Builds
 
 on:
@@ -19,6 +23,7 @@ env:
 jobs:
   build:
     name: Build ${{ matrix.name }}
+    if: matrix.enabled 
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -26,18 +31,21 @@ jobs:
         include:
           # -------- Desktop --------
           - name: linux
+            enabled: false
             runner: ubuntu-latest
             build_cmd: "flet build linux --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/linux
             needs_linux_deps: true
 
           - name: macos
+            enabled: false
             runner: macos-latest
             build_cmd: "flet build macos --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/macos
             needs_linux_deps: false
 
           - name: windows
+            enabled: false
             runner: windows-latest
             build_cmd: "flet build windows --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/windows
@@ -45,12 +53,14 @@ jobs:
 
           # -------- Android --------
           - name: aab
+            enabled: false
             runner: ubuntu-latest
             build_cmd: "flet build aab --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/aab
             needs_linux_deps: false
 
           - name: apk
+            enabled: true
             runner: ubuntu-latest
             build_cmd: "flet build apk --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/apk
@@ -58,6 +68,7 @@ jobs:
 
           # -------- iOS --------
           - name: ipa
+            enabled: false
             runner: macos-latest
             build_cmd: "flet build ipa --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
             artifact_path: build/ipa
@@ -65,6 +76,7 @@ jobs:
 
           # -------- Web --------
           - name: web
+            enabled: false
             runner: ubuntu-latest
             build_cmd: "flet build web --yes --verbose"
             artifact_path: build/web
