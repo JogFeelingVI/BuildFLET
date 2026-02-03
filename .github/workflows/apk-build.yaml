@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-03 21:33:23
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-03 21:47:32
+# @Last Modified time: 2026-02-03 21:49:12
 name: Flet Builds
 
 on:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  UV_PYTHON: 3.12   # Python version
+  UV_PYTHON: 3.12.12   # Python version
   PYTHONUTF8: 1
 
   # https://docs.flet.dev/publish/
