@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 05:45:52
+# @Last Modified time: 2026-02-04 13:42:34
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -33,12 +33,22 @@ class serendipitousCapture(ft.Card):
 
     def setting_get_exp_all(self, getexpall: list = None):
         self.get_exp_all = getexpall
+        
+    def setting_width(self):
+        """width= self.page.width -20 if self.page.web else None"""
+        sw = self.scshot.content
+        if isinstance(sw, ft.Container):
+            if self.page.web:
+                sw.width = self.page.width * 0.25 - 80
+                logr.info(f'page width {self.page.width} SW {sw.width}')
 
     def did_mount(self):
         self.running = True
-
+        self.setting_width()
+        
     def will_unmount(self):
         self.running = False
+        
 
     async def update_tips(self, text: str = ""):
         self.tips.value = f"{text}"
@@ -66,6 +76,7 @@ class serendipitousCapture(ft.Card):
                     size=18,
                     color="#900015" if i % 2 == 0 else "#d7a700",
                     weight="bold",
+                    font_family="RacingSansOne",
                 )
             )
             if (i + 1) % 5 == 0:
@@ -107,9 +118,7 @@ class serendipitousCapture(ft.Card):
             ]
 
             image = await self.scshot.capture()
-            stored_id = await ft.SharedPreferences().get("stored_id")
-            id = os.path.splitext(os.path.basename(stored_id))[0]
-            png_name = f"{id}.png"
+            png_name = f"{genid}.png"
             logr.info(f"{image.__sizeof__()=} {png_name=}")
 
             save_png = await ft.FilePicker().save_file(
@@ -222,7 +231,10 @@ class ItemC2(ft.GestureDetector):
 
         # 1. 构建内部显示的 Chip
         self.chip_content = ft.Text(
-            "03 07 11 17 29 30 + 09", size=20, color=DraculaColors.PURPLE
+            "03 07 11 17 29 30 + 09",
+            size=20,
+            color=DraculaColors.PURPLE,
+            font_family="RacingSansOne",
         )
         self.chip = ft.Chip(
             width=float("inf"),
@@ -578,11 +590,18 @@ class LotteryPage:
     def get_data_view(self):
         return ft.Column(
             controls=[
-                ft.Image(
-                    src="lotter.png",
-                    fit=ft.BoxFit.FIT_HEIGHT,
-                    width=288 * 0.45,
-                    height=131 * 0.45,
+                # ft.Image(
+                #     src="lotter.png",
+                #     fit=ft.BoxFit.FIT_HEIGHT,
+                #     width=288 * 0.45,
+                #     height=131 * 0.45,
+                # ),
+                ft.Text(
+                    "Lotter",
+                    size=25,
+                    weight="bold",
+                    color=DraculaColors.COMMENT,
+                    font_family="RacingSansOne",
                 ),
                 ft.Divider(),
                 self.itemslist,

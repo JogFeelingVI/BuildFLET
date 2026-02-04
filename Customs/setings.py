@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-04 01:50:42
+# @Last Modified time: 2026-02-04 13:00:21
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -291,7 +291,9 @@ class showRule(ft.Card):
                     ft.TextSpan(
                         b,
                         ft.TextStyle(
-                            color=DraculaColors.RED, weight=ft.FontWeight.W_900
+                            color=DraculaColors.RED,
+                            weight=ft.FontWeight.W_900,
+                            font_family="RacingSansOne",
                         ),
                     )
                 )
@@ -299,14 +301,22 @@ class showRule(ft.Card):
                 spans.append(
                     ft.TextSpan(
                         f" {s} ",
-                        ft.TextStyle(color=DraculaColors.PURPLE, weight="W_900"),
+                        ft.TextStyle(
+                            color=DraculaColors.PURPLE,
+                            weight="W_900",
+                            font_family="RacingSansOne",
+                        ),
                     )
                 )
                 # 第二组（紫/蓝球）
                 spans.append(
                     ft.TextSpan(
                         a,
-                        ft.TextStyle(color=DraculaColors.PURPLE, weight="W_900"),
+                        ft.TextStyle(
+                            color=DraculaColors.PURPLE,
+                            weight="W_900",
+                            font_family="RacingSansOne",
+                        ),
                     )
                 )
 
@@ -314,7 +324,12 @@ class showRule(ft.Card):
             case [b, s, a] if s == a == "" and b != a:
                 spans.append(
                     ft.TextSpan(
-                        b, ft.TextStyle(color=DraculaColors.RED, weight="W_900")
+                        b,
+                        ft.TextStyle(
+                            color=DraculaColors.RED,
+                            weight="W_900",
+                            font_family="RacingSansOne",
+                        ),
                     )
                 )
         return ft.Text(
@@ -455,10 +470,9 @@ class DefaultSettings(ft.Card):
                         content=f"{k}",
                         tooltip=ft.Tooltip(message=description),
                         # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
-                        on_click=lambda e,
-                        name=k,
-                        data=item,
-                        desc=description: self.save_preset_to_file(name, data, desc),
+                        on_click=lambda e, name=k, data=item, desc=description: (
+                            self.save_preset_to_file(name, data, desc)
+                        ),
                     )
                 )
             self.content.content.controls = button_list
@@ -615,7 +629,7 @@ class UserDirectory(ft.Card):
             return
         filePath = pathlib.Path(self.stored_id)
         for item in filePath.parent.iterdir():
-            if item.is_file() or item.is_symlink(): # 确保只删除文件
+            if item.is_file() or item.is_symlink():  # 确保只删除文件
                 logr.info(f"clean_up_id Delete {item.name}.")
                 item.unlink()
         filePath.parent.mkdir(parents=True, exist_ok=True)
@@ -680,13 +694,19 @@ class SetingsPage:
     def get_seting_view(self):
         return ft.Column(
             controls=[
-                ft.Image(
-                    src="setting.png",
-                    fit=ft.BoxFit.FIT_HEIGHT,
-                    width=475 * 0.45,
-                    height=135 * 0.45,
+                # ft.Image(
+                #     src="setting.png",
+                #     fit=ft.BoxFit.FIT_HEIGHT,
+                #     width=475 * 0.45,
+                #     height=135 * 0.45,
+                # ),
+                ft.Text(
+                    "Setting",
+                    size=25,
+                    weight="bold",
+                    color=DraculaColors.COMMENT,
+                    font_family="RacingSansOne",
                 ),
-                # ft.Text("Setting", size=25, weight="bold", color=DraculaColors.COMMENT),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),
                 # ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),

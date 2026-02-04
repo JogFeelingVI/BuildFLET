@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-04 01:55:23
+# @Last Modified time: 2026-02-04 13:51:18
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -10,12 +10,14 @@ from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
 from Customs.jackpot_core import randomData
 from Customs.loger import logr
+from Customs.loadfonts import GenerateFontList
 import flet as ft
 import os
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
+app_assets_dr = os.getenv("FLET_ASSETS_DIR")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
@@ -31,6 +33,10 @@ async def main(page: ft.Page):
     # raw_json = await page.shared_preferences.get("save_data_list")
     # save_data = json.loads(raw_json) if raw_json else []
     # initial_count = len(save_data)
+
+    fonts = GenerateFontList(fontPath=f"{app_assets_dr}/fonts")
+    print(f"{fonts.fontdict=}")
+    page.fonts = fonts.fontdict
 
     # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
     lottery_icon = ft.Icon(

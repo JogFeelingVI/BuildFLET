@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-03 14:30:03
+# @Last Modified time: 2026-02-04 12:52:36
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -805,7 +805,7 @@ class CommandList(ft.Card):
         await asyncio.sleep(0.5)
         logr.info(f"handle upload {e}")
         if e.progress == 1.0 and e.error == None:
-            filepath = os.path.join(app_temp_path, e.file_name)
+            filepath = os.path.join(app_temp_path, f"filter/{e.file_name}")
             logr.info(f"upload Fullpath {filepath}")
             fiter_data = []
             if self.filter_clear_all:
@@ -837,18 +837,19 @@ class CommandList(ft.Card):
             if not pick_result:
                 return
             is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
+                # ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
             if is_mobile_or_web:
                 uplpads = [
                     ft.FilePickerUploadFile(
-                        self.page.get_upload_url(pick_result[0].name, 600),
+                        self.page.get_upload_url(f"filter/{pick_result[0].name}", 600),
                         "PUT",
                         None,
                         pick_result[0].name,
                     )
                 ]
+                logr.info(uplpads)
                 await pick.upload(uplpads)
             else:
                 logr.info(f"{pick_result[0]}")
@@ -905,11 +906,18 @@ class FilterPage:
     def get_filter_view(self):
         return ft.Column(
             controls=[
-                ft.Image(
-                    src="filter.png",
-                    fit=ft.BoxFit.FIT_HEIGHT,
-                    width=328 * 0.45,
-                    height=112 * 0.45,
+                # ft.Image(
+                #     src="filter.png",
+                #     fit=ft.BoxFit.FIT_HEIGHT,
+                #     width=328 * 0.45,
+                #     height=112 * 0.45,
+                # ),
+                ft.Text(
+                    "Filter",
+                    size=25,
+                    weight="bold",
+                    color=DraculaColors.COMMENT,
+                    font_family="RacingSansOne",
                 ),
                 ft.Divider(),
                 self.Filters_cmd_list,
