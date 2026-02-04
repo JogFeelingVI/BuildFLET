@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 06:59:32
+# @Last Modified time: 2026-02-04 01:50:42
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -268,7 +268,7 @@ class showRule(ft.Card):
         try:
             self.updateCard()
         except Exception as er:
-            logr.error(f"{self.__name__} running error.",  {er})
+            logr.error(f"{self.__name__} running error.", {er})
         finally:
             logr.info(f"{self.__name__} running over.")
 
@@ -336,7 +336,7 @@ class showRule(ft.Card):
                 self.page.session.store.set("settings", temp)
                 return temp
         except Exception as er:
-            logr.error(f"__load_json_setting run error.",{er})
+            logr.error(f"__load_json_setting run error.", {er})
             return
 
     async def __update_card(self):
@@ -608,12 +608,16 @@ class UserDirectory(ft.Card):
                 await ft.SharedPreferences().set("stored_id", self.stored_id)
                 self.clean_up_id()
             showid = os.path.splitext(os.path.basename(self.stored_id))[0]
-            await self.update_tips_value(f"Using {showid}")
+            await self.update_tips_value(f"💡 ID: {showid}")
 
     def clean_up_id(self):
         if not self.stored_id:
             return
         filePath = pathlib.Path(self.stored_id)
+        for item in filePath.parent.iterdir():
+            if item.is_file() or item.is_symlink(): # 确保只删除文件
+                logr.info(f"clean_up_id Delete {item.name}.")
+                item.unlink()
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
         logr.info(f"clean_up_id is over.")

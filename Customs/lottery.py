@@ -105,13 +105,13 @@ class serendipitousCapture(ft.Card):
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
-            
+
             image = await self.scshot.capture()
             stored_id = await ft.SharedPreferences().get("stored_id")
             id = os.path.splitext(os.path.basename(stored_id))[0]
             png_name = f"{id}.png"
             logr.info(f"{image.__sizeof__()=} {png_name=}")
-            
+
             save_png = await ft.FilePicker().save_file(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["png"],
@@ -406,8 +406,8 @@ class itemsList(ft.Card):
 
     def find_the_maximum(self):
         is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
-                ft.PagePlatform.IOS,
+            ft.PagePlatform.ANDROID,
+            ft.PagePlatform.IOS,
         ]
         self.max_item = 10 if is_mobile_or_web else 1000
 

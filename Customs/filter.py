@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 06:44:06
+# @Last Modified time: 2026-02-03 14:30:03
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -484,7 +484,7 @@ class InputPad(ft.Card):
                         add_quick(formatted_hint)
                         break  # 找到第一个匹配就退出，避免冲突
                     except Exception as er:
-                        logr.error(f"Format error. {er}",exc_info=True)
+                        logr.error(f"Format error. {er}", exc_info=True)
 
             self.pad_data["condition"] = val.strip()
 
@@ -775,7 +775,7 @@ class CommandList(ft.Card):
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
         except Exception as er:
-            logr.error(f"handle_Save error: {save_path}. {er}",exc_info=True)
+            logr.error(f"handle_Save error: {save_path}. {er}", exc_info=True)
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -851,7 +851,7 @@ class CommandList(ft.Card):
                 ]
                 await pick.upload(uplpads)
             else:
-                logr.info(f'{pick_result[0]}')
+                logr.info(f"{pick_result[0]}")
                 fiter_data = []
                 if self.filter_clear_all:
                     self.filter_clear_all()

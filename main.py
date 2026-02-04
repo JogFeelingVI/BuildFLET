@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-02 07:03:00
+# @Last Modified time: 2026-02-04 01:55:23
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -22,7 +22,7 @@ os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
 
 
 async def main(page: ft.Page):
-    page.title = "Jackpot App --- lotter"
+    page.title = "Jackpot App lotter"
     # page.theme = Dracula_Theme
     # 设置移动端适配的内边距
     page.theme_mode = ft.ThemeMode.DARK
@@ -41,8 +41,8 @@ async def main(page: ft.Page):
     )
 
     logr.info(f"Initialization complete.")
-    
-    # --- 页面逻辑控制 --- 
+
+    # --- 页面逻辑控制 ---
     def on_navigation_change(e):
         index = e.control.selected_index
         # 切换中间的内容区域
