@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-04 13:42:34
+# @Last Modified time: 2026-02-05 10:16:26
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -13,6 +13,7 @@ import flet as ft
 import datetime
 import os
 import asyncio
+import time
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -76,7 +77,7 @@ class serendipitousCapture(ft.Card):
                     size=18,
                     color="#900015" if i % 2 == 0 else "#d7a700",
                     weight="bold",
-                    font_family="RacingSansOne",
+                    font_family="RacingSansOne-Regular",
                 )
             )
             if (i + 1) % 5 == 0:
@@ -209,7 +210,8 @@ class ItemC2(ft.GestureDetector):
         # 用于记录累积的滑动距离
         self.drag_accumulated = 0
         # 触发动作的阈值（滑动超过 100 像素则触发）
-        self.threshold = 100
+        self.timeout = 30
+        self.threshold = 120
         self.is_refreshing = False
         self.running = False
         self.state_exp = "none"  # "ref" "done"
@@ -234,7 +236,7 @@ class ItemC2(ft.GestureDetector):
             "03 07 11 17 29 30 + 09",
             size=20,
             color=DraculaColors.PURPLE,
-            font_family="RacingSansOne",
+            font_family="RacingSansOne-Regular",
         )
         self.chip = ft.Chip(
             width=float("inf"),
@@ -278,14 +280,16 @@ class ItemC2(ft.GestureDetector):
         # logr.info(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
 
+    #region SearchForData
     async def SearchForData(self, name: str):
         logr.info(f"SearchForData {name}")
         self.is_refreshing = True
         count = 0
-        max_retries = 100
+        time
         await asyncio.sleep(0.5)
+        start_time = time.time()
         try:
-            while count < max_retries:
+            while True:
                 # 1. 使用 to_thread 运行耗时计算，防止界面卡死
                 # 假设 calculate_lottery 是普通的同步函数
                 # tempd, state = await asyncio.to_thread(self.calculate_lottery)
@@ -302,11 +306,13 @@ class ItemC2(ft.GestureDetector):
                     # 失败但未达到上限，更新 UI 并稍作等待
                     self.chip_content.value = tempd
                     self.chip_content.color = DraculaColors.ORANGE
+                    self.chip.badge=f'{count}'
                     self.state_exp = "ref"
                     self.update()
-                    await asyncio.sleep(0.3)  # 给 CPU 喘息时间，也让 UI 有机会渲染
+                    await asyncio.sleep(0.1)  # 给 CPU 喘息时间，也让 UI 有机会渲染
                 count += 1
-                if count >= max_retries:
+                elapsed_time = time.time() - start_time
+                if elapsed_time >= self.timeout:
                     logr.info("count is max_retries, work stoping.")
                     self.chip_content.value = (
                         "Please swipe right to restart."  # 显示错误/超时界面
@@ -320,6 +326,7 @@ class ItemC2(ft.GestureDetector):
             self.update()
         finally:
             self.is_refreshing = False
+    #endregion
 
     def calculate_lottery(self):
         settings = self.page.session.store.get("settings")
@@ -601,7 +608,7 @@ class LotteryPage:
                     size=25,
                     weight="bold",
                     color=DraculaColors.COMMENT,
-                    font_family="RacingSansOne",
+                    font_family="RacingSansOne-Regular",
                 ),
                 ft.Divider(),
                 self.itemslist,

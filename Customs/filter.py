@@ -961,7 +961,7 @@ class FilterPage:
                     size=25,
                     weight="bold",
                     color=DraculaColors.COMMENT,
-                    font_family="RacingSansOne",
+                    font_family="RacingSansOne-Regular",
                 ),
                 ft.Divider(),
                 self.Filters_cmd_list,

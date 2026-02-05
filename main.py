@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 04:31:04
+# @Last Modified time: 2026-02-05 10:20:43
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -10,7 +10,7 @@ from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
 from Customs.jackpot_core import randomData
 from Customs.loger import logr
-from Customs.loadfonts import GenerateFontList
+from Customs.loadfonts import FontManager
 import flet as ft
 import os
 
@@ -34,9 +34,9 @@ async def main(page: ft.Page):
     # save_data = json.loads(raw_json) if raw_json else []
     # initial_count = len(save_data)
 
-    fonts = GenerateFontList(fontPath=f"{app_assets_dir}/fonts")
-    print(f"{fonts.fontdict=}")
-    page.fonts = fonts.fontdict
+    fm = FontManager(assets_dir=app_assets_dir, fonts_subdir="fonts")
+    page.fonts = fm.get_fonts()
+    logr.info(f"Registered fonts: {page.fonts}")
 
     # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
     lottery_icon = ft.Icon(

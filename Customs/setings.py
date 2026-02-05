@@ -293,7 +293,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.RED,
                             weight=ft.FontWeight.W_900,
-                            font_family="RacingSansOne",
+                            font_family="RacingSansOne-Regular",
                         ),
                     )
                 )
@@ -304,7 +304,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.PURPLE,
                             weight="W_900",
-                            font_family="RacingSansOne",
+                            font_family="RacingSansOne-Regular",
                         ),
                     )
                 )
@@ -315,7 +315,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.PURPLE,
                             weight="W_900",
-                            font_family="RacingSansOne",
+                            font_family="RacingSansOne-Regular",
                         ),
                     )
                 )
@@ -328,7 +328,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.RED,
                             weight="W_900",
-                            font_family="RacingSansOne",
+                            font_family="RacingSansOne-Regular-Regular",
                         ),
                     )
                 )
@@ -710,7 +710,7 @@ class SetingsPage:
                     size=25,
                     weight="bold",
                     color=DraculaColors.COMMENT,
-                    font_family="RacingSansOne",
+                    font_family="RacingSansOne-Regular",
                 ),
                 # 这里可以添加更多的设置控件
                 ft.Divider(),
