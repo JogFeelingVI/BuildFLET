@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-04 12:52:36
+# @Last Modified time: 2026-02-05 01:59:15
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -745,11 +745,23 @@ class CommandList(ft.Card):
                 e.control.update()
 
     async def handle_Save(self, e):
+        #region update save badge
+        async def update_e(e,msg=None):
+            e_control:ft.TextButton = e.control
+            if not isinstance(e_control, ft.TextButton):
+                return
+            e_control.badge=f'{msg}'
+            e_control.update()
+            await asyncio.sleep(3)
+            e_control.badge=None
+            e_control.update()
+        #endregion
         try:
             stored_id = await ft.SharedPreferences().get("stored_id")
             logr.info(f"stored_id: {stored_id}")
             if not stored_id:
                 logr.error("ID not found.")
+                await update_e(e,'NF')
                 return
             save_path = None
             is_mobile_or_web = self.page.web or self.page.platform in [
@@ -774,20 +786,36 @@ class CommandList(ft.Card):
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
+            await update_e(e,'done')
         except Exception as er:
             logr.error(f"handle_Save error: {save_path}. {er}", exc_info=True)
+            await update_e(e,'error')
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
     async def handle_Open(self, e):
+        #region update open badge
+        async def update_e(e,msg=None):
+            e_control:ft.TextButton = e.control
+            if not isinstance(e_control, ft.TextButton):
+                return
+            e_control.badge=f'{msg}'
+            e_control.update()
+            await asyncio.sleep(3)
+            e_control.badge=None
+            e_control.update()
+        #endregion
+            
         stored_id = await ft.SharedPreferences().get("stored_id")
         if not stored_id:
             logr.error("ID not found.")
+            await update_e(e,'NF')
             return
 
         fiter_data = []
         if self.filter_clear_all:
             self.filter_clear_all()
+            await update_e(e,'CA')
         with open(stored_id, "r", encoding="utf-8") as f:
             for line in f:
                 # 去掉行尾换行符并确保行不为空
@@ -799,6 +827,7 @@ class CommandList(ft.Card):
                     if self.filterAddItem:
                         self.filterAddItem(item)
         self.page.session.store.set("filters", fiter_data)
+        await update_e(e,len(fiter_data))
         logr.info(f"Reading complete. {len(fiter_data)}")
 
     async def handle_upload(self, e):
@@ -825,6 +854,17 @@ class CommandList(ft.Card):
             os.remove(filepath)
 
     async def handle_Load(self, e):
+        #region update open badge
+        async def update_e(e,msg=None):
+            e_control:ft.TextButton = e.control
+            if not isinstance(e_control, ft.TextButton):
+                return
+            e_control.badge=f'{msg}'
+            e_control.update()
+            await asyncio.sleep(3)
+            e_control.badge=None
+            e_control.update()
+        #endregion
         try:
             pick = ft.FilePicker(on_upload=self.handle_upload)
             logr.info("open pick -> pick_files")
@@ -835,6 +875,7 @@ class CommandList(ft.Card):
             )
             logr.info(f"selsect file: {pick_result}")
             if not pick_result:
+                await update_e(e, 'NS')
                 return
             is_mobile_or_web = self.page.web or self.page.platform in [
                 # ft.PagePlatform.ANDROID,
@@ -851,6 +892,7 @@ class CommandList(ft.Card):
                 ]
                 logr.info(uplpads)
                 await pick.upload(uplpads)
+                await update_e(e, 'web done')
             else:
                 logr.info(f"{pick_result[0]}")
                 fiter_data = []
@@ -868,7 +910,9 @@ class CommandList(ft.Card):
                                 self.filterAddItem(item)
                 self.page.session.store.set("filters", fiter_data)
                 logr.info(f"Reading complete. {len(fiter_data)}")
+                await update_e(e, len(fiter_data))
         except Exception as er:
+            await update_e(e, 'error')
             logr.error(f"handle_Load error. {er}", exc_info=True)
 
 

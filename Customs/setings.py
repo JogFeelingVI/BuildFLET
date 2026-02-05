@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-04 13:00:21
+# @Last Modified time: 2026-02-05 01:37:40
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -558,14 +558,14 @@ class UserDirectory(ft.Card):
             # overflow=ft.TextOverflow.ELLIPSIS,
             no_wrap=False,
         )
-        self.clear_id = ft.Button(
-            "Clean up ID",
+        self.Regenerate_id = ft.Button(
+            "Regenerate",
             icon=ft.Icons.ACCOUNT_CIRCLE,
             color=DraculaColors.PINK,
             style=ft.ButtonStyle(
                 side=ft.BorderSide(width=1, color=DraculaColors.PINK),
             ),
-            on_click=lambda _: self.clean_up_id(),
+            on_click=lambda _: self.page.run_task(self.Regenerate_id_work, True),
         )
         self.content = self.__build_card()
         self.count = 10
@@ -593,7 +593,7 @@ class UserDirectory(ft.Card):
             content=ft.Row(
                 controls=[
                     self.tips,
-                    self.clear_id,
+                    self.Regenerate_id,
                 ],
                 spacing=5,
                 wrap=True,
@@ -615,26 +615,31 @@ class UserDirectory(ft.Card):
             temp = await ft.SharedPreferences().get("stored_id")
             if temp:
                 self.stored_id = temp
+                await self.Regenerate_id_work(rgen=False)
                 logr.info(f"Found Storage id: {temp}")
             else:
-                id = f"{randomData.generate_secure_string(8)}"
-                self.stored_id = os.path.join(app_temp_path, f"{id}.dict")
-                await ft.SharedPreferences().set("stored_id", self.stored_id)
-                self.clean_up_id()
-            showid = os.path.splitext(os.path.basename(self.stored_id))[0]
-            await self.update_tips_value(f"💡 ID: {showid}")
+                await self.Regenerate_id_work(rgen=True)
+            
 
-    def clean_up_id(self):
-        if not self.stored_id:
-            return
-        filePath = pathlib.Path(self.stored_id)
-        for item in filePath.parent.iterdir():
-            if item.is_file() or item.is_symlink():  # 确保只删除文件
-                logr.info(f"clean_up_id Delete {item.name}.")
-                item.unlink()
-        filePath.parent.mkdir(parents=True, exist_ok=True)
-        filePath.write_text("")
-        logr.info(f"clean_up_id is over.")
+    async def Regenerate_id_work(self,rgen=False):
+        self.Regenerate_id.badge="F" if rgen else "T"
+        self.Regenerate_id.update()
+        if rgen:
+            id = f"{randomData.generate_secure_string(8)}"
+            self.stored_id = os.path.join(app_temp_path, f"gen_{id}.dict")
+            await ft.SharedPreferences().set("stored_id", self.stored_id)
+            filePath = pathlib.Path(self.stored_id)
+            for item in filePath.parent.iterdir():
+                if item.is_file() or item.is_symlink() and item.name.startswith('gen_'):  # 确保只删除文件
+                    logr.info(f"Regenerate_id Delete {item.name}.")
+                    item.unlink()
+            filePath.parent.mkdir(parents=True, exist_ok=True)
+            filePath.write_text("")
+        showid = os.path.splitext(os.path.basename(self.stored_id))[0]
+        await self.update_tips_value(f"💡 ID: {showid}")
+        self.Regenerate_id.badge=None
+        self.Regenerate_id.update()
+        logr.info(f"Regenerate_id is over.")
 
 
 # endregion
