@@ -330,7 +330,7 @@ class InputPad(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.PURPLE),
+            border=ft.Border.all(2, DraculaColors.PINK),
             border_radius=10,
             content=self.__Pad(),
         )

@@ -588,7 +588,7 @@ class UserDirectory(ft.Card):
             padding=12,
             # width=200,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border=ft.Border.all(2, DraculaColors.PINK),
             border_radius=10,
             content=ft.Row(
                 controls=[
