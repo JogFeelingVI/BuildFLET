@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 10:20:43
+# @Last Modified time: 2026-02-05 13:49:27
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -30,11 +30,7 @@ async def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = ft.Padding.only(top=20)
 
-    # raw_json = await page.shared_preferences.get("save_data_list")
-    # save_data = json.loads(raw_json) if raw_json else []
-    # initial_count = len(save_data)
-
-    fm = FontManager(assets_dir=app_assets_dir, fonts_subdir="fonts")
+    fm = FontManager(fonts_subdir="fonts")
     page.fonts = fm.get_fonts()
     logr.info(f"Registered fonts: {page.fonts}")
 

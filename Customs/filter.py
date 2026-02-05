@@ -801,7 +801,7 @@ class CommandList(ft.Card):
                 return
             e_control.badge=f'{msg}'
             e_control.update()
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
             e_control.badge=None
             e_control.update()
         #endregion

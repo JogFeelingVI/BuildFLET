@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-04 05:32:13
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 04:18:02
+# @Last Modified time: 2026-02-05 12:12:43
 
 import pathlib as pl
 from typing import Dict, Optional
@@ -12,15 +12,21 @@ class FontManager:
     
     SUPPORTED_EXTENSIONS = {".ttf", ".otf", ".woff", ".woff2"}
 
-    def __init__(self, assets_dir: str, fonts_subdir: str = "fonts"):
+    def __init__(self, fonts_subdir: str = "fonts"):
         """
-        :param assets_dir: Flet 的 assets 目录绝对路径
         :param fonts_subdir: 相对于 assets 目录的字体文件夹路径
         """
-        self.assets_path = pl.Path(assets_dir)
+        self.assets_path = self.__find_assets_dir()
         self.fonts_path = self.assets_path / fonts_subdir
         self.relative_prefix = fonts_subdir
         self.font_map: Dict[str, str] = self._generate_font_map()
+        
+    def __find_assets_dir(self):
+        """尝试自动获取 assets 目录路径"""
+        # 在 Flet 安卓环境中，通常脚本运行在根目录，assets 就在同级
+        assets_path = pl.Path(__file__).parent.parent
+        print(f'debug: {assets_path}')
+        return assets_path / 'assets'
 
     def _generate_font_map(self) -> Dict[str, str]:
         fonts = {}
