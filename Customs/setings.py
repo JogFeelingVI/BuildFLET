@@ -328,7 +328,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.RED,
                             weight="W_900",
-                            font_family="RacingSansOne-Regular-Regular",
+                            font_family="RacingSansOne-Regular",
                         ),
                     )
                 )
