@@ -328,7 +328,7 @@ class showRule(ft.Card):
                         ft.TextStyle(
                             color=DraculaColors.RED,
                             weight="W_900",
-                            font_family="RacingSansOne-Regular-Regular",
+                            font_family="RacingSansOne-Regular",
                         ),
                     )
                 )
@@ -619,10 +619,9 @@ class UserDirectory(ft.Card):
                 logr.info(f"Found Storage id: {temp}")
             else:
                 await self.Regenerate_id_work(rgen=True)
-            
 
-    async def Regenerate_id_work(self,rgen=False):
-        self.Regenerate_id.badge="F" if rgen else "T"
+    async def Regenerate_id_work(self, rgen=False):
+        self.Regenerate_id.badge = "F" if rgen else "T"
         self.Regenerate_id.update()
         if rgen:
             id = f"{randomData.generate_secure_string(8)}"
@@ -630,14 +629,16 @@ class UserDirectory(ft.Card):
             await ft.SharedPreferences().set("stored_id", self.stored_id)
             filePath = pathlib.Path(self.stored_id)
             for item in filePath.parent.iterdir():
-                if item.is_file() or item.is_symlink() and item.name.startswith('gen_'):  # 确保只删除文件
+                if (
+                    item.is_file() or item.is_symlink() and item.name.startswith("gen_")
+                ):  # 确保只删除文件
                     logr.info(f"Regenerate_id Delete {item.name}.")
                     item.unlink()
             filePath.parent.mkdir(parents=True, exist_ok=True)
             filePath.write_text("")
         showid = os.path.splitext(os.path.basename(self.stored_id))[0]
         await self.update_tips_value(f"💡 ID: {showid}")
-        self.Regenerate_id.badge=None
+        self.Regenerate_id.badge = None
         self.Regenerate_id.update()
         logr.info(f"Regenerate_id is over.")
 

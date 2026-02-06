@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-23 13:50:38
+# @Last Modified time: 2026-02-06 05:46:52
 
 
 import secrets
@@ -12,7 +12,7 @@ import inspect
 from typing import TypedDict, List, get_type_hints
 from collections import OrderedDict
 
-
+#region LotteryData
 class LotteryData(TypedDict, total=False):
     # total=False 表示这些键不是每一个都必须同时出现
     PA: List[int]
@@ -25,8 +25,9 @@ class LotteryData(TypedDict, total=False):
     PH: List[int]
     PI: List[int]
     PJ: List[int]
+#endregion
 
-
+#region randomData
 class randomData:
     """根据设置随机选择数据"""
 
@@ -109,8 +110,9 @@ class randomData:
         secure_str = "".join(secrets.choice(alphabet) for _ in range(length))
 
         return secure_str
+#endregion
 
-
+#region CalcUtils
 class CalcUtils:
     @staticmethod
     def average(data_list: list[int]) -> int:
@@ -308,8 +310,9 @@ class CalcUtils:
             diff = abs(a - b)
             diff_set.add(diff)
         return len(diff_set) - len(data_list) + 1
+#endregion
 
-
+#region filterFunc
 class filterFunc:
     @staticmethod
     def getFuncName():
@@ -376,11 +379,10 @@ class filterFunc:
     def include(pabc: LotteryData, args: str, target: str) -> bool:
         targetValue = []
         if target == "all":
-            targetValue = [y for x in pabc.values() for y in x]
+            targetValue = set([y for x in pabc.values() for y in x])
         else:
             targetValue = set(pabc[target])
         Number_for_args = set(CalcUtils.nwped(args))
-
         if targetValue & Number_for_args:
             return True
         return False
@@ -580,8 +582,21 @@ class filterFunc:
         if sum(hsList) in Number_for_args:
             return True
         return False
+    
+    @staticmethod
+    def max(pabc: LotteryData, args: str, target: str):
+        if target == 'all':
+            maxVale = [y for x in pabc.values() for y in x]
+        else:
+            maxVale = pabc[target]
+        maxVale = max(maxVale)
+        Number_for_args = CalcUtils.nwped(args)
+        if maxVale in Number_for_args:
+            return True
+        return False
+#endregion
 
-
+#region filter_for_pabc
 class filter_for_pabc:
     def __init__(self, filters: list):
         self.filters = filters
@@ -632,3 +647,4 @@ class filter_for_pabc:
         if False in flgs:
             return False
         return True
+#endregion

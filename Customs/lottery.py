@@ -34,22 +34,21 @@ class serendipitousCapture(ft.Card):
 
     def setting_get_exp_all(self, getexpall: list = None):
         self.get_exp_all = getexpall
-        
+
     def setting_width(self):
         """width= self.page.width -20 if self.page.web else None"""
         sw = self.scshot.content
         if isinstance(sw, ft.Container):
             if self.page.web:
                 sw.width = self.page.width * 0.25 - 80
-                logr.info(f'page width {self.page.width} SW {sw.width}')
+                logr.info(f"page width {self.page.width} SW {sw.width}")
 
     def did_mount(self):
         self.running = True
         self.setting_width()
-        
+
     def will_unmount(self):
         self.running = False
-        
 
     async def update_tips(self, text: str = ""):
         self.tips.value = f"{text}"
@@ -280,7 +279,7 @@ class ItemC2(ft.GestureDetector):
         # logr.info(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
 
-    #region SearchForData
+    # region SearchForData
     async def SearchForData(self, name: str):
         logr.info(f"SearchForData {name}")
         self.is_refreshing = True
@@ -306,7 +305,7 @@ class ItemC2(ft.GestureDetector):
                     # 失败但未达到上限，更新 UI 并稍作等待
                     self.chip_content.value = tempd
                     self.chip_content.color = DraculaColors.ORANGE
-                    self.chip.badge=f'{count}'
+                    self.chip.badge = f"{count}"
                     self.state_exp = "ref"
                     self.update()
                     await asyncio.sleep(0.1)  # 给 CPU 喘息时间，也让 UI 有机会渲染
@@ -326,7 +325,8 @@ class ItemC2(ft.GestureDetector):
             self.update()
         finally:
             self.is_refreshing = False
-    #endregion
+
+    # endregion
 
     def calculate_lottery(self):
         settings = self.page.session.store.get("settings")

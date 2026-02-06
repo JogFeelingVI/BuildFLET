@@ -1,16 +1,34 @@
 {
     "randomData": {
-        "note": "🇨🇳百万富翁缔造者",
+        "note": "🇨🇳体育排列3/5",
         "PA": {
             "enabled": true,
-            "range_start": 1,
-            "range_end": 33,
-            "count": 6
+            "range_start": 0,
+            "range_end": 9,
+            "count": 1
         },
         "PB": {
             "enabled": true,
-            "range_start": 1,
-            "range_end": 16,
+            "range_start": 0,
+            "range_end": 9,
+            "count": 1
+        },
+        "PC": {
+            "enabled": true,
+            "range_start": 0,
+            "range_end": 9,
+            "count": 1
+        },
+        "PD": {
+            "enabled": true,
+            "range_start": 0,
+            "range_end": 9,
+            "count": 1
+        },
+        "PE": {
+            "enabled": true,
+            "range_start": 0,
+            "range_end": 9,
             "count": 1
         }
     }
