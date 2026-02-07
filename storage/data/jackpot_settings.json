@@ -1,35 +1,17 @@
 {
     "randomData": {
-        "note": "🇨🇳体育排列3/5",
+        "note": "🇨🇳体育大乐透",
         "PA": {
             "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
+            "range_start": 1,
+            "range_end": 35,
+            "count": 5
         },
         "PB": {
             "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PC": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PD": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
-        },
-        "PE": {
-            "enabled": true,
-            "range_start": 0,
-            "range_end": 9,
-            "count": 1
+            "range_start": 1,
+            "range_end": 12,
+            "count": 2
         }
     }
 }

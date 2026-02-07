@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 01:59:15
+# @Last Modified time: 2026-02-07 01:26:13
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -320,6 +320,7 @@ class InputPad(ft.Card):
                     if not isinstance(item.controls[0], ft.Chip):
                         continue
                     item.controls[0].label = "Click to finish editing."
+                    item.controls[0].bgcolor = DraculaColors.ORANGE
                 case _:
                     pass
         self.visible = True
@@ -580,6 +581,7 @@ class InputPad(ft.Card):
         if not isinstance(e.control, ft.Chip):
             return
         e.control.label = "Click to add a filter."
+        e.control.bgcolor = DraculaColors.GREEN
         # logr.info(f'handle_apply_click {self.pad_data=}')
         if self.applycallback:
             self.applycallback(scriptd=self.pad_data)
@@ -592,6 +594,7 @@ class InputPad(ft.Card):
                 e.control.data = k
                 self.__FT_show.visible = False
                 self.pad_data["func"] = f"{k}".strip()
+                self.input_field.value=""
 
         if self.funcs_dc.__len__() == 0:
             self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))

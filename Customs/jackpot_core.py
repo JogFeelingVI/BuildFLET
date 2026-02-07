@@ -12,7 +12,8 @@ import inspect
 from typing import TypedDict, List, get_type_hints
 from collections import OrderedDict
 
-#region LotteryData
+
+# region LotteryData
 class LotteryData(TypedDict, total=False):
     # total=False 表示这些键不是每一个都必须同时出现
     PA: List[int]
@@ -25,9 +26,12 @@ class LotteryData(TypedDict, total=False):
     PH: List[int]
     PI: List[int]
     PJ: List[int]
-#endregion
 
-#region randomData
+
+# endregion
+
+
+# region randomData
 class randomData:
     """根据设置随机选择数据"""
 
@@ -110,9 +114,12 @@ class randomData:
         secure_str = "".join(secrets.choice(alphabet) for _ in range(length))
 
         return secure_str
-#endregion
 
-#region CalcUtils
+
+# endregion
+
+
+# region CalcUtils
 class CalcUtils:
     @staticmethod
     def average(data_list: list[int]) -> int:
@@ -310,9 +317,12 @@ class CalcUtils:
             diff = abs(a - b)
             diff_set.add(diff)
         return len(diff_set) - len(data_list) + 1
-#endregion
 
-#region filterFunc
+
+# endregion
+
+
+# region filterFunc
 class filterFunc:
     @staticmethod
     def getFuncName():
@@ -582,10 +592,10 @@ class filterFunc:
         if sum(hsList) in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def max(pabc: LotteryData, args: str, target: str):
-        if target == 'all':
+        if target == "all":
             maxVale = [y for x in pabc.values() for y in x]
         else:
             maxVale = pabc[target]
@@ -594,9 +604,12 @@ class filterFunc:
         if maxVale in Number_for_args:
             return True
         return False
-#endregion
 
-#region filter_for_pabc
+
+# endregion
+
+
+# region filter_for_pabc
 class filter_for_pabc:
     def __init__(self, filters: list):
         self.filters = filters
@@ -647,4 +660,6 @@ class filter_for_pabc:
         if False in flgs:
             return False
         return True
-#endregion
+
+
+# endregion

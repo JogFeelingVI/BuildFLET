@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-06 06:59:01
+# @Last Modified time: 2026-02-07 01:31:00
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -25,15 +25,15 @@ os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
 
 async def main(page: ft.Page):
     page.title = "Jackpot App lotter"
-    # page.theme = Dracula_Theme 
+    # page.theme = Dracula_Theme
     # 设置移动端适配的内边距
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = ft.Padding.only(top=20)
 
     # fsp = FastSourcePicker()
-    # page.fonts = fsp.get_fastest_json()
-    fm = FontManager()
-    page.fonts = fm.get_fonts()
+    # fsp_fonts = fsp.get_fastest_json()
+    fsp_fonts = FontManager()
+    page.fonts = fsp_fonts.get_fonts()
     logr.info(f"Registered fonts: {page.fonts.keys()}")
 
     # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
@@ -44,7 +44,7 @@ async def main(page: ft.Page):
         # badge=str(initial_count) if initial_count > 0 else None,
     )
 
-    logr.info(f"Initialization complete.") 
+    logr.info(f"Initialization complete.")
 
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
