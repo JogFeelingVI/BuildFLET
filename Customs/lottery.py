@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 10:16:26
+# @Last Modified time: 2026-02-07 07:45:40
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -346,6 +346,9 @@ class ItemC2(ft.GestureDetector):
     def handle_drag_update(self, e: ft.DragUpdateEvent):
         # 累加滑动距离 (e.primary_delta 在水平滑动时是 x 轴的变化量)
         self.drag_accumulated += e.primary_delta
+        self.chip_content.offset = ft.Offset(self.drag_accumulated / 200, 0)
+        progress = abs(self.drag_accumulated) / self.threshold
+        self.chip_content.opacity = 1.0 - max(0.0, min(1.0, progress))
 
     def handle_drag_end(self, e: ft.DragEndEvent):
         # 判断滑动方向
@@ -353,6 +356,8 @@ class ItemC2(ft.GestureDetector):
             self.refresh_data()
         elif self.drag_accumulated < -self.threshold:
             self.save_item()
+        self.chip_content.offset = ft.Offset(0, 0)
+        self.chip_content.opacity = 1.0
 
         # 重置滑动计数值
         self.drag_accumulated = 0
@@ -361,12 +366,13 @@ class ItemC2(ft.GestureDetector):
         """右滑逻辑：刷新数据"""
         logr.info("向右滑动：正在刷新数据...")
         self.refresh(name="refresh_data")
+        self.page.show_dialog(ft.SnackBar(ft.Text("Project refresh started.")))
 
     def save_item(self):
         """左滑逻辑：保存项目"""
         logr.info("向左滑动：项目已保存")
         # 这里执行你的保存逻辑
-        self.page.show_dialog(ft.SnackBar(ft.Text("项目已保存！")))
+        self.page.show_dialog(ft.SnackBar(ft.Text("The project has been saved.")))
 
     async def handle_select(self, e):
         if self.is_refreshing:

@@ -92,11 +92,11 @@ class FastSourcePicker:
             # 1. 规范化文件名处理
             # unquote 处理 %20 等 URL 编码，pathlib.Path().name 获取纯文件名
             clean_filename = unquote(pathlib.Path(filename_raw).name)
-            
+
             # 2. 确保目标目录存在
             font_dir = self.storage_path / "fonts"
             font_dir.mkdir(parents=True, exist_ok=True)
-            
+
             file_full_path = font_dir / clean_filename
 
             # 3. 缓存检查：如果文件已存在且大小不为0，直接返回路径，避免重复下载
@@ -107,10 +107,10 @@ class FastSourcePicker:
             # 增加 raise_for_status() 自动检查 404/500 等错误
             with requests.get(url, timeout=10, stream=True) as response:
                 response.raise_for_status()
-                
+
                 with open(file_full_path, "wb") as f:
                     for chunk in response.iter_content(chunk_size=8192):
-                        if chunk: # 过滤掉 keep-alive 新块
+                        if chunk:  # 过滤掉 keep-alive 新块
                             f.write(chunk)
 
             # 5. 返回 Flet 映射格式
@@ -122,11 +122,11 @@ class FastSourcePicker:
 
     def __Correction_parameters(self, result) -> dict[str, str]:
         font_map_raw, source_url = result
-    
+
         # 1. 预处理：生成下载列表
         # 将 url_str 的 fonts.json 替换掉，拿到基础路径
         base_url = str(source_url).replace("/fonts.json", "")
-        
+
         # 最终返回给 Flet 的映射表
         final_font_map = {}
 
@@ -134,20 +134,20 @@ class FastSourcePicker:
         # max_workers=5 表示同时下载 5 个文件，通常 5-10 比较合适
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
             future_to_name = {}
-            
+
             for name, font_path_suffix in dict(font_map_raw).items():
                 # 过滤掉注释或无效配置
                 if not str(name).startswith("--"):
                     # 拼接完整的下载地址
                     full_download_url = f"{base_url}{font_path_suffix}"
-                    
+
                     # 提交任务到线程池
                     # __ObtainResources 应该返回 {name: local_path}
                     future = executor.submit(
-                        self.__ObtainResources, 
-                        name, 
-                        font_path_suffix, 
-                        full_download_url
+                        self.__ObtainResources,
+                        name,
+                        font_path_suffix,
+                        full_download_url,
                     )
                     future_to_name[future] = name
 
@@ -156,7 +156,7 @@ class FastSourcePicker:
                 name = future_to_name[future]
                 try:
                     # 这里的 result 是 __ObtainResources 返回的字典
-                    download_result = future.result() 
+                    download_result = future.result()
                     if download_result:
                         final_font_map.update(download_result)
                 except Exception as e:
@@ -164,7 +164,6 @@ class FastSourcePicker:
 
         return final_font_map
 
-   
     def get_fastest_json(self):
         """并行执行，取最快的结果"""
         # 使用线程池并发请求

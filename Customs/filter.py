@@ -594,7 +594,7 @@ class InputPad(ft.Card):
                 e.control.data = k
                 self.__FT_show.visible = False
                 self.pad_data["func"] = f"{k}".strip()
-                self.input_field.value=""
+                self.input_field.value = ""
 
         if self.funcs_dc.__len__() == 0:
             self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))
