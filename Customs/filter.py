@@ -2,7 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-09 06:30:54
+# @Last Modified time: 2026-02-09 16:30:00
+
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -21,6 +22,99 @@ import random
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
+
+
+# region FilterChipV2
+class FilterChipV2(ft.Container):
+    """高度定制 chip"""
+
+    fontSize = 14
+    Alternative = ["#df6817", "#7a42b9", "#31935e"]
+
+    def __init__(self, scd: dict, ondelete=None, onclick=None):
+        self.selectColor = random.choice(self.Alternative)
+        super().__init__(data=scd)
+        self.padding = 5
+        self.content = self.__build__content(scd)
+        self.bgcolor = self.ColorOpx(0.3)
+        self.border_radius = 8
+        # 2. 设置边框：宽度和颜色
+        self.border = ft.Border.all(1, self.ColorOpx(0.3))
+        self.on_hover = self.handle_hover
+        self.ondelete = ondelete
+        self.onclick = onclick
+
+    def handle_hover(self, e):
+        # self.bgcolor = self.ColorOpx(0.8) if e.data else self.ColorOpx(0.3)
+        self.border = ft.Border.all(
+            1, self.ColorOpx(1) if e.data else self.ColorOpx(0.3)
+        )
+    
+    def handle_right_hover(self,e):
+        if e.data:
+            self.Cright.content = ft.Icon(ft.Icons.DELETE_FOREVER, color=self.ColorOpx(1))
+        else:
+            self.Cright.content = ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.8))
+            
+    def handle_left_click(self,e):
+        e.control = self
+        if self.onclick:
+            self.onclick(e)
+    
+    def handle_right_click(self,e):
+        e.control = self
+        if self.ondelete:
+            self.ondelete(e)
+
+    def did_mount(self):
+        self.running = True
+
+    def will_unmount(self):
+        self.running = False
+
+    def ColorOpx(self, opacity: float = 1.0):
+        return ft.Colors.with_opacity(opacity, self.selectColor)
+
+    def __build__content(self, scd: dict):
+        contents = ft.Row(
+            tight=True,
+            spacing=0,
+            controls=[
+                left := ft.Container(
+                    padding=0,
+                    content=ft.Column(
+                        tight=True,
+                        spacing=0,
+                        controls=[
+                            ft.Text(
+                                value=f"{scd['func']} {scd['target']}",
+                                size=self.fontSize,
+                                weight="bold",
+                                color=self.selectColor,
+                            ),
+                            ft.Text(
+                                value=f"{scd['condition']}",
+                                size=self.fontSize - 2,
+                                color=self.selectColor,
+                            ),
+                        ],
+                    ),
+                    on_click=self.handle_left_click,
+                ),
+                right := ft.Container(
+                    padding=0,
+                    on_hover=self.handle_right_hover,
+                    on_click=self.handle_right_click,
+                    content=ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.8)),
+                ),
+            ],
+        )
+        self.Cleft = left
+        self.Cright = right
+        return contents
+
+
+# endregion
 
 
 # region FilterChip
@@ -43,15 +137,20 @@ class FilterChip(ft.Chip):
         self.delete_icon = self.__build_delIcon()
         self.padding = 5
         self.shape = ft.RoundedRectangleBorder(
-            radius=8, side=ft.BorderSide(width=1, color=self.select_color,style=ft.BorderStyle.SOLID)
+            radius=8,
+            side=ft.BorderSide(
+                width=1,
+                color=ft.Colors.with_opacity(0.2, self.select_color),
+                style=ft.BorderStyle.SOLID,
+            ),
         )
         self.bgcolor = self.__build_bgcolor()
 
     def __build_bgcolor(self):
         bgcolor = {
-            ft.ControlState.DEFAULT: ft.Colors.with_opacity(0.8, self.select_color),
+            ft.ControlState.DEFAULT: ft.Colors.with_opacity(0.3, self.select_color),
             ft.ControlState.HOVERED: ft.Colors.with_opacity(
-                0.3, self.select_color
+                0.8, self.select_color
             ),  # 悬停加深
         }
         return bgcolor
@@ -68,7 +167,7 @@ class FilterChip(ft.Chip):
                 ),
                 ft.Text(
                     value=f"{scd['condition']}",
-                    size=self.fontSzie-2,
+                    size=self.fontSzie - 2,
                     color=self.select_color,
                 ),
             ],
@@ -186,7 +285,7 @@ class FiltersList(ft.Card):
         controls = self.content.content.controls
 
         def deleteForE(e):
-            if not isinstance(e.control, ft.Chip):
+            if not isinstance(e.control, ft.Container):
                 return
             e_chip = e.control
             e_script = e.control.data
@@ -198,7 +297,7 @@ class FiltersList(ft.Card):
         def editForE(e):
             if self.filtersAll_change == "edit":
                 return
-            if not isinstance(e.control, ft.Chip):
+            if not isinstance(e.control, ft.Container):
                 return
             e_chip = e.control
             e_script = e.control.data
@@ -216,7 +315,8 @@ class FiltersList(ft.Card):
         self.filtersAll.append(_scd)
         controls.append(
             # region addend chip
-            FilterChip(_scd, deleteForE, editForE)
+            # FilterChip(_scd, deleteForE, editForE)
+            FilterChipV2(_scd,deleteForE,editForE)
             # endregion
         )
         self.filtersAll_change = "add"
