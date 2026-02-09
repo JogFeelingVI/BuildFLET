@@ -2,8 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-07 01:26:13
+# @Last Modified time: 2026-02-09 06:30:54
 
+from cProfile import label
+from turtle import bgcolor
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -16,10 +18,80 @@ import json
 import re
 import asyncio
 import hashlib
+import random
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
+
+
+# region FilterChip
+class FilterChip(ft.Chip):
+    """自定义chip"""
+
+    fontSzie = 14
+    Alternative = ["#df6817", "#7a42b9", "#31935e"]
+    # select_color = random.choice(Alternative)
+
+    def __init__(self, scd: dict, ondelete=None, onclick=None):
+        self.select_color = random.choice(self.Alternative)
+        super().__init__(
+            data=scd,
+            label=self.__build_lable(scd),
+            on_delete=ondelete,
+            on_click=onclick,
+        )
+        self.label_padding = ft.Padding.only(left=3)
+        self.delete_icon = self.__build_delIcon()
+        self.padding = 5
+        self.shape = ft.RoundedRectangleBorder(
+            radius=8, side=ft.BorderSide(width=1, color=self.select_color,style=ft.BorderStyle.SOLID)
+        )
+        self.bgcolor = self.__build_bgcolor()
+
+    def __build_bgcolor(self):
+        bgcolor = {
+            ft.ControlState.DEFAULT: ft.Colors.with_opacity(0.8, self.select_color),
+            ft.ControlState.HOVERED: ft.Colors.with_opacity(
+                0.3, self.select_color
+            ),  # 悬停加深
+        }
+        return bgcolor
+
+    def __build_lable(self, scd: dict):
+        label_crl = ft.Column(
+            spacing=0,
+            controls=[
+                ft.Text(
+                    value=f"{scd['func']} {scd['target']}",
+                    size=self.fontSzie,
+                    weight="bold",
+                    color=self.select_color,
+                ),
+                ft.Text(
+                    value=f"{scd['condition']}",
+                    size=self.fontSzie-2,
+                    color=self.select_color,
+                ),
+            ],
+        )
+        return label_crl
+
+    def __build_delIcon(self):
+        delIcon = ft.Container(
+            content=ft.Icon(
+                ft.Icons.DELETE_FOREVER,
+                color=self.select_color,
+                size=20,
+                margin=0,
+            ),
+            margin=ft.Margin.all(0),
+            padding=0,
+        )
+        return delIcon
+
+
+# endregion
 
 
 # region FiltersList
@@ -55,7 +127,8 @@ class FiltersList(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.ORANGE),
+            border=ft.Border.all(1, DraculaColors.ORANGE),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=self.__command_button(),
         )
@@ -125,6 +198,8 @@ class FiltersList(ft.Card):
             self.filtersAll_change = "del"
 
         def editForE(e):
+            if self.filtersAll_change == "edit":
+                return
             if not isinstance(e.control, ft.Chip):
                 return
             e_chip = e.control
@@ -142,35 +217,9 @@ class FiltersList(ft.Card):
 
         self.filtersAll.append(_scd)
         controls.append(
-            ft.Chip(
-                data=_scd,
-                label=ft.Column(
-                    spacing=0,
-                    controls=[
-                        ft.Text(
-                            spans=self.targetspan(f"{_scd['func']} {_scd['target']}"),
-                            size=14,
-                        ),
-                        ft.Text(spans=self.tokenspan(f"{_scd['condition']}"), size=14),
-                    ],
-                ),
-                # leading=ft.Icon(ft.Icons.FILTER_ALT),
-                label_padding=ft.Padding.only(left=3),
-                padding=3,
-                delete_icon=ft.Container(
-                    content=ft.Icon(
-                        ft.Icons.DELETE_FOREVER,
-                        color=DraculaColors.RED,
-                        size=20,
-                        margin=0,
-                    ),
-                    margin=ft.Margin.all(0),
-                    padding=0,
-                ),
-                # delete_icon_color=DraculaColors.RED,
-                on_delete=deleteForE,
-                on_click=editForE,
-            )
+            # region addend chip
+            FilterChip(_scd, deleteForE, editForE)
+            # endregion
         )
         self.filtersAll_change = "add"
         self.content.content.update()
@@ -331,7 +380,8 @@ class InputPad(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.PINK),
+            border=ft.Border.all(1, DraculaColors.PINK),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=self.__Pad(),
         )
@@ -365,7 +415,7 @@ class InputPad(ft.Card):
             spans.append(
                 ft.Container(
                     key=f"quick_{key}",
-                    content=ft.Text(f"{key}", size=15, color=DraculaColors.PURPLE),
+                    content=ft.Text(f"{key}", size=17, color=DraculaColors.PURPLE),
                     padding=ft.Padding(5, 2, 5, 2),
                     on_click=lambda e, k=key: handle_tap(e, k),
                 )
@@ -387,11 +437,11 @@ class InputPad(ft.Card):
                 ),
                 self.__load_funxtarget(),
                 self.__FT_show,
-                ft.Divider(),
+                # ft.Divider(),
                 self.__command_input(),
                 # self.__shadow_input(),
                 self.__quick_input(),
-                ft.Divider(),
+                # ft.Divider(),
                 self.__apply_text(),
             ],
             # 给这一行打个标签，方便以后提取数据
@@ -606,6 +656,7 @@ class InputPad(ft.Card):
                     padding=2,
                     label=f"{key}",
                     data=key,
+                    bgcolor=ft.Colors.TRANSPARENT,
                     leading=ft.Icon(ft.Icons.FUNCTIONS),
                     on_click=lambda _, k=key: function_click(k),
                 )
@@ -640,6 +691,7 @@ class InputPad(ft.Card):
                         padding=2,
                         label=f"{key}",
                         data=key,
+                        bgcolor=ft.Colors.TRANSPARENT,
                         leading=ft.Icon(ft.Icons.FACE),
                         on_click=lambda _, k=key: function_click(k),
                     )
@@ -681,7 +733,8 @@ class CommandList(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border=ft.Border.all(1, DraculaColors.COMMENT),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=self.__command_button(),
         )

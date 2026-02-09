@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-07 07:45:40
+# @Last Modified time: 2026-02-09 02:40:50
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -182,7 +182,7 @@ class serendipitousCapture(ft.Card):
             padding=12,
             width=float("inf"),
             # width=600,
-            border=ft.Border.all(2, DraculaColors.ORANGE),
+            border=ft.Border.all(1, DraculaColors.ORANGE),
             border_radius=10,
             content=ft.Column(
                 controls=[
@@ -424,7 +424,8 @@ class itemsList(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.PINK),
+            border=ft.Border.all(1, DraculaColors.PINK),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=self.__command_button(),
         )
@@ -522,7 +523,8 @@ class commandList(ft.Card):
             padding=12,
             width=float("inf"),
             # width=400,
-            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border=ft.Border.all(1, DraculaColors.COMMENT),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=self.__command_button(),
         )

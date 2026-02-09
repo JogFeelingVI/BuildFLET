@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-07 07:43:38
+# @Last Modified time: 2026-02-09 06:30:59
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -96,7 +96,7 @@ async def main(page: ft.Page):
 
     # 将内容添加到页面
     page.add(content_area)
-    page.update()
+    # page.update() 
 
 
 # 运行应用

@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-05 01:37:40
+# @Last Modified time: 2026-02-09 03:48:54
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
+from dataclasses import dataclass, field
 from .loger import logr
 import flet as ft
 import json
@@ -87,6 +88,22 @@ Lotter_Data = {
 # endregion
 
 
+# region radiusButton
+# @ft.control
+# @dataclass
+# class RadiusButton(ft.ElevatedButton):
+#     # 使用 default_factory 确保每个实例都有独立的 Style 对象
+#     style: ft.ButtonStyle = field(
+#         default_factory=lambda: ft.ButtonStyle(
+#             shape=ft.RoundedRectangleBorder(radius=8)
+#         )
+#     )
+#     bgcolor: DraculaColors.PINK
+#     text: str = "Custom Button"
+
+# endregion
+
+
 # region input_user_rule
 class input_user_rule(ft.Card):
     def __init__(self):
@@ -128,6 +145,11 @@ class input_user_rule(ft.Card):
                 ft.TextButton(
                     expand=1,
                     icon=ft.Icons.WINDOW,
+                    style=ft.ButtonStyle(
+                        bgcolor=DraculaColors.PINK,
+                        color=DraculaColors.FOREGROUND,
+                        shape=ft.RoundedRectangleBorder(radius=5),
+                    ),
                     content="Apply",
                     on_click=self.handle_Apply,
                 ),
@@ -179,7 +201,8 @@ class input_user_rule(ft.Card):
             # expand=True,
             # opacity=0.65,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.PINK),
+            border=ft.Border.all(1, DraculaColors.PINK),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=ft.Column(
                 tight=True,
@@ -387,7 +410,49 @@ class showRule(ft.Card):
 
             textlist.append(
                 ft.Text(
-                    f"Section [ {key} ].  Choose {count} number from {count_range}.",
+                    # f"Section [ {key} ].  Choose {count} number from {count_range}.",
+                    spans=[
+                        ft.TextSpan(
+                            f"{key}: ",
+                            style=ft.TextStyle(
+                                size=15,
+                                weight="bold",
+                                decoration_thickness=3,
+                            ),
+                        ),
+                        ft.TextSpan(
+                            f"Choose",
+                            style=ft.TextStyle(
+                                size=14,
+                                decoration_thickness=3,
+                                color=DraculaColors.CURRENT_LINE,
+                            ),
+                        ),
+                        ft.TextSpan(
+                            f" {count} ",
+                            style=ft.TextStyle(
+                                size=15,
+                                weight="bold",
+                                decoration_thickness=3,
+                            ),
+                        ),
+                        ft.TextSpan(
+                            f"number from",
+                            style=ft.TextStyle(
+                                size=14,
+                                decoration_thickness=3,
+                                color=DraculaColors.CURRENT_LINE,
+                            ),
+                        ),
+                        ft.TextSpan(
+                            f" {count_range} ",
+                            style=ft.TextStyle(
+                                size=15,
+                                weight="bold",
+                                decoration_thickness=3,
+                            ),
+                        ),
+                    ],
                     max_lines=2,
                     color=DraculaColors.PURPLE,
                     size=15,
@@ -403,7 +468,8 @@ class showRule(ft.Card):
             # expand=True,
             # opacity=0.65,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.ORANGE),
+            border=ft.Border.all(1, DraculaColors.ORANGE),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=ft.Column(
                 tight=True,
@@ -455,8 +521,9 @@ class DefaultSettings(ft.Card):
             add_rule = ft.Button(
                 bgcolor=DraculaColors.GREEN,
                 color=DraculaColors.BACKGROUND,
-                icon=ft.Icons.RULE,
+                icon=ft.Icons.ADD_CIRCLE_OUTLINE,
                 content="new rule",
+                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
                 tooltip=ft.Tooltip(message="new game rule"),
                 on_click=self.handle_add_rule,
             )
@@ -525,7 +592,8 @@ class DefaultSettings(ft.Card):
         return ft.Container(
             padding=12,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.COMMENT),
+            border=ft.Border.all(1, DraculaColors.COMMENT),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=ft.Row(
                 controls=[],
@@ -560,10 +628,19 @@ class UserDirectory(ft.Card):
         )
         self.Regenerate_id = ft.Button(
             "Regenerate",
-            icon=ft.Icons.ACCOUNT_CIRCLE,
+            icon=ft.Icons.REFRESH,
             color=DraculaColors.PINK,
             style=ft.ButtonStyle(
                 side=ft.BorderSide(width=1, color=DraculaColors.PINK),
+                shape=ft.RoundedRectangleBorder(radius=5),
+                bgcolor={
+                    ft.ControlState.DEFAULT: ft.Colors.with_opacity(
+                        0.2, DraculaColors.PINK
+                    ),
+                    ft.ControlState.HOVERED: ft.Colors.with_opacity(
+                        0.4, DraculaColors.PINK
+                    ),  # 悬停加深
+                },
             ),
             on_click=lambda _: self.page.run_task(self.Regenerate_id_work, True),
         )
@@ -588,7 +665,8 @@ class UserDirectory(ft.Card):
             padding=12,
             # width=200,
             width=float("inf"),
-            border=ft.Border.all(2, DraculaColors.PINK),
+            border=ft.Border.all(1, DraculaColors.PINK),
+            bgcolor=DraculaColors.CRADBG,
             border_radius=10,
             content=ft.Row(
                 controls=[

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 04:20:46
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-01-17 08:12:58
+# @Last Modified time: 2026-02-09 02:33:55
 from typing import Final
 
 
@@ -20,3 +20,4 @@ class DraculaColors:
     ORANGE: Final[str] = "#ffb86c"
     RED: Final[str] = "#ff5555"
     YELLOW: Final[str] = "#f1fa8c"
+    CRADBG: Final[str] = "#1e293b"
