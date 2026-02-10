@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-09 16:30:00
+# @Last Modified time: 2026-02-10 01:25:00
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -36,32 +36,46 @@ class FilterChipV2(ft.Container):
         super().__init__(data=scd)
         self.padding = 5
         self.content = self.__build__content(scd)
-        self.bgcolor = self.ColorOpx(0.3)
+        self.bgcolor = self.ColorOpx(0.1)
         self.border_radius = 8
         # 2. 设置边框：宽度和颜色
         self.border = ft.Border.all(1, self.ColorOpx(0.3))
-        self.on_hover = self.handle_hover
+        # self.on_hover = self.handle_hover
         self.ondelete = ondelete
         self.onclick = onclick
 
-    def handle_hover(self, e):
-        # self.bgcolor = self.ColorOpx(0.8) if e.data else self.ColorOpx(0.3)
-        self.border = ft.Border.all(
-            1, self.ColorOpx(1) if e.data else self.ColorOpx(0.3)
-        )
-    
-    def handle_right_hover(self,e):
+    # def handle_hover(self, e):
+    #     # self.bgcolor = self.ColorOpx(0.8) if e.data else self.ColorOpx(0.3)
+    #     self.border = ft.Border.all(
+    #         1, self.ColorOpx(1) if e.data else self.ColorOpx(0.3)
+    #     )
+
+    def handle_right_hover(self, e):
         if e.data:
-            self.Cright.content = ft.Icon(ft.Icons.DELETE_FOREVER, color=self.ColorOpx(1))
+            self.Cright.content = ft.Icon(
+                ft.Icons.DELETE_FOREVER, color=self.ColorOpx(1)
+            )
+            self.border = ft.Border.all(1, self.ColorOpx(1))
+            self.bgcolor = self.ColorOpx(0.4)
         else:
-            self.Cright.content = ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.8))
-            
-    def handle_left_click(self,e):
+            self.Cright.content = ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.3))
+            self.border = ft.Border.all(1, self.ColorOpx(0.3))
+            self.bgcolor = self.ColorOpx(0.1)
+
+    def handle_left_hover(self, e):
+        if e.data:
+            self.border = ft.Border.all(1, self.ColorOpx(1))
+            self.bgcolor = self.ColorOpx(0.4)
+        else:
+            self.border = ft.Border.all(1, self.ColorOpx(0.3))
+            self.bgcolor = self.ColorOpx(0.1)
+
+    def handle_left_click(self, e):
         e.control = self
         if self.onclick:
             self.onclick(e)
-    
-    def handle_right_click(self,e):
+
+    def handle_right_click(self, e):
         e.control = self
         if self.ondelete:
             self.ondelete(e)
@@ -100,12 +114,13 @@ class FilterChipV2(ft.Container):
                         ],
                     ),
                     on_click=self.handle_left_click,
+                    on_hover=self.handle_left_hover,
                 ),
                 right := ft.Container(
                     padding=0,
                     on_hover=self.handle_right_hover,
                     on_click=self.handle_right_click,
-                    content=ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.8)),
+                    content=ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.3)),
                 ),
             ],
         )
@@ -316,7 +331,7 @@ class FiltersList(ft.Card):
         controls.append(
             # region addend chip
             # FilterChip(_scd, deleteForE, editForE)
-            FilterChipV2(_scd,deleteForE,editForE)
+            FilterChipV2(_scd, deleteForE, editForE)
             # endregion
         )
         self.filtersAll_change = "add"
@@ -332,21 +347,28 @@ class FiltersList(ft.Card):
         return ft.Row(
             wrap=True,
             controls=[
-                ft.Switch(
-                    thumb_color={
-                        ft.ControlState.DEFAULT: DraculaColors.FOREGROUND,
-                        ft.ControlState.SELECTED: DraculaColors.PINK,
-                    },
-                    track_color={
-                        ft.ControlState.DEFAULT: DraculaColors.BACKGROUND,
-                        ft.ControlState.SELECTED: DraculaColors.BACKGROUND,
-                    },
-                    track_outline_color=DraculaColors.PINK,
-                    value=False,
-                    on_change=self.handle_switch,
-                    tooltip=ft.Tooltip(
-                        message="It saves automatically every 20 seconds."
-                    ),
+                ft.Row(
+                    width=float("inf"),
+                    alignment=ft.MainAxisAlignment.END,
+                    controls=[
+                        ft.Text("Automatic save filter.", size=16, color=DraculaColors.COMMENT, italic=True),
+                        ft.Switch(
+                            thumb_color={
+                                ft.ControlState.DEFAULT: DraculaColors.FOREGROUND,
+                                ft.ControlState.SELECTED: DraculaColors.PINK,
+                            },
+                            track_color={
+                                ft.ControlState.DEFAULT: DraculaColors.BACKGROUND,
+                                ft.ControlState.SELECTED: DraculaColors.BACKGROUND,
+                            },
+                            track_outline_color=DraculaColors.PINK,
+                            value=False,
+                            on_change=self.handle_switch,
+                            tooltip=ft.Tooltip(
+                                message="It saves automatically every 20 seconds."
+                            ),
+                        ),
+                    ],
                 ),
                 # "Various filter commands can be added to narrow down the massive pool of phone numbers."
             ],
@@ -359,7 +381,7 @@ class FiltersList(ft.Card):
         row = self.content.content
         if not isinstance(row, ft.Row):
             return
-        rows = [x for x in row.controls if isinstance(x, ft.Switch)]
+        rows = [x for x in row.controls if isinstance(x, ft.Row)]
         row.controls = rows
         self.filtersAll.clear()
         self.filterSeed.clear()
