@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-09 02:40:50
+# @Last Modified time: 2026-02-11 00:24:08
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -74,7 +74,7 @@ class serendipitousCapture(ft.Card):
                 ft.Text(
                     value=f"{chr(65 + i)}: {_e}",
                     size=18,
-                    color="#900015" if i % 2 == 0 else "#d7a700",
+                    color="#D62741" if i % 2 == 0 else "#d7a700",
                     weight="bold",
                     font_family="RacingSansOne-Regular",
                 )
@@ -166,7 +166,7 @@ class serendipitousCapture(ft.Card):
                     controls=[
                         ft.Text(
                             "May your cup overflow with blessings and your coffers with gold.",
-                            size=16,
+                            size=15,
                             color="#7b0000",
                             italic=True,
                             data="biaoyu",
@@ -406,11 +406,14 @@ class ItemC2(ft.GestureDetector):
 
 
 # region itemsList
-class itemsList(ft.Card):
+class itemsList(ft.Container):
     def __init__(self):
         super().__init__()
         self.content = self.__build_card()
         self.max_item = 10
+        self.padding =10
+        self.width = float("inf")
+        self.bgcolor = ft.Colors.TRANSPARENT
 
     def did_mount(self):
         self.running = True
@@ -419,16 +422,16 @@ class itemsList(ft.Card):
     def will_unmount(self):
         self.running = False
 
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=400,
-            border=ft.Border.all(1, DraculaColors.PINK),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=self.__command_button(),
-        )
+    # def __build_card(self):
+    #     return ft.Container(
+    #         padding=12,
+    #         width=float("inf"),
+    #         # width=400,
+    #         # border=ft.Border.all(1, DraculaColors.PINK),
+    #         bgcolor=ft.Colors.TRANSPARENT,
+    #         # border_radius=10,
+    #         content=self.__luck_word(),
+    #     )
 
     def find_the_maximum(self):
         is_mobile_or_web = self.page.web or self.page.platform in [
@@ -438,7 +441,7 @@ class itemsList(ft.Card):
         self.max_item = 10 if is_mobile_or_web else 1000
 
     def add_itemc2(self, itemc2remove=None):
-        control = self.content.content
+        control = self.content
         if not isinstance(control, ft.Column):
             logr.info(f"add_item type {type(control)}")
             return
@@ -452,7 +455,7 @@ class itemsList(ft.Card):
 
     def all_refresh(self):
         """全部刷新"""
-        control = self.content.content
+        control = self.content
         if not isinstance(control, ft.Column):
             logr.info(f"all_refresh {type(control)}")
             return
@@ -463,7 +466,7 @@ class itemsList(ft.Card):
 
     def get_item_exp(self):
         """"""
-        control = self.content.content
+        control = self.content
         if not isinstance(control, ft.Column):
             logr.info(f"all_refresh {type(control)}")
             return
@@ -482,18 +485,11 @@ class itemsList(ft.Card):
             control.controls.remove(item)
             self.update()
 
-    def __command_button(self):
+    def __build_card(self):
         """Add, Apply, Cancel"""
         return ft.Column(
             # wrap=True,
-            controls=[
-                ft.Text(
-                    "愿你所有的好运都不期而遇，愿你所有的努力都有岁月的温柔回馈。✨"
-                ),
-                ft.Text(
-                    "May all the good luck come to you unexpectedly, and may all your hard work be rewarded with the gentleness of time. 🕊️"
-                ),
-            ],
+            controls=[],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
@@ -583,10 +579,44 @@ class commandList(ft.Card):
 # endregion
 
 
+# region luck_tips
+class lucktips(ft.Container):
+    def __init__(self):
+        super().__init__()
+        self.bgcolor = ft.Colors.TRANSPARENT
+        self.width=float("inf")
+        self.padding = 10
+        self.content = self.__build_tips()
+
+    def __build_text(self, text: str = "Luck word."):
+        return ft.Text(
+            value=f"{text}",
+            size=15,
+            color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
+            max_lines=2,
+        )
+
+    def __build_tips(self):
+        content = ft.Column(
+            controls=[
+                self.__build_text(
+                    "愿你所有的好运都不期而遇，愿你所有的努力都有岁月的温柔回馈。✨"
+                ),
+                self.__build_text(
+                    "May all the good luck come to you unexpectedly, and may all your hard work be rewarded with the gentleness of time. 🕊️"
+                ),
+            ],
+        )
+        return content
+
+
+# endregion
+
+
 # region LotteryPage
 class LotteryPage:
-    def __init__(self, page: ft.Page):
-        self.page = page
+    def __init__(self):
+        
         self.itemslist = itemsList()
         self.comandlist = commandList()
         self.serendipitous_Capture = serendipitousCapture()
@@ -599,6 +629,7 @@ class LotteryPage:
             self.serendipitous_Capture.schot_exp_capture
         )
         self.comandlist.setting_all_refresh(self.itemslist.all_refresh)
+        self.luckTips = lucktips()
         self.view = self.get_data_view()
 
     # region get_data_view
@@ -619,6 +650,7 @@ class LotteryPage:
                     font_family="RacingSansOne-Regular",
                 ),
                 ft.Divider(),
+                self.luckTips,
                 self.itemslist,
                 self.serendipitous_Capture,
                 self.comandlist,

@@ -2,9 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-10 01:25:00
+# @Last Modified time: 2026-02-10 02:42:15
 
 
+from turtle import bgcolor
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
@@ -43,12 +44,6 @@ class FilterChipV2(ft.Container):
         # self.on_hover = self.handle_hover
         self.ondelete = ondelete
         self.onclick = onclick
-
-    # def handle_hover(self, e):
-    #     # self.bgcolor = self.ColorOpx(0.8) if e.data else self.ColorOpx(0.3)
-    #     self.border = ft.Border.all(
-    #         1, self.ColorOpx(1) if e.data else self.ColorOpx(0.3)
-    #     )
 
     def handle_right_hover(self, e):
         if e.data:
@@ -351,7 +346,12 @@ class FiltersList(ft.Card):
                     width=float("inf"),
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
-                        ft.Text("Automatic save filter.", size=16, color=DraculaColors.COMMENT, italic=True),
+                        ft.Text(
+                            "Automatic save filter.",
+                            size=16,
+                            color=DraculaColors.COMMENT,
+                            italic=True,
+                        ),
                         ft.Switch(
                             thumb_color={
                                 ft.ControlState.DEFAULT: DraculaColors.FOREGROUND,
@@ -868,6 +868,11 @@ class CommandList(ft.Card):
                     icon=ft.Icons.ADD_CARD,
                     content="Add",
                     on_click=self.handle_add,
+                    style=ft.ButtonStyle(
+                        color=DraculaColors.FOREGROUND,
+                        bgcolor=DraculaColors.RED,
+                        shape=ft.RoundedRectangleBorder(radius=5),
+                    ),
                 ),
                 ft.TextButton(
                     icon=ft.Icons.FILE_OPEN,
@@ -1102,8 +1107,7 @@ class CommandList(ft.Card):
 class FilterPage:
     """筛选页面类"""
 
-    def __init__(self, page: ft.Page):
-        self.page = page
+    def __init__(self):
         self.Filters_cmd_list = FiltersList()
         self.Input_Pad = InputPad()
         self.Command_List = CommandList()

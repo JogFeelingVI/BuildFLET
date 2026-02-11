@@ -728,9 +728,7 @@ class UserDirectory(ft.Card):
 class SetingsPage:
     """设置页面类"""
 
-    def __init__(self, page: ft.Page):
-        self.page = page
-
+    def __init__(self):
         self.rule_mode_show = showRule()
         self.uese_input_mode = input_user_rule()
         self.default_setings = DefaultSettings()
