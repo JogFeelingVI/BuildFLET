@@ -2,7 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-10 02:42:15
+# @Last Modified time: 2026-02-11 02:30:52
+
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
@@ -997,16 +998,19 @@ class CommandList(ft.Card):
         if self.filter_clear_all:
             self.filter_clear_all()
             await update_e(e, "CA")
-        with open(stored_id, "r", encoding="utf-8") as f:
-            for line in f:
-                # 去掉行尾换行符并确保行不为空
-                line = line.strip()
-                if line:
-                    # 将每一行的 JSON 字符串转回字典对象
-                    item = json.loads(line)
-                    fiter_data.append(item)
-                    if self.filterAddItem:
-                        self.filterAddItem(item)
+        try:
+            with open(stored_id, "r", encoding="utf-8") as f:
+                for line in f:
+                    # 去掉行尾换行符并确保行不为空
+                    line = line.strip()
+                    if line:
+                        # 将每一行的 JSON 字符串转回字典对象
+                        item = json.loads(line)
+                        fiter_data.append(item)
+                        if self.filterAddItem:
+                            self.filterAddItem(item)
+        except Exception as er:
+            await update_e(e, "ER")
         self.page.session.store.set("filters", fiter_data)
         await update_e(e, len(fiter_data))
         logr.info(f"Reading complete. {len(fiter_data)}")

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-09 03:48:54
+# @Last Modified time: 2026-02-11 02:27:08
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -766,12 +766,9 @@ class SetingsPage:
     def render_filters(self):
         """渲染过滤器列表"""
         self.rule_mode_show.updateCard()
-        self.page.update()
 
     def open_dialog(self):
         self.uese_input_mode.openCard()
-        # self.dlg.open = True
-        self.page.update()
 
     def get_seting_view(self):
         return ft.Column(
