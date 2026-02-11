@@ -4,8 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-02-10 02:42:15
 
-
-from turtle import bgcolor
 from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
 from .SnackBar import get_snack_bar
