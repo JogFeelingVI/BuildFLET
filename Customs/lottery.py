@@ -393,7 +393,7 @@ class itemC2plus(ft.Container):
                 if state:
                     # 成功情况
                     self.showNumber.controls = self.displayNumbers(tempd).controls
-                    self.tips.value = "Search successful."
+                    self.tips.value = "Search successful"
                     self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.GREEN)
                     self.state_exp = "done"
                     self.update()
@@ -403,7 +403,7 @@ class itemC2plus(ft.Container):
                     self.showNumber.controls = self.displayNumbers(tempd).controls
                     # self.showNumber.color = DraculaColors.ORANGE
                     self.buildBadge.content.value = f"{count}"
-                    self.tips.value = "We are searching diligently, please wait..."
+                    self.tips.value = "We are searching diligently"
                     self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.ORANGE)
                     self.state_exp = "ref"
                     self.update()
@@ -411,14 +411,14 @@ class itemC2plus(ft.Container):
                 count += 1
                 elapsed_time = time.time() - start_time
                 if elapsed_time >= self.timeout:
-                    self.tips.value = "count is max_retries, work stoping."
+                    self.tips.value = "count is max_retries"
                     self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.RED)
                     self.state_exp = "none"
                     self.update()
                     break
         except Exception as e:
             # 显示错误/超时界面
-            self.tips.value = "Program execution error."
+            self.tips.value = "Program execution error"
             self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.YELLOW)
             self.update()
         finally:
