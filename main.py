@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-11 02:31:01
+# @Last Modified time: 2026-02-12 07:34:40
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -14,7 +14,7 @@ from Customs.loadfonts import FontManager, FastSourcePicker
 import flet as ft
 import os
 
-# 获取系统标示 
+# 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 app_assets_dir = os.getenv("FLET_ASSETS_DIR")
@@ -64,7 +64,7 @@ async def main(page: ft.Page):
 
     lottery_class = LotteryPage()
 
-    # --- 2. 界面组件定义 ---
+    # --- 2. 界面组件定义 --- 
     # 中间显示区域容器
     content_area = ft.Container(
         content=setting_class.view,  # 默认显示设置页
