@@ -247,7 +247,8 @@ class itemC2plus(ft.Container):
             data=text,
             wrap=False,
             tight=True,
-            spacing=10,
+            scroll=ft.ScrollMode.HIDDEN,
+            spacing=5,
         )
         colors = [["#d9dbdf", "#747fdf"], ["#eab425", "#fbbf24"]]
         quan, shuzi = colors[0]
