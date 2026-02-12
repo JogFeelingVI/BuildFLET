@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-12 07:29:47
+# @Last Modified time: 2026-02-12 10:19:25
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -72,7 +72,7 @@ class serendipitousCapture(ft.Card):
         for i, _e in enumerate(exp):
             cols.append(_e)
             if (i + 1) % 5 == 0:
-                cols.append(custom_divider(False)) 
+                cols.append(custom_divider(False))
         esc.append(
             ft.Container(
                 content=ft.Column(
@@ -234,6 +234,7 @@ class itemC2plus(ft.Container):
         self.Itemc2_remove = None
         self.fontSize = 25
         # 参数
+
         self.padding = 15
         self.border_radius = 10
         self.bgcolor = DraculaColors.CRADBG
@@ -242,12 +243,10 @@ class itemC2plus(ft.Container):
     def displayNumbers(self, text: str, size: int = 35):
         """用环形标示 标识出数字"""
         result = re.findall(r"\d+|\+", text)
-        # logr.info(result)
         row = ft.Row(
-            data=text,
             wrap=False,
-            tight=True,
             scroll=ft.ScrollMode.HIDDEN,
+            expand=True,
             spacing=5,
         )
         colors = [["#d9dbdf", "#747fdf"], ["#eab425", "#fbbf24"]]
@@ -314,6 +313,7 @@ class itemC2plus(ft.Container):
             height=size,
             icon=ft.Icons.CHECK,
             selected=False,
+            visual_density=ft.VisualDensity.COMPACT,
             bgcolor={
                 ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
                 ft.ControlState.SELECTED: DraculaColors.GREEN,
@@ -325,12 +325,11 @@ class itemC2plus(ft.Container):
 
     def __build_content(self):
         content = ft.Column(
-            tight=True,
             spacing=0,
             controls=[
                 ft.Row(
-                    expand=1,
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    expand=1,
                     controls=[
                         # 显示是否选中 显示号码
                         shownumber := self.displayNumbers("05 06 07"),
@@ -339,6 +338,7 @@ class itemC2plus(ft.Container):
                 ),
                 ft.Row(
                     expand=1,
+                    spacing=5,
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
                         tips := ft.Text(
@@ -347,10 +347,16 @@ class itemC2plus(ft.Container):
                             color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
                         ),
                         ft.IconButton(
-                            icon=ft.Icons.REFRESH, on_click=self.handle_refresh_data
+                            padding=5,
+                            visual_density=ft.VisualDensity.COMPACT,
+                            icon=ft.Icons.REFRESH,
+                            on_click=self.handle_refresh_data,
                         ),
                         ft.IconButton(
-                            icon=ft.Icons.DELETE_FOREVER, on_click=self.handle_delete
+                            padding=5,
+                            visual_density=ft.VisualDensity.COMPACT,
+                            icon=ft.Icons.DELETE_FOREVER,
+                            on_click=self.handle_delete,
                         ),
                         self.__build__badge(text="0"),
                     ],

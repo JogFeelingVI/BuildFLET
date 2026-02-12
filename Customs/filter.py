@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-11 02:30:52
+# @Last Modified time: 2026-02-12 09:40:28
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -1135,12 +1135,6 @@ class FilterPage:
     def get_filter_view(self):
         return ft.Column(
             controls=[
-                # ft.Image(
-                #     src="filter.png",
-                #     fit=ft.BoxFit.FIT_HEIGHT,
-                #     width=328 * 0.45,
-                #     height=112 * 0.45,
-                # ),
                 ft.Text(
                     "Filter",
                     size=25,
