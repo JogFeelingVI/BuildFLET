@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-13 00:43:31
+# @Last Modified time: 2026-02-13 13:55:34
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -26,7 +26,7 @@ os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
 async def main(page: ft.Page):
     page.title = "Jackpot App lotter"
     # page.theme = Dracula_Theme
-    # 设置移动端适配的内边距 
+    # 设置移动端适配的内边距
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = ft.Padding.only(top=20)
     page.bgcolor = DraculaColors.BACKGROUND

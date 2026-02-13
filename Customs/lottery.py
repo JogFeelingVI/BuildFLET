@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-13 00:10:25
+# @Last Modified time: 2026-02-13 13:53:39
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -76,7 +76,7 @@ class serendipitousCapture(ft.Card):
         esc.append(
             ft.Container(
                 content=ft.Column(
-                    tight=True,
+                    # tight=True,
                     spacing=10,
                     controls=cols,
                 ),
@@ -233,20 +233,49 @@ class itemC2plus(ft.Container):
         self.state_exp = "none"  # "ref" "done"
         self.Itemc2_remove = None
         self.fontSize = 25
+        self.selected = False
         # 参数
 
         self.padding = 15
         self.border_radius = 10
         self.bgcolor = DraculaColors.CRADBG
-        self.tips = ft.Text(size=13, overflow=ft.TextOverflow.ELLIPSIS)
         self.content = self.__build_content()
 
-    # self.tips = ft.Text(size=13,overflow=ft.TextOverflow.ELLIPSIS)
+    def __build_tips(self):
+        self.tips = ft.Text(
+            value="Please wait...",
+            no_wrap=True,
+            size=13,
+            color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
+        )
+
+        def handle_animation_end(e):
+            if conta.offset == ft.Offset(0, 0):
+                conta.offset = ft.Offset(-0.5, 0)  # 向左移动自身宽度的 50%
+            else:
+                conta.offset = ft.Offset(0, 0)
+            conta.update()
+            # end
+
+        conta = ft.Container(
+            content=self.tips,
+            width=200,
+            alignment=ft.Alignment.CENTER_RIGHT,
+            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            border=ft.Border.only(
+                left=ft.BorderSide(5, ft.Colors.RED)  # 宽度为5的红色左边框
+            ),
+            padding=ft.Padding.only(left=5),
+            # 动画配置
+            animate_offset=ft.Animation(3000, ft.AnimationCurve.EASE_IN_OUT),
+            on_animation_end=handle_animation_end,
+            offset=ft.Offset(0, 0),
+        )
+        return conta
+
     def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
         self.tips.value = f"{value}"
-        # self.tips.size=13,
         self.tips.color = ft.Colors.with_opacity(0.5, color)
-        self.tips.overflow = (ft.TextOverflow.ELLIPSIS,)
         self.tips.tooltip = ft.Tooltip(message=f"{value}")
         # self.tips.update()
 
@@ -313,25 +342,38 @@ class itemC2plus(ft.Container):
             # 切换选中状态
             if self.state_exp != "done":
                 return
-            e.control.selected = not e.control.selected
-            e.control.update()
+            # e.control.selected = not e.control.selected
+            # e.control.update()
+            self.selected = not self.selected
+            self.check.bgcolor = DraculaColors.GREEN if self.selected else None
+            self.check.update()
+            logr.info(f"{self.selected}")
+            # end
 
-        self.check = ft.IconButton(
-            icon_color=DraculaColors.FOREGROUND,
-            icon_size=size * 0.6,
+        self.check = ft.Container(
+            padding=5,
+            content=ft.Icon(
+                ft.Icons.CHECK, color=DraculaColors.FOREGROUND, size=size * 0.6
+            ),
             width=size,
             height=size,
-            icon=ft.Icons.CHECK,
-            selected=False,
-            visual_density=ft.VisualDensity.COMPACT,
-            bgcolor={
-                ft.ControlState.DEFAULT: ft.Colors.TRANSPARENT,
-                ft.ControlState.SELECTED: DraculaColors.GREEN,
-            },
-            style=ft.ButtonStyle(padding=3),
+            border_radius=size / 2,
+            alignment=ft.Alignment.CENTER,
             on_click=toggle_icon,
         )
         return self.check
+
+    def __build_Butter(self, size=30, icon=ft.Icons.REFRESH, onclick=None):
+        butter = ft.Container(
+            # padding=5,
+            content=ft.Icon(icon, color=DraculaColors.FOREGROUND, size=size),
+            # width=size,
+            # height=size,
+            # border_radius=size / 2,
+            # alignment=ft.Alignment.CENTER,
+            on_click=onclick if onclick else None,
+        )
+        return butter
 
     def __build_content(self):
         content = ft.Column(
@@ -341,7 +383,6 @@ class itemC2plus(ft.Container):
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     expand=1,
                     controls=[
-                        # 显示是否选中 显示号码
                         shownumber := self.displayNumbers("05 06 07"),
                         self.__build_check(),
                     ],
@@ -351,19 +392,9 @@ class itemC2plus(ft.Container):
                     spacing=5,
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
-                        self.tips,
-                        ft.IconButton(
-                            padding=5,
-                            visual_density=ft.VisualDensity.COMPACT,
-                            icon=ft.Icons.REFRESH,
-                            on_click=self.handle_refresh_data,
-                        ),
-                        ft.IconButton(
-                            padding=5,
-                            visual_density=ft.VisualDensity.COMPACT,
-                            icon=ft.Icons.DELETE_FOREVER,
-                            on_click=self.handle_delete,
-                        ),
+                        self.__build_tips(),
+                        self.__build_Butter(30, ft.Icons.REFRESH,self.handle_refresh_data),
+                        self.__build_Butter(30, ft.Icons.DELETE_FOREVER,self.handle_delete),
                         self.__build__badge(text="0"),
                     ],
                 ),
@@ -376,7 +407,7 @@ class itemC2plus(ft.Container):
         self.Itemc2_remove = itemc2remove
 
     def refresh(self, name: str = "None"):
-        if self.is_refreshing or self.check.selected:
+        if self.is_refreshing or self.selected:
             return
         # logr.info(f"markdata is running. {name}")
         self.page.run_task(self.SearchForData, name)
@@ -453,7 +484,7 @@ class itemC2plus(ft.Container):
         self.refresh(name="refresh_data")
 
     def handle_delete(self, e):
-        if self.is_refreshing or self.check.selected:
+        if self.is_refreshing or self.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
@@ -510,7 +541,7 @@ class itemsList(ft.Container):
             return
         itemc2_all = [x for x in control.controls if isinstance(x, itemC2plus)]
         for item in itemc2_all:
-            if item.check.selected == False:
+            if item.selected == False:
                 item.refresh(name="all_refresh")
 
     def get_item_exp(self):
@@ -522,7 +553,7 @@ class itemsList(ft.Container):
         exp_all = [
             x.showNumber
             for x in control.controls
-            if isinstance(x, itemC2plus) and x.check.selected
+            if isinstance(x, itemC2plus) and x.selected
         ]
         return exp_all
 
