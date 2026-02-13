@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-12 10:19:25
+# @Last Modified time: 2026-02-13 00:10:25
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -238,7 +238,17 @@ class itemC2plus(ft.Container):
         self.padding = 15
         self.border_radius = 10
         self.bgcolor = DraculaColors.CRADBG
+        self.tips = ft.Text(size=13, overflow=ft.TextOverflow.ELLIPSIS)
         self.content = self.__build_content()
+
+    # self.tips = ft.Text(size=13,overflow=ft.TextOverflow.ELLIPSIS)
+    def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
+        self.tips.value = f"{value}"
+        # self.tips.size=13,
+        self.tips.color = ft.Colors.with_opacity(0.5, color)
+        self.tips.overflow = (ft.TextOverflow.ELLIPSIS,)
+        self.tips.tooltip = ft.Tooltip(message=f"{value}")
+        # self.tips.update()
 
     def displayNumbers(self, text: str, size: int = 35):
         """用环形标示 标识出数字"""
@@ -341,11 +351,7 @@ class itemC2plus(ft.Container):
                     spacing=5,
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
-                        tips := ft.Text(
-                            value="Click to start refreshing. -> ",
-                            size=13,
-                            color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
-                        ),
+                        self.tips,
                         ft.IconButton(
                             padding=5,
                             visual_density=ft.VisualDensity.COMPACT,
@@ -363,7 +369,6 @@ class itemC2plus(ft.Container):
                 ),
             ],
         )
-        self.tips = tips
         self.showNumber = shownumber
         return content
 
@@ -393,8 +398,7 @@ class itemC2plus(ft.Container):
                 if state:
                     # 成功情况
                     self.showNumber.controls = self.displayNumbers(tempd).controls
-                    self.tips.value = "Search successful"
-                    self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.GREEN)
+                    self.tips_value("Search successful.", DraculaColors.GREEN)
                     self.state_exp = "done"
                     self.update()
                     break  # 成功后直接跳出循环
@@ -403,23 +407,25 @@ class itemC2plus(ft.Container):
                     self.showNumber.controls = self.displayNumbers(tempd).controls
                     # self.showNumber.color = DraculaColors.ORANGE
                     self.buildBadge.content.value = f"{count}"
-                    self.tips.value = "We are searching diligently"
-                    self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.ORANGE)
+                    self.tips_value(
+                        "We are searching diligently, please wait...",
+                        DraculaColors.ORANGE,
+                    )
                     self.state_exp = "ref"
                     self.update()
                     await asyncio.sleep(0.1)  # 给 CPU 喘息时间，也让 UI 有机会渲染
                 count += 1
                 elapsed_time = time.time() - start_time
                 if elapsed_time >= self.timeout:
-                    self.tips.value = "count is max_retries"
-                    self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.RED)
+                    self.tips_value(
+                        "Count is max_retries, work stoping.", DraculaColors.RED
+                    )
                     self.state_exp = "none"
                     self.update()
                     break
         except Exception as e:
             # 显示错误/超时界面
-            self.tips.value = "Program execution error"
-            self.tips.color = ft.Colors.with_opacity(0.5, DraculaColors.YELLOW)
+            self.tips_value("Program execution error.", DraculaColors.YELLOW)
             self.update()
         finally:
             self.is_refreshing = False

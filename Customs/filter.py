@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-12 09:40:28
+# @Last Modified time: 2026-02-13 00:39:38
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -201,17 +201,21 @@ class FilterChip(ft.Chip):
 
 
 # region FiltersList
-class FiltersList(ft.Card):
+class FiltersList(ft.Container):
     def __init__(
         self,
     ):
         super().__init__()
-        self.content = self.__build_card()
+        self.content = self.__command_button()
         self.editItemCallback = None
         self.add_closed_stat = None
         self.filtersAll_change = "none"  # add none del edit
         self.filtersAll = []
         self.filterSeed = set()
+        self.bgcolor = ft.Colors.TRANSPARENT
+        self.width = float("inf")
+        self.padding = 10
+        self.border_radius = 10
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
@@ -228,16 +232,17 @@ class FiltersList(ft.Card):
     def will_unmount(self):
         self.running = False
 
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=400,
-            border=ft.Border.all(1, DraculaColors.ORANGE),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=self.__command_button(),
-        )
+    # def __build_card(self):
+    #     return ft.Container(
+    #         padding=12,
+    #         width=float("inf"),
+    #         # width=400,
+    #         # border=ft.Border.all(1, DraculaColors.ORANGE),
+    #         # bgcolor=DraculaColors.CRADBG,
+    #         border_radius=10,
+    #         bgcolor=ft.Colors.TRANSPARENT,
+    #         content=self.__command_button(),
+    #     )
 
     def targetspan(self, text: str):
         split_wc = spiltfortarget(text)
@@ -268,7 +273,7 @@ class FiltersList(ft.Card):
         if "" in _scd.values():
             logr.info(f"add filter error {_scd}.")
             return
-        if not isinstance(self.content.content, ft.Row):
+        if not isinstance(self.content, ft.Row):
             return
 
         # hash 确认
@@ -291,7 +296,7 @@ class FiltersList(ft.Card):
         if hashcode(_scd, "is") == False:
             return
 
-        controls = self.content.content.controls
+        controls = self.content.controls
 
         def deleteForE(e):
             if not isinstance(e.control, ft.Container):
@@ -329,7 +334,7 @@ class FiltersList(ft.Card):
             # endregion
         )
         self.filtersAll_change = "add"
-        self.content.content.update()
+        self.content.update()
         self.filter_data_task()
 
     def filter_data_task(self):
@@ -377,7 +382,7 @@ class FiltersList(ft.Card):
 
     def clear_all(self):
         """清空 filter 设置"""
-        row = self.content.content
+        row = self.content
         if not isinstance(row, ft.Row):
             return
         rows = [x for x in row.controls if isinstance(x, ft.Row)]

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-11 02:27:08
+# @Last Modified time: 2026-02-13 00:13:02
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -85,22 +85,6 @@ Lotter_Data = {
         "PB_K": 1,
     },
 }
-# endregion
-
-
-# region radiusButton
-# @ft.control
-# @dataclass
-# class RadiusButton(ft.ElevatedButton):
-#     # 使用 default_factory 确保每个实例都有独立的 Style 对象
-#     style: ft.ButtonStyle = field(
-#         default_factory=lambda: ft.ButtonStyle(
-#             shape=ft.RoundedRectangleBorder(radius=8)
-#         )
-#     )
-#     bgcolor: DraculaColors.PINK
-#     text: str = "Custom Button"
-
 # endregion
 
 
@@ -620,7 +604,7 @@ class UserDirectory(ft.Card):
         self.stored_id = None
         self.tips = ft.Text(
             "💡 Tip: The app saves the filter path by default.",
-            color=DraculaColors.FOREGROUND,
+            color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
             size=16,
             max_lines=2,
             # overflow=ft.TextOverflow.ELLIPSIS,
