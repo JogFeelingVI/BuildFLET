@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-14 05:39:52
+# @Last Modified time: 2026-02-14 15:53:14
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -124,81 +124,6 @@ class FilterChipV2(ft.Container):
 
 
 # endregion
-
-
-# region FilterChip
-class FilterChip(ft.Chip):
-    """自定义chip"""
-
-    fontSzie = 14
-    Alternative = ["#df6817", "#7a42b9", "#31935e"]
-    # select_color = random.choice(Alternative)
-
-    def __init__(self, scd: dict, ondelete=None, onclick=None):
-        self.select_color = random.choice(self.Alternative)
-        super().__init__(
-            data=scd,
-            label=self.__build_lable(scd),
-            on_delete=ondelete,
-            on_click=onclick,
-        )
-        self.label_padding = ft.Padding.only(left=3)
-        self.delete_icon = self.__build_delIcon()
-        self.padding = 5
-        self.shape = ft.RoundedRectangleBorder(
-            radius=8,
-            side=ft.BorderSide(
-                width=1,
-                color=ft.Colors.with_opacity(0.2, self.select_color),
-                style=ft.BorderStyle.SOLID,
-            ),
-        )
-        self.bgcolor = self.__build_bgcolor()
-
-    def __build_bgcolor(self):
-        bgcolor = {
-            ft.ControlState.DEFAULT: ft.Colors.with_opacity(0.3, self.select_color),
-            ft.ControlState.HOVERED: ft.Colors.with_opacity(
-                0.8, self.select_color
-            ),  # 悬停加深
-        }
-        return bgcolor
-
-    def __build_lable(self, scd: dict):
-        label_crl = ft.Column(
-            spacing=0,
-            controls=[
-                ft.Text(
-                    value=f"{scd['func']} {scd['target']}",
-                    size=self.fontSzie,
-                    weight="bold",
-                    color=self.select_color,
-                ),
-                ft.Text(
-                    value=f"{scd['condition']}",
-                    size=self.fontSzie - 2,
-                    color=self.select_color,
-                ),
-            ],
-        )
-        return label_crl
-
-    def __build_delIcon(self):
-        delIcon = ft.Container(
-            content=ft.Icon(
-                ft.Icons.DELETE_FOREVER,
-                color=self.select_color,
-                size=20,
-                margin=0,
-            ),
-            margin=ft.Margin.all(0),
-            padding=0,
-        )
-        return delIcon
-
-
-# endregion
-
 
 # region FiltersList
 class FiltersList(ft.Container):
@@ -437,17 +362,25 @@ class FiltersList(ft.Container):
 
 
 # region InputPad
-class InputPad(ft.Card):
+class InputPad(ft.Container):
     def __init__(self):
         super().__init__()
         self.applycallback = None
-        self.visible = False
+
         self.__FT_show = self.__load_FT_show()
-        self.content = self.__build_card()
+
         self.funcs_dc = {}
         self.target_pn = ["all"]
         self.pad_data = {"func": "", "target": "", "condition": ""}
         self.search_pos = 0
+        self.visible = False
+        self.padding = 0
+        self.width = float("inf")
+        # width=400,
+        self.border = ft.Border.all(1, DraculaColors.ORANGE)
+        self.bgcolor = DraculaColors.ORANGE
+        self.border_radius = 10
+        self.content = self.__Pad()
 
     def did_mount(self):
         self.running = True
@@ -467,7 +400,7 @@ class InputPad(ft.Card):
 
     def editePad(self, script: dict):
         """编辑模式"""
-        func_target: list = self.content.content.controls
+        func_target: list = self.inputpad.content.controls
         for item in func_target:
             match item.data:
                 case "__load_funxtarget":
@@ -498,17 +431,6 @@ class InputPad(ft.Card):
                     pass
         self.visible = True
         self.update()
-
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=400,
-            border=ft.Border.all(1, DraculaColors.PINK),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=self.__Pad(),
-        )
 
     # region quick input
     def __quick_input(self):
@@ -552,21 +474,44 @@ class InputPad(ft.Card):
 
     def __Pad(self):
         """Add, Apply, Cancel"""
+        self.inputpad = ft.Container(
+            padding=12,
+            border_radius=10,
+            bgcolor=DraculaColors.CRADBG,
+            border=ft.Border(
+                top=ft.BorderSide(1, DraculaColors.ORANGE),  # 宽度为 3, 颜色为蓝色
+            ),
+            width=float("inf"),
+            content=ft.Column(
+                controls=[
+                    self.__load_funxtarget(),
+                    self.__FT_show,
+                    # ft.Divider(),
+                    self.__command_input(),
+                    # self.__shadow_input(),
+                    self.__quick_input(),
+                    # ft.Divider(),
+                    self.__apply_text(),
+                ],
+            ),
+        )
         return ft.Column(
             data="__Pad",
+            spacing=0,
             controls=[
-                ft.Text(
-                    "This is a test plan designed to facilitate rapid data entry for filtering projects.",
-                    color=DraculaColors.PURPLE,
+                ft.Container(
+                    alignment=ft.Alignment.CENTER_LEFT,
+                    padding=ft.Padding(12, 5, 12, 5),
+                    width=float("inf"),
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    content=ft.Text(
+                        "This is a test plan designed to facilitate rapid data entry for filtering projects.",
+                        color=DraculaColors.BACKGROUND,
+                        size=12,
+                        no_wrap=False,
+                    ),
                 ),
-                self.__load_funxtarget(),
-                self.__FT_show,
-                # ft.Divider(),
-                self.__command_input(),
-                # self.__shadow_input(),
-                self.__quick_input(),
-                # ft.Divider(),
-                self.__apply_text(),
+                self.inputpad,
             ],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -675,11 +620,6 @@ class InputPad(ft.Card):
             content_padding=ft.Padding.all(0),
             bgcolor=ft.Colors.TRANSPARENT,
         )
-        # self.hint_text = ft.Text(
-        #     value="Execute the script",
-        #     color=ft.Colors.GREY_700,
-        #     style=text_style,
-        # )
         return ft.Stack(
             expand=True,
             controls=[
@@ -933,11 +873,11 @@ class CommandList(ft.Container):
     def setting_edit_stat_open(self):
         # e.control.content = "Add"
         # e.control.icon = ft.Icons.FILTER
-        icon, text=self.addclose.content.controls
-        if isinstance(icon,ft.Icon):
-            icon.icon=ft.Icons.CLOSE
-        if isinstance(text,ft.Text):
-            text.value="Closed"
+        icon, text = self.addclose.content.controls
+        if isinstance(icon, ft.Icon):
+            icon.icon = ft.Icons.CLOSE
+        if isinstance(text, ft.Text):
+            text.value = "Closed".upper()
 
     def setting_add_callback(self, addCallBack=None):
         self.addcallback = addCallBack
@@ -948,22 +888,14 @@ class CommandList(ft.Container):
     def handle_add(self, e):
         if self.running and self.addcallback:
             self.addcallback()
-            icon, text=self.addclose.content.controls
-            if isinstance(icon,ft.Icon) and isinstance(text,ft.Text):
-                if text.value.lower() == 'add':
-                    text.value="Closed"
-                    icon.icon=ft.Icons.CLOSE
+            icon, text = self.addclose.content.controls
+            if isinstance(icon, ft.Icon) and isinstance(text, ft.Text):
+                if text.value == "ADD":
+                    text.value = "Closed".upper()
+                    icon.icon = ft.Icons.CLOSE
                 else:
-                    text.value="add"
-                    icon.icon=ft.Icons.ADD
-            # if isinstance(e.control, ft.TextButton):
-            #     if e.control.content == "Add":
-            #         e.control.content = "Closed"
-            #         e.control.icon = ft.Icons.CLOSE
-            #     else:
-            #         e.control.content = "Add"
-            #         e.control.icon = ft.Icons.FILTER
-            #     e.control.update()
+                    text.value = "ADD"
+                    icon.icon = ft.Icons.ADD
 
     async def handle_Save(self, e):
         # region update save badge
