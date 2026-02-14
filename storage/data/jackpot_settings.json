@@ -1,23 +1,17 @@
 {
     "randomData": {
-        "note": "fucai3d",
+        "note": "🇨🇳体育大乐透",
         "PA": {
-            "range_start": 0,
-            "range_end": 9,
             "enabled": true,
-            "count": 1
+            "range_start": 1,
+            "range_end": 35,
+            "count": 5
         },
         "PB": {
-            "range_start": 0,
-            "range_end": 9,
             "enabled": true,
-            "count": 1
-        },
-        "PC": {
-            "range_start": 0,
-            "range_end": 9,
-            "enabled": true,
-            "count": 1
+            "range_start": 1,
+            "range_end": 12,
+            "count": 2
         }
     }
 }

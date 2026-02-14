@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-13 00:39:38
+# @Last Modified time: 2026-02-14 05:39:52
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -830,10 +830,16 @@ class InputPad(ft.Card):
 
 
 # region CommandList
-class CommandList(ft.Card):
+class CommandList(ft.Container):
     def __init__(self):
         super().__init__()
-        self.content = self.__build_card()
+        self.padding = 12
+        self.width = float("inf")
+        # width=400,
+        # self.border=ft.Border.all(1, DraculaColors.COMMENT)
+        self.bgcolor = ft.Colors.TRANSPARENT
+        # self.border_radius=10
+        self.content = self.__command_button()
         self.addcallback = None
         self.filterAddItem = None
         self.give_data = None
@@ -852,46 +858,68 @@ class CommandList(ft.Card):
     def setting_give_data(self, give_data: None):
         self.give_data = give_data
 
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=400,
-            border=ft.Border.all(1, DraculaColors.COMMENT),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=self.__command_button(),
+    def __build_butter(self, size=70, icon=ft.Icons.ABC, name="ABC", oncilck=None):
+        def handle_hover(e):
+            if e.data:
+                conter.bgcolor = ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
+                conter.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.4, DraculaColors.PURPLE)
+                )
+            else:
+                conter.bgcolor = None
+                conter.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
+                )
+            conter.update()
+            # end
+
+        conter = ft.Container(
+            width=size,
+            height=size,
+            alignment=ft.Alignment.CENTER,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
+            border_radius=8,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=5,
+                alignment=ft.MainAxisAlignment.CENTER,
+                controls=[
+                    ft.Icon(icon, size=size * 0.45, color=DraculaColors.PURPLE),
+                    ft.Text(
+                        value=f"{name.upper()}",
+                        size=size * 0.15,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
+            ),
+            on_hover=handle_hover,
+            on_click=oncilck,
         )
+        return conter
 
     def __command_button(self):
         """Add, Apply, Cancel"""
-        return ft.Row(
+        command = ft.Row(
             controls=[
-                ft.TextButton(
-                    key="add_close",
+                addclose := self.__build_butter(
                     icon=ft.Icons.ADD_CARD,
-                    content="Add",
-                    on_click=self.handle_add,
-                    style=ft.ButtonStyle(
-                        color=DraculaColors.FOREGROUND,
-                        bgcolor=DraculaColors.RED,
-                        shape=ft.RoundedRectangleBorder(radius=5),
-                    ),
+                    name="ADD",
+                    oncilck=self.handle_add,
                 ),
-                ft.TextButton(
+                self.__build_butter(
                     icon=ft.Icons.FILE_OPEN,
-                    content="Open",
-                    on_click=self.handle_Open,
+                    name="open",
+                    oncilck=self.handle_Open,
                 ),
-                ft.TextButton(
+                self.__build_butter(
                     icon=ft.Icons.FILE_DOWNLOAD,
-                    content="Save",
-                    on_click=self.handle_Save,
+                    name="save",
+                    oncilck=self.handle_Save,
                 ),
-                ft.TextButton(
+                self.__build_butter(
                     icon=ft.Icons.FILE_UPLOAD,
-                    content="Load",
-                    on_click=self.handle_Load,
+                    name="load",
+                    oncilck=self.handle_Load,
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
@@ -899,17 +927,17 @@ class CommandList(ft.Card):
             scroll=ft.ScrollMode.HIDDEN,
             expand=True,
         )
+        self.addclose = addclose
+        return command
 
     def setting_edit_stat_open(self):
         # e.control.content = "Add"
         # e.control.icon = ft.Icons.FILTER
-        row_controls = self.content.content.controls
-        # 查找 key 为 "btn_add" 的控件
-        add_close = next((c for c in row_controls if c.key == "add_close"), None)
-        if not isinstance(add_close, ft.TextButton):
-            return
-        add_close.content = "Closed"
-        add_close.icon = ft.Icons.CLOSE
+        icon, text=self.addclose.content.controls
+        if isinstance(icon,ft.Icon):
+            icon.icon=ft.Icons.CLOSE
+        if isinstance(text,ft.Text):
+            text.value="Closed"
 
     def setting_add_callback(self, addCallBack=None):
         self.addcallback = addCallBack
@@ -920,14 +948,22 @@ class CommandList(ft.Card):
     def handle_add(self, e):
         if self.running and self.addcallback:
             self.addcallback()
-            if isinstance(e.control, ft.TextButton):
-                if e.control.content == "Add":
-                    e.control.content = "Closed"
-                    e.control.icon = ft.Icons.CLOSE
+            icon, text=self.addclose.content.controls
+            if isinstance(icon,ft.Icon) and isinstance(text,ft.Text):
+                if text.value.lower() == 'add':
+                    text.value="Closed"
+                    icon.icon=ft.Icons.CLOSE
                 else:
-                    e.control.content = "Add"
-                    e.control.icon = ft.Icons.FILTER
-                e.control.update()
+                    text.value="add"
+                    icon.icon=ft.Icons.ADD
+            # if isinstance(e.control, ft.TextButton):
+            #     if e.control.content == "Add":
+            #         e.control.content = "Closed"
+            #         e.control.icon = ft.Icons.CLOSE
+            #     else:
+            #         e.control.content = "Add"
+            #         e.control.icon = ft.Icons.FILTER
+            #     e.control.update()
 
     async def handle_Save(self, e):
         # region update save badge

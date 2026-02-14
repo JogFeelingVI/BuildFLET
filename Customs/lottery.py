@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-14 02:14:29
+# @Last Modified time: 2026-02-14 05:18:22
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -587,10 +587,18 @@ class itemsList(ft.Container):
 
 
 # region commandList
-class commandList(ft.Card):
+class commandList(ft.Container):
     def __init__(self):
         super().__init__()
-        self.content = self.__build_card()
+        # self.content = self.__build_card()、
+        self.padding = 12
+        self.width = float("inf")
+        # width=400,
+        # self.border=ft.Border.all(1, DraculaColors.COMMENT)
+        self.bgcolor = ft.Colors.TRANSPARENT
+        # self.border_radius=10
+        self.content = self.__command_button()
+        # 基本属性
         self.item_list_add = None
         self.itemc2remove = None
         self.all_refresh = None
@@ -602,17 +610,6 @@ class commandList(ft.Card):
     def will_unmount(self):
         self.running = False
 
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=400,
-            border=ft.Border.all(1, DraculaColors.COMMENT),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=self.__command_button(),
-        )
-
     def setting_shot_capture(self, capture=None):
         self.shot_capture = capture
 
@@ -623,25 +620,57 @@ class commandList(ft.Card):
     def setting_all_refresh(self, all_refresh=None):
         self.all_refresh = all_refresh
 
+    def __build_butter(self, size=70, icon=ft.Icons.ABC, name="ABC", oncilck=None):
+        def handle_hover(e):
+            if e.data:
+                conter.bgcolor = ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
+                conter.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.4, DraculaColors.PURPLE)
+                )
+            else:
+                conter.bgcolor = None
+                conter.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
+                )
+            conter.update()
+            # end
+
+        conter = ft.Container(
+            width=size,
+            height=size,
+            alignment=ft.Alignment.CENTER,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
+            border_radius=8,
+            content=ft.Column(
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=5,
+                alignment=ft.MainAxisAlignment.CENTER,
+                controls=[
+                    ft.Icon(icon, size=size * 0.45, color=DraculaColors.PURPLE),
+                    ft.Text(
+                        value=f"{name.upper()}",
+                        size=size * 0.15,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                ],
+            ),
+            on_hover=handle_hover,
+            on_click=oncilck,
+        )
+        return conter
+
     def __command_button(self):
         """Add, Apply, Cancel"""
         return ft.Row(
             controls=[
-                ft.TextButton(
-                    key="add_close",
-                    icon=ft.Icons.INSERT_EMOTICON,
-                    content="Add",
-                    on_click=self.handle_add,
+                self.__build_butter(
+                    icon=ft.Icons.INSERT_EMOTICON, name="ADD", oncilck=self.handle_add
                 ),
-                ft.TextButton(
-                    icon=ft.Icons.REFRESH,
-                    content="Refresh",
-                    on_click=self.handle_refresh,
+                self.__build_butter(
+                    icon=ft.Icons.REFRESH, name="Refresh", oncilck=self.handle_refresh
                 ),
-                ft.TextButton(
-                    icon=ft.Icons.SAVE_AS,
-                    content="Export",
-                    on_click=self.handle_export,
+                self.__build_butter(
+                    icon=ft.Icons.SAVE_AS, name="Export", oncilck=self.handle_export
                 ),
             ],
             # 给这一行打个标签，方便以后提取数据
