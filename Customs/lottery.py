@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-13 13:53:39
+# @Last Modified time: 2026-02-14 02:14:29
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -31,6 +31,7 @@ class serendipitousCapture(ft.Card):
         self.tips = self.__build_tips()
         self.content = self.__build__Container()
         self.visible = False
+        # self.width = 400
 
     def setting_get_exp_all(self, getexpall: list = None):
         self.get_exp_all = getexpall
@@ -51,32 +52,43 @@ class serendipitousCapture(ft.Card):
         for i in range(1, 4):
             await self.update_tips(f"The window will close in {3 - i} seconds.")
 
+    # region add_exp
     async def add_exp(self, exp: list = None, genid: str = None):
-        if not exp:
+        if not exp or not genid:
             return
 
-        def custom_divider(t=True, h: int = 2):
-            # 这里不指定宽度，它会跟随 Column 的自然宽度（由文字决定）
-            # 或者指定一个很小的宽度，让内容去撑开
-            return ft.Container(
-                height=h,
-                # width=h*5,
-                bgcolor="#7b0000" if t else ft.Colors.TRANSPARENT,
-                margin=ft.Margin.only(top=5, bottom=5),
+        def eTotext(text: str = "", i=0):
+            if text not in ["", None]:
+                text = f"{chr(65 + i)}: {_e}"
+                color = "#E70224" if i % 2 == 0 else "#d7a700"
+                size = 18
+                weight = ft.FontWeight.BOLD
+                font_family = "RacingSansOne-Regular"
+            else:
+                text = "Billionaire!"
+                color = ft.Colors.with_opacity(0.3, "#FFFFFF")
+                size = 12
+                weight = ft.FontWeight.W_100
+                font_family = None
+            return ft.Text(
+                value=text,
+                size=size,
+                color=color,
+                weight=weight,
+                font_family=font_family,
             )
 
-        if not genid:
-            return
         esc = [x for x in self.showNumbers.controls if x.data == "biaoyu"]
         cols = []
         for i, _e in enumerate(exp):
-            cols.append(_e)
-            if (i + 1) % 5 == 0:
-                cols.append(custom_divider(False))
+            #! _e is row
+            cols.append(eTotext(_e, i))
+            if (i + 1) % 5 == 0 and (i + 1) < len(exp):
+                cols.append(eTotext("", i))
         esc.append(
             ft.Container(
                 content=ft.Column(
-                    # tight=True,
+                    tight=True,
                     spacing=10,
                     controls=cols,
                 ),
@@ -87,12 +99,6 @@ class serendipitousCapture(ft.Card):
                 padding=ft.padding.only(bottom=10, top=10, left=5, right=5),
             )
         )
-        # esc.append(custom_divider())
-        # for i, _e in enumerate(exp):
-        #     esc.append(_e)
-        #     if (i + 1) % 5 == 0:
-        #         esc.append(custom_divider(False))
-        # esc.append(custom_divider())
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         esc.append(
             ft.Text(
@@ -103,6 +109,8 @@ class serendipitousCapture(ft.Card):
         )
         self.showNumbers.controls = esc
         self.showNumbers.update()
+
+    # endregion
 
     # region schot_exp_capture
     async def schot_exp_capture(self):
@@ -177,25 +185,20 @@ class serendipitousCapture(ft.Card):
             ],
         )
         return ft.Screenshot(
-            content=ft.Row(
-                tight=True,
-                controls=[
-                    ft.Container(
-                        foreground_decoration=ft.BoxDecoration(
-                            # bgcolor=DraculaColors.CURRENT_LINE,
-                            image=ft.DecorationImage(
-                                src="fa.png",
-                                fit=ft.BoxFit.NONE,
-                                # repeat=ft.ImageRepeat.REPEAT,
-                                opacity=0.1,
-                            ),
-                        ),
-                        bgcolor="#1f1f1f",
-                        border_radius=5,
-                        padding=10,
-                        content=self.showNumbers,
-                    )
-                ],
+            content=ft.Container(
+                foreground_decoration=ft.BoxDecoration(
+                    # bgcolor=DraculaColors.CURRENT_LINE,
+                    image=ft.DecorationImage(
+                        src="fa.png",
+                        fit=ft.BoxFit.NONE,
+                        # repeat=ft.ImageRepeat.REPEAT,
+                        opacity=0.1,
+                    ),
+                ),
+                bgcolor="#1f1f1f",
+                border_radius=5,
+                padding=10,
+                content=self.showNumbers,
             )
         )
 
@@ -393,8 +396,12 @@ class itemC2plus(ft.Container):
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
                         self.__build_tips(),
-                        self.__build_Butter(30, ft.Icons.REFRESH,self.handle_refresh_data),
-                        self.__build_Butter(30, ft.Icons.DELETE_FOREVER,self.handle_delete),
+                        self.__build_Butter(
+                            30, ft.Icons.REFRESH, self.handle_refresh_data
+                        ),
+                        self.__build_Butter(
+                            30, ft.Icons.DELETE_FOREVER, self.handle_delete
+                        ),
                         self.__build__badge(text="0"),
                     ],
                 ),
@@ -428,6 +435,7 @@ class itemC2plus(ft.Container):
                 tempd, state = await asyncio.to_thread(self.calculate_lottery)
                 if state:
                     # 成功情况
+                    self.tempd = tempd
                     self.showNumber.controls = self.displayNumbers(tempd).controls
                     self.tips_value("Search successful.", DraculaColors.GREEN)
                     self.state_exp = "done"
@@ -551,7 +559,7 @@ class itemsList(ft.Container):
             logr.info(f"all_refresh {type(control)}")
             return
         exp_all = [
-            x.showNumber
+            x.tempd
             for x in control.controls
             if isinstance(x, itemC2plus) and x.selected
         ]

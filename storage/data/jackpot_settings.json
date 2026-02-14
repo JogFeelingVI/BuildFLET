@@ -1,11 +1,23 @@
 {
     "randomData": {
-        "note": "🇨🇳你的快乐就是他的快乐",
+        "note": "fucai3d",
         "PA": {
+            "range_start": 0,
+            "range_end": 9,
             "enabled": true,
-            "range_start": 1,
-            "range_end": 80,
-            "count": 10
+            "count": 1
+        },
+        "PB": {
+            "range_start": 0,
+            "range_end": 9,
+            "enabled": true,
+            "count": 1
+        },
+        "PC": {
+            "range_start": 0,
+            "range_end": 9,
+            "enabled": true,
+            "count": 1
         }
     }
 }

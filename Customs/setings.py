@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-13 00:13:02
+# @Last Modified time: 2026-02-14 02:27:56
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -263,11 +263,18 @@ class input_user_rule(ft.Card):
 
 
 # region showRule
-class showRule(ft.Card):
+class showRule(ft.Container):
     __name__ = "showRule"
 
     def __init__(self):
         super().__init__()
+        self.padding = 12
+        # expand=True,
+        # opacity=0.65,
+        self.width = float("inf")
+        self.border = ft.Border.all(1, DraculaColors.ORANGE)
+        self.bgcolor = DraculaColors.CRADBG
+        self.border_radius = 10
         self.content = self.__build_card()
 
     def did_mount(self):
@@ -442,32 +449,22 @@ class showRule(ft.Card):
                     size=15,
                 )
             )
-        self.content.content.controls = textlist
+        self.content.controls = textlist
         self.update()
 
     def __build_card(self):
         logr.info("bulid card is running.")
-        return ft.Container(
-            padding=12,
-            # expand=True,
-            # opacity=0.65,
-            width=float("inf"),
-            border=ft.Border.all(1, DraculaColors.ORANGE),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=ft.Column(
-                tight=True,
-                controls=[
-                    # LotteryBalls(exp, align="LE"),
-                    # ft.Divider(),
-                    # *textlist,
-                    ft.Text(
-                        "💡Please add game rules. You can customize them using [new rule] or use the preset options."
-                    ),
-                ],
-            ),
+        return ft.Column(
+            tight=True,
+            controls=[
+                # LotteryBalls(exp, align="LE"),
+                # ft.Divider(),
+                # *textlist,
+                ft.Text(
+                    "💡Please add game rules. You can customize them using [new rule] or use the preset options."
+                ),
+            ],
         )
-
 
 # endregion
 
