@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-14 15:53:14
+# @Last Modified time: 2026-02-15 01:54:28
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -125,6 +125,7 @@ class FilterChipV2(ft.Container):
 
 # endregion
 
+
 # region FiltersList
 class FiltersList(ft.Container):
     def __init__(
@@ -156,42 +157,6 @@ class FiltersList(ft.Container):
 
     def will_unmount(self):
         self.running = False
-
-    # def __build_card(self):
-    #     return ft.Container(
-    #         padding=12,
-    #         width=float("inf"),
-    #         # width=400,
-    #         # border=ft.Border.all(1, DraculaColors.ORANGE),
-    #         # bgcolor=DraculaColors.CRADBG,
-    #         border_radius=10,
-    #         bgcolor=ft.Colors.TRANSPARENT,
-    #         content=self.__command_button(),
-    #     )
-
-    def targetspan(self, text: str):
-        split_wc = spiltfortarget(text)
-        spans = []
-        for ttext, color in split_wc:
-            spans.append(
-                ft.TextSpan(
-                    ttext,
-                    style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
-                )
-            )
-        return spans
-
-    def tokenspan(self, text: str):
-        segments = Tokenizer().Segment(text)
-        spans = []
-        for text, color in segments:
-            spans.append(
-                ft.TextSpan(
-                    text,
-                    style=ft.TextStyle(color=color if color else ft.Colors.WHITE),
-                )
-            )
-        return spans
 
     def addFilter(self, scriptd: dict):
         _scd = scriptd.copy()
@@ -266,6 +231,56 @@ class FiltersList(ft.Container):
         # self.page.session.store.set("filters", fiter_data)
         self.page.session.store.set("filters", self.filtersAll)
 
+    def Custom_Switch(self, onswitch=None):
+        """Custom Switch"""
+        width = 35
+        heigth = 20
+
+        active_color = "#50fa7b"
+        default_color = "#a3a3a3"
+
+        def toggle_switch(e):
+            if switch.data == "def":
+                switch.data = "act"
+                switch.alignment = ft.Alignment.CENTER_RIGHT
+                switch.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.8, active_color)
+                )
+                handle.bgcolor = ft.Colors.with_opacity(0.8, active_color)
+            else:
+                switch.data = "def"
+                switch.alignment = ft.Alignment.CENTER_LEFT
+                switch.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.6, default_color)
+                )
+                handle.bgcolor = ft.Colors.with_opacity(0.8, default_color)
+            # end
+            if onswitch:
+                onswitch(switch)
+
+        handle = ft.Container(
+            width=14,
+            height=14,
+            border_radius=3,
+            bgcolor=ft.Colors.with_opacity(0.8, default_color),
+        )
+        switch = ft.Container(
+            data="def",
+            width=width,
+            height=heigth,
+            padding=3,
+            border_radius=5,
+            alignment=ft.Alignment.CENTER_LEFT,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.6, default_color)),
+            animate=ft.Animation(500, "decelerate"),
+            bgcolor=ft.Colors.TRANSPARENT,
+            content=handle,
+            tooltip=ft.Tooltip(message="It saves automatically every 20 seconds."),
+            on_click=toggle_switch,
+        )
+
+        return switch
+
     def __command_button(self):
         """Add, Apply, Cancel"""
         return ft.Row(
@@ -281,22 +296,7 @@ class FiltersList(ft.Container):
                             color=DraculaColors.COMMENT,
                             italic=True,
                         ),
-                        ft.Switch(
-                            thumb_color={
-                                ft.ControlState.DEFAULT: DraculaColors.FOREGROUND,
-                                ft.ControlState.SELECTED: DraculaColors.PINK,
-                            },
-                            track_color={
-                                ft.ControlState.DEFAULT: DraculaColors.BACKGROUND,
-                                ft.ControlState.SELECTED: DraculaColors.BACKGROUND,
-                            },
-                            track_outline_color=DraculaColors.PINK,
-                            value=False,
-                            on_change=self.handle_switch,
-                            tooltip=ft.Tooltip(
-                                message="It saves automatically every 20 seconds."
-                            ),
-                        ),
+                        self.Custom_Switch(onswitch=self.handle_switch),
                     ],
                 ),
                 # "Various filter commands can be added to narrow down the massive pool of phone numbers."
@@ -317,15 +317,14 @@ class FiltersList(ft.Container):
         row.update()
 
     def handle_switch(self, e):
-        switch = e.control
-        if not isinstance(switch, ft.Switch):
+        if not isinstance(e, ft.Container):
             return
-        if not switch.value:
-            switch.badge = None
+        if e.data == "def":
+            e.badge = None
             return
-        self.page.run_task(self.auto_save, switch, 10)
+        self.page.run_task(self.auto_save, e, 10)
 
-    async def auto_save(self, sw: ft.Switch, time: int = 10):
+    async def auto_save(self, sw: ft.Container, time: int = 10):
         _time = time
         while _time != 0:
             await asyncio.sleep(2)
@@ -335,7 +334,7 @@ class FiltersList(ft.Container):
                 await self.saveTodict()
             if _time == 0:
                 _time = time
-            if not sw.value:
+            if sw.data == "def":
                 sw.badge = None
                 break
             sw.update()
@@ -366,9 +365,7 @@ class InputPad(ft.Container):
     def __init__(self):
         super().__init__()
         self.applycallback = None
-
         self.__FT_show = self.__load_FT_show()
-
         self.funcs_dc = {}
         self.target_pn = ["all"]
         self.pad_data = {"func": "", "target": "", "condition": ""}
@@ -376,9 +373,8 @@ class InputPad(ft.Container):
         self.visible = False
         self.padding = 0
         self.width = float("inf")
-        # width=400,
         self.border = ft.Border.all(1, DraculaColors.ORANGE)
-        self.bgcolor = DraculaColors.ORANGE
+        self.bgcolor = ft.Colors.with_opacity(0.8, DraculaColors.ORANGE)
         self.border_radius = 10
         self.content = self.__Pad()
 
@@ -414,13 +410,11 @@ class InputPad(ft.Container):
                     self.pad_data["func"] = script["func"]
                     self.pad_data["target"] = script["target"]
                     self.pad_data["condition"] = script["condition"]
-                    # logr.info(f"editPad {self.pad_data=} {text_spans[1].text=}")
                 case "__command_input":
                     if not isinstance(item, ft.TextField):
                         continue
                     item.value = script["condition"]
                 case "__apply_text":
-                    # logr.info('__apply_text.')
                     if not isinstance(item, ft.Row):
                         continue
                     if not isinstance(item.controls[0], ft.Chip):
@@ -505,7 +499,7 @@ class InputPad(ft.Container):
                     width=float("inf"),
                     bgcolor=ft.Colors.TRANSPARENT,
                     content=ft.Text(
-                        "This is a test plan designed to facilitate rapid data entry for filtering projects.",
+                        "💡This is a test plan designed to facilitate rapid data entry for filtering projects.",
                         color=DraculaColors.BACKGROUND,
                         size=12,
                         no_wrap=False,
@@ -530,105 +524,6 @@ class InputPad(ft.Container):
                 ),
             ],
         )
-
-    # region __Shadow_input
-
-    def __command_dict(self):
-        return {
-            re.compile(r"(\d+),$"): "{},",
-            re.compile(r"--$"): "z",
-            re.compile(r"--m$"): "3",
-            re.compile(r"--w$"): "{}{}{}",
-            re.compile(r"--w(\d+)$"): "{}{}{}",
-            re.compile(r"bi$"): "t",
-            re.compile(r"bit(\d+),$"): "{} ",
-            re.compile(r"mo$"): "d",
-            re.compile(r"ra$"): "nge ",
-            re.compile(r"ran$"): "ge ",
-        }
-
-    def __Automatic_append(self, numbers: list[int], format_str: str):
-        try:
-            if not numbers:
-                numbers = [0, 1, 2]
-                return format_str.format(*numbers)
-            else:
-                return format_str.format(*[x + 1 for x in numbers])
-        except:
-            numbers.append(numbers[-1] + 1)
-            return self.__Automatic_append(numbers, format_str)
-
-    def __shadow_input(self):
-        def add_quick(hint: str):
-            defquick = [x for x in self.quick_input.controls if x.key != "hint"]
-
-            new_hint = ft.Container(
-                key="hint",
-                content=ft.Text(f"{hint}", size=15, color=DraculaColors.PURPLE),
-                padding=ft.Padding(8, 2, 8, 2),
-                bgcolor=DraculaColors.CURRENT_LINE,
-                on_click=lambda _, k=hint: (
-                    setattr(
-                        self.input_field, "value", (self.input_field.value or "") + k
-                    ),
-                    self.input_field.update(),
-                ),
-            )
-            defquick.insert(0, new_hint)
-            self.quick_input.controls = defquick
-            self.quick_input.update()
-
-        def input_change(e):
-            val = self.input_field.value
-
-            # 1. 必须重置搜索位置和初始提示
-            self.search_pos = 0
-            # 2. 遍历命令库
-            for cmd_pattern, hint_template in self.__command_dict().items():
-                # 注意：cmd_pattern 应该是编译好的正则对象
-                search = cmd_pattern.search(val, pos=self.search_pos)
-
-                if search:
-                    start, end = search.span()
-                    # 3. 提取该匹配项内部或周边的数字 (根据需要调整)
-                    self.search_pos = end
-                    numbers = [int(x) for x in re.findall(r"\d+", val[start:end])]
-
-                    # 4. 尝试格式化提示
-                    try:
-                        formatted_hint = self.__Automatic_append(numbers, hint_template)
-                        # 5. 组合影子文字 (Prefix + Hint + Suffix)
-                        # self.hint_text.value = val[:start] + formatted_hint + val[end:]
-                        # self.input_field.suffix = formatted_hint
-                        logr.info(f"{formatted_hint=}")
-                        add_quick(formatted_hint)
-                        break  # 找到第一个匹配就退出，避免冲突
-                    except Exception as er:
-                        logr.error(f"Format error. {er}", exc_info=True)
-
-            self.pad_data["condition"] = val.strip()
-
-        self.input_field = ft.TextField(
-            key="__command_input",
-            label="Execute the script",
-            hint_text="exp: bit1,2 range 1,15 --z",
-            expand=1,
-            border=ft.InputBorder.UNDERLINE,
-            on_change=input_change,
-            # text_style=text_style,
-            # 移除默认内边距，方便对齐
-            content_padding=ft.Padding.all(0),
-            bgcolor=ft.Colors.TRANSPARENT,
-        )
-        return ft.Stack(
-            expand=True,
-            controls=[
-                # ft.Container(content=self.hint_text, padding=ft.padding.only(top=24)),
-                self.input_field,
-            ],
-        )
-
-    # endregion
 
     # region TextField
     def __command_input(self):

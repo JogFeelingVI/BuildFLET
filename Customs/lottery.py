@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-14 05:18:22
+# @Last Modified time: 2026-02-15 04:15:51
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -374,7 +374,7 @@ class itemC2plus(ft.Container):
             # height=size,
             # border_radius=size / 2,
             # alignment=ft.Alignment.CENTER,
-            on_click=onclick if onclick else None,
+            on_click=onclick,
         )
         return butter
 
@@ -490,13 +490,14 @@ class itemC2plus(ft.Container):
         """右滑逻辑：刷新数据"""
         logr.info("向右滑动：正在刷新数据...")
         self.refresh(name="refresh_data")
+        self.page.show_dialog(ft.SnackBar(f"handle refresh data."))
 
     def handle_delete(self, e):
         if self.is_refreshing or self.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
-        logr.info("点击了删除图标")
+        self.page.show_dialog(ft.SnackBar(f"handle delete."))
 
 
 # endregion
@@ -581,7 +582,6 @@ class itemsList(ft.Container):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
-
 
 # endregion
 
@@ -753,12 +753,6 @@ class LotteryPage:
     def get_data_view(self):
         return ft.Column(
             controls=[
-                # ft.Image(
-                #     src="lotter.png",
-                #     fit=ft.BoxFit.FIT_HEIGHT,
-                #     width=288 * 0.45,
-                #     height=131 * 0.45,
-                # ),
                 ft.Text(
                     "Lotter",
                     size=25,

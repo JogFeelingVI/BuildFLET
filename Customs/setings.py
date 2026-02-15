@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-14 02:27:56
+# @Last Modified time: 2026-02-15 04:08:33
 
 from .DraculaTheme import DraculaColors
 from .jackpot_core import randomData
@@ -471,11 +471,17 @@ class showRule(ft.Container):
 
 
 # region DefaultSettings
-class DefaultSettings(ft.Card):
+class DefaultSettings(ft.Container):
     """默认设置指示器"""
 
     def __init__(self):
         super().__init__()
+        self.width = float("inf")
+        self.border = ft.Border.all(
+            1, ft.Colors.with_opacity(0.6, DraculaColors.COMMENT)
+        )
+        self.bgcolor = ft.Colors.with_opacity(0.4, DraculaColors.COMMENT)
+        self.border_radius = 10
         self.content = self.__build_card()
         # self.apply_rule = {}
         self.render_filters = None
@@ -500,16 +506,7 @@ class DefaultSettings(ft.Card):
         if self.running:
             await asyncio.sleep(0.5)
 
-            add_rule = ft.Button(
-                bgcolor=DraculaColors.GREEN,
-                color=DraculaColors.BACKGROUND,
-                icon=ft.Icons.ADD_CIRCLE_OUTLINE,
-                content="new rule",
-                style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
-                tooltip=ft.Tooltip(message="new game rule"),
-                on_click=self.handle_add_rule,
-            )
-            button_list = [add_rule]
+            button_list = []
 
             # 注意：Lotter_Data 应该在函数外部定义或作为参数传入
             for k, item in Lotter_Data.items():
@@ -524,7 +521,7 @@ class DefaultSettings(ft.Card):
                         ),
                     )
                 )
-            self.content.content.controls = button_list
+            self.defrow.controls = button_list
             self.update()
 
     def handle_add_rule(self, e):
@@ -569,141 +566,190 @@ class DefaultSettings(ft.Card):
         self.page.session.store.set("settings", valid_json)
         if self.render_filters:
             self.render_filters()
+    
+    async def Regenerate_handle_click(self,e):
+        id = f"{randomData.generate_secure_string(8)}"
+        self.stored_id = os.path.join(app_temp_path, f"gen_{id}.dict")
+        filePath = pathlib.Path(self.stored_id)
+        for item in filePath.parent.iterdir():
+            if (
+                item.is_file() or item.is_symlink() and item.name.startswith("gen_")
+            ):  # 确保只删除文件
+                logr.info(f"Regenerate_id Delete {item.name}.")
+                item.unlink()
+        filePath.parent.mkdir(parents=True, exist_ok=True)
+        filePath.write_text("")
+        self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
 
     def __build_card(self):
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            border=ft.Border.all(1, DraculaColors.COMMENT),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=ft.Row(
-                controls=[],
-                spacing=2,
-                run_spacing=2,
-                wrap=True,
-                alignment=ft.MainAxisAlignment.START,
-            ),
+        self.defrow = ft.Row(
+            controls=[],
+            spacing=2,
+            run_spacing=2,
+            wrap=True,
+            alignment=ft.MainAxisAlignment.START,
         )
-
-
-# endregion
-
-
-# region UserDirectory
-class UserDirectory(ft.Card):
-    """用户目录指示器"""
-
-    __name__ = "UserDirectory"
-
-    def __init__(self):
-        super().__init__()
-        self.file_picker = ft.FilePicker()
-        self.stored_id = None
-        self.tips = ft.Text(
-            "💡 Tip: The app saves the filter path by default.",
-            color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
-            size=16,
-            max_lines=2,
-            # overflow=ft.TextOverflow.ELLIPSIS,
-            no_wrap=False,
+        add_rule = ft.Button(
+            bgcolor=DraculaColors.GREEN,
+            color=DraculaColors.BACKGROUND,
+            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+            content="new rule",
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
+            tooltip=ft.Tooltip(message="new game rule"),
+            on_click=self.handle_add_rule,
         )
-        self.Regenerate_id = ft.Button(
-            "Regenerate",
+        Regenerate = ft.Button(
+            bgcolor=DraculaColors.PINK,
+            color=DraculaColors.BACKGROUND,
             icon=ft.Icons.REFRESH,
-            color=DraculaColors.PINK,
-            style=ft.ButtonStyle(
-                side=ft.BorderSide(width=1, color=DraculaColors.PINK),
-                shape=ft.RoundedRectangleBorder(radius=5),
-                bgcolor={
-                    ft.ControlState.DEFAULT: ft.Colors.with_opacity(
-                        0.2, DraculaColors.PINK
+            content="Regenerate",
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
+            tooltip=ft.Tooltip(message="ID Regeneration"),
+            on_click=self.Regenerate_handle_click,
+        )
+        uibuttens = ft.Column(
+            spacing=0,
+            controls=[
+                ft.Container(
+                    padding=12,
+                    border_radius=10,
+                    bgcolor=DraculaColors.CRADBG,
+                    border=ft.Border(
+                        bottom=ft.BorderSide(
+                            1, ft.Colors.with_opacity(0.6, DraculaColors.COMMENT)
+                        ),  # 宽度为 3, 颜色为蓝色
                     ),
-                    ft.ControlState.HOVERED: ft.Colors.with_opacity(
-                        0.4, DraculaColors.PINK
-                    ),  # 悬停加深
-                },
-            ),
-            on_click=lambda _: self.page.run_task(self.Regenerate_id_work, True),
+                    width=float("inf"),
+                    content=self.defrow,
+                ),
+                ft.Container(
+                    padding=ft.Padding(12, 5, 12, 5),
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    content=ft.Row(
+                        controls=[Regenerate,add_rule],
+                        alignment=ft.MainAxisAlignment.END,
+                    ),
+                ),
+            ],
         )
-        self.content = self.__build_card()
-        self.count = 10
-
-    def did_mount(self):
-        self.running = True
-        try:
-            if not self.stored_id:
-                self.page.run_task(self.Checking_user_id)
-        except Exception as er:
-            logr.error(f"{self.__name__} running error.", {er})
-        finally:
-            logr.info(f"{self.__name__} running over.")
-
-    def will_unmount(self):
-        self.running = False
-
-    def __build_card(self):
-        return ft.Container(
-            padding=12,
-            # width=200,
-            width=float("inf"),
-            border=ft.Border.all(1, DraculaColors.PINK),
-            bgcolor=DraculaColors.CRADBG,
-            border_radius=10,
-            content=ft.Row(
-                controls=[
-                    self.tips,
-                    self.Regenerate_id,
-                ],
-                spacing=5,
-                wrap=True,
-                # tight=True,
-                alignment=ft.MainAxisAlignment.START,
-            ),
-        )
-
-    async def update_tips_value(self, text: str = None):
-        if not text:
-            return
-        self.tips.value = f"{text}"
-        self.tips.update()
-        await asyncio.sleep(2)
-
-    async def Checking_user_id(self):
-        if self.running:
-            await asyncio.sleep(0.5)  # 初始延迟，确保页面加载完成
-            temp = await ft.SharedPreferences().get("stored_id")
-            if temp:
-                self.stored_id = temp
-                await self.Regenerate_id_work(rgen=False)
-                logr.info(f"Found Storage id: {temp}")
-            else:
-                await self.Regenerate_id_work(rgen=True)
-
-    async def Regenerate_id_work(self, rgen=False):
-        self.Regenerate_id.badge = "F" if rgen else "T"
-        self.Regenerate_id.update()
-        if rgen:
-            id = f"{randomData.generate_secure_string(8)}"
-            self.stored_id = os.path.join(app_temp_path, f"gen_{id}.dict")
-            await ft.SharedPreferences().set("stored_id", self.stored_id)
-            filePath = pathlib.Path(self.stored_id)
-            for item in filePath.parent.iterdir():
-                if (
-                    item.is_file() or item.is_symlink() and item.name.startswith("gen_")
-                ):  # 确保只删除文件
-                    logr.info(f"Regenerate_id Delete {item.name}.")
-                    item.unlink()
-            filePath.parent.mkdir(parents=True, exist_ok=True)
-            filePath.write_text("")
-        showid = os.path.splitext(os.path.basename(self.stored_id))[0]
-        await self.update_tips_value(f"💡 ID: {showid}")
-        self.Regenerate_id.badge = None
-        self.Regenerate_id.update()
-        logr.info(f"Regenerate_id is over.")
-
-
+        return uibuttens
 # endregion
+
+
+# # region UserDirectory
+# class UserDirectory(ft.Card):
+#     """用户目录指示器"""
+
+#     __name__ = "UserDirectory"
+
+#     def __init__(self):
+#         super().__init__()
+#         self.file_picker = ft.FilePicker()
+#         self.stored_id = None
+#         self.tips = ft.Text(
+#             "💡 Tip: The app saves the filter path by default.",
+#             color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
+#             size=16,
+#             max_lines=2,
+#             # overflow=ft.TextOverflow.ELLIPSIS,
+#             no_wrap=False,
+#         )
+#         self.Regenerate_id = ft.Button(
+#             "Regenerate",
+#             icon=ft.Icons.REFRESH,
+#             color=DraculaColors.PINK,
+#             style=ft.ButtonStyle(
+#                 side=ft.BorderSide(width=1, color=DraculaColors.PINK),
+#                 shape=ft.RoundedRectangleBorder(radius=5),
+#                 bgcolor={
+#                     ft.ControlState.DEFAULT: ft.Colors.with_opacity(
+#                         0.2, DraculaColors.PINK
+#                     ),
+#                     ft.ControlState.HOVERED: ft.Colors.with_opacity(
+#                         0.4, DraculaColors.PINK
+#                     ),  # 悬停加深
+#                 },
+#             ),
+#             on_click=lambda _: self.page.run_task(self.Regenerate_id_work, True),
+#         )
+#         self.content = self.__build_card()
+#         self.count = 10
+
+#     def did_mount(self):
+#         self.running = True
+#         try:
+#             if not self.stored_id:
+#                 self.page.run_task(self.Checking_user_id)
+#         except Exception as er:
+#             logr.error(f"{self.__name__} running error.", {er})
+#         finally:
+#             logr.info(f"{self.__name__} running over.")
+
+#     def will_unmount(self):
+#         self.running = False
+
+#     def __build_card(self):
+#         return ft.Container(
+#             padding=12,
+#             # width=200,
+#             width=float("inf"),
+#             border=ft.Border.all(1, DraculaColors.PINK),
+#             bgcolor=DraculaColors.CRADBG,
+#             border_radius=10,
+#             content=ft.Row(
+#                 controls=[
+#                     self.tips,
+#                     self.Regenerate_id,
+#                 ],
+#                 spacing=5,
+#                 wrap=True,
+#                 # tight=True,
+#                 alignment=ft.MainAxisAlignment.START,
+#             ),
+#         )
+
+#     async def update_tips_value(self, text: str = None):
+#         if not text:
+#             return
+#         self.tips.value = f"{text}"
+#         self.tips.update()
+#         await asyncio.sleep(2)
+
+#     async def Checking_user_id(self):
+#         if self.running:
+#             await asyncio.sleep(0.5)  # 初始延迟，确保页面加载完成
+#             temp = await ft.SharedPreferences().get("stored_id")
+#             if temp:
+#                 self.stored_id = temp
+#                 await self.Regenerate_id_work(rgen=False)
+#                 logr.info(f"Found Storage id: {temp}")
+#             else:
+#                 await self.Regenerate_id_work(rgen=True)
+
+#     async def Regenerate_id_work(self, rgen=False):
+#         self.Regenerate_id.badge = "F" if rgen else "T"
+#         self.Regenerate_id.update()
+#         if rgen:
+#             id = f"{randomData.generate_secure_string(8)}"
+#             self.stored_id = os.path.join(app_temp_path, f"gen_{id}.dict")
+#             await ft.SharedPreferences().set("stored_id", self.stored_id)
+#             filePath = pathlib.Path(self.stored_id)
+#             for item in filePath.parent.iterdir():
+#                 if (
+#                     item.is_file() or item.is_symlink() and item.name.startswith("gen_")
+#                 ):  # 确保只删除文件
+#                     logr.info(f"Regenerate_id Delete {item.name}.")
+#                     item.unlink()
+#             filePath.parent.mkdir(parents=True, exist_ok=True)
+#             filePath.write_text("")
+#         showid = os.path.splitext(os.path.basename(self.stored_id))[0]
+#         await self.update_tips_value(f"💡 ID: {showid}")
+#         self.Regenerate_id.badge = None
+#         self.Regenerate_id.update()
+#         logr.info(f"Regenerate_id is over.")
+
+
+# # endregion
 
 
 # region SetingsPage
@@ -714,7 +760,7 @@ class SetingsPage:
         self.rule_mode_show = showRule()
         self.uese_input_mode = input_user_rule()
         self.default_setings = DefaultSettings()
-        self.User_Directory = UserDirectory()
+        # self.User_Directory = UserDirectory()
         self.apply_rule = {}
 
         self.uese_input_mode.setting_render_filters(self.render_filters)
@@ -773,7 +819,6 @@ class SetingsPage:
                 # ft.Row(controls=self.buttons, scroll=ft.ScrollMode.HIDDEN, expand=True),
                 # ft.Divider(),
                 self.rule_mode_show,
-                self.User_Directory,
                 self.default_setings,
                 self.uese_input_mode,
             ],
