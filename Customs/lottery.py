@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-15 04:15:51
+# @Last Modified time: 2026-02-15 14:44:31
 
 from .jackpot_core import randomData, filter_for_pabc
 from .SnackBar import get_snack_bar
@@ -21,7 +21,7 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
 # region serendipitousCapture
-class serendipitousCapture(ft.Card):
+class serendipitousCapture(ft.Container):
     """创建一个控件 用来使用列表拍照"""
 
     def __init__(self):
@@ -29,9 +29,15 @@ class serendipitousCapture(ft.Card):
         self.get_exp_all = None
         self.scshot = self.__build_exp()
         self.tips = self.__build_tips()
+
         self.content = self.__build__Container()
         self.visible = False
-        # self.width = 400
+        self.padding = 12
+        self.width = float("inf")
+        self.border = ft.Border.all(
+            1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
+        )
+        self.border_radius = 10
 
     def setting_get_exp_all(self, getexpall: list = None):
         self.get_exp_all = getexpall
@@ -204,22 +210,16 @@ class serendipitousCapture(ft.Card):
 
     def __build__Container(self):
         # 注意：这里 self.exp_list 已经是字符串或列表，逻辑保持你的不变
-        return ft.Container(
-            padding=12,
-            width=float("inf"),
-            # width=600,
-            border=ft.Border.all(1, DraculaColors.ORANGE),
-            border_radius=10,
-            content=ft.Column(
-                controls=[
-                    self.scshot,
-                    ft.Divider(),
-                    self.tips,
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-                tight=True,
-            ),
+        content = ft.Column(
+            controls=[
+                self.scshot,
+                ft.Divider(),
+                self.tips,
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            tight=True,
         )
+        return content
 
 
 # endregion
@@ -241,7 +241,10 @@ class itemC2plus(ft.Container):
 
         self.padding = 15
         self.border_radius = 10
-        self.bgcolor = DraculaColors.CRADBG
+        self.border = ft.Border.all(
+            1, ft.Colors.with_opacity(0.2, DraculaColors.COMMENT)
+        )
+        self.bgcolor = ft.Colors.with_opacity(0.4, DraculaColors.CRADBG)
         self.content = self.__build_content()
 
     def __build_tips(self):
@@ -310,7 +313,8 @@ class itemC2plus(ft.Container):
                 width=size,
                 height=size,
                 border_radius=size / 2,
-                padding=ft.Padding.all(5),
+                # padding=ft.Padding.all(5),
+                alignment=ft.Alignment.CENTER,
             )
             row.controls.append(item)
         return row
@@ -582,6 +586,7 @@ class itemsList(ft.Container):
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
+
 
 # endregion
 

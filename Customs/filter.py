@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-15 01:54:28
+# @Last Modified time: 2026-02-16 14:19:31
 
 
 from .ColorTokenizer import Tokenizer, spiltfortarget
@@ -373,8 +373,8 @@ class InputPad(ft.Container):
         self.visible = False
         self.padding = 0
         self.width = float("inf")
-        self.border = ft.Border.all(1, DraculaColors.ORANGE)
-        self.bgcolor = ft.Colors.with_opacity(0.8, DraculaColors.ORANGE)
+        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, DraculaColors.GREEN))
+        self.bgcolor = ft.Colors.with_opacity(0.3, DraculaColors.GREEN)
         self.border_radius = 10
         self.content = self.__Pad()
 
@@ -471,10 +471,12 @@ class InputPad(ft.Container):
         self.inputpad = ft.Container(
             padding=12,
             border_radius=10,
-            bgcolor=DraculaColors.CRADBG,
-            border=ft.Border(
-                top=ft.BorderSide(1, DraculaColors.ORANGE),  # 宽度为 3, 颜色为蓝色
-            ),
+            bgcolor=ft.Colors.with_opacity(0.6, DraculaColors.CRADBG),
+            # border=ft.Border(
+            #     top=ft.BorderSide(
+            #         1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
+            #     ),  # 宽度为 3, 颜色为蓝色
+            # ),
             width=float("inf"),
             content=ft.Column(
                 controls=[
