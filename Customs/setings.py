@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-16 14:21:16
+# @Last Modified time: 2026-02-17 15:13:06
 
-from .DraculaTheme import DraculaColors
+from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
 from dataclasses import dataclass, field
 from .loger import logr
@@ -94,6 +94,7 @@ class input_user_rule(ft.Container):
     def __init__(self):
         super().__init__()
         self.visible = False
+        self.bgX = RandColor()
         self.content = self.__build_card()
         self.render_filters = None
         self.row_name_char = 65
@@ -104,8 +105,8 @@ class input_user_rule(ft.Container):
             }
         }
         self.width = float("inf")
-        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, DraculaColors.PINK))
-        self.bgcolor = ft.Colors.with_opacity(0.6, DraculaColors.PINK)
+        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.bgX))
+        self.bgcolor = ft.Colors.with_opacity(0.6, self.bgX)
         self.border_radius = 10
 
     def setting_render_filters(self, render_filters=None):
@@ -135,7 +136,7 @@ class input_user_rule(ft.Container):
                     expand=1,
                     icon=ft.Icons.WINDOW,
                     style=ft.ButtonStyle(
-                        bgcolor=DraculaColors.PINK,
+                        bgcolor=self.bgX,
                         color=DraculaColors.BACKGROUND,
                         shape=ft.RoundedRectangleBorder(radius=5),
                     ),
@@ -205,7 +206,7 @@ class input_user_rule(ft.Container):
                 ft.Container(
                     border=ft.Border(
                         top=ft.BorderSide(
-                            1, ft.Colors.with_opacity(0.4, DraculaColors.PINK)
+                            1, ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND)
                         ),  # 宽度为 3, 颜色为蓝色
                     ),
                     bgcolor=ft.Colors.with_opacity(0.6, DraculaColors.CRADBG),
@@ -313,7 +314,7 @@ class showRulev2(ft.Container):
             return _offset
 
         def black():
-            color = f"#{random.randint(0, 0xFFFFFF):06x}"
+            color = RandColor()
             size = random.randint(5, 30)
             return ft.Container(
                 width=size,
@@ -403,34 +404,35 @@ class showRulev2(ft.Container):
             return
         self.neirong.controls = [
             self.display_note(randomDatax["note"]),
-            self.display_rules(randomDatax)
+            self.display_rules(randomDatax),
         ]
         self.neirong.update()
 
     def display_rules(self, pn: dict):
         rules = []
         for key, item in pn.items():
-            if f'{key}'.lower().startswith("p") and isinstance(item, dict):
+            if f"{key}".lower().startswith("p") and isinstance(item, dict):
                 # PA Number Selection Rules: Choose 5 out of 36.
-                if item['enabled'] == False:
+                if item["enabled"] == False:
                     continue
-                ranges = item.get('range_end',0)
-                count = item.get('count',0)
+                ranges = item.get("range_end", 0)
+                count = item.get("count", 0)
                 rules.append(
-                    ft.Text(value=f"{key} Number Selection Rules: Choose {count} out of {ranges}.",
-                    size=16,
-                    color=ft.Colors.with_opacity(
+                    ft.Text(
+                        value=f"{key} Number Selection Rules: Choose {count} out of {ranges}.",
+                        size=16,
+                        color=ft.Colors.with_opacity(
                             0.6, color=DraculaColors.FOREGROUND
-                        )
+                        ),
                     )
                 )
-                #end
+                # end
         example = randomData(seting=pn).get_exp()
         conter = ft.Container(
             padding=12,
             border_radius=10,
             width=float("inf"),
-            bgcolor=ft.Colors.with_opacity(0.1, "#6068DA"),
+            bgcolor=ft.Colors.with_opacity(0.1, RandColor()),
             content=ft.Column(
                 spacing=0,
                 tight=True,
@@ -456,13 +458,14 @@ class showRulev2(ft.Container):
             ),
         )
         return conter
-    
+
     def display_note(self, note: str):
         conter = ft.Container(
             padding=12,
             border_radius=10,
             width=float("inf"),
-            bgcolor=ft.Colors.with_opacity(0.3, "#8A1503"),
+            bgcolor=ft.Colors.with_opacity(0.3,RandColor()),
+            # blend_mode=ft.BlendMode.SCREEN,
             content=ft.Column(
                 spacing=0,
                 tight=True,
@@ -474,7 +477,7 @@ class showRulev2(ft.Container):
                             0.3, color=DraculaColors.FOREGROUND
                         ),
                     ),
-                    ft.Text(f'{note}', color=DraculaColors.FOREGROUND, size=16),
+                    ft.Text(f"{note}", color=DraculaColors.FOREGROUND, size=16),
                 ],
             ),
         )
@@ -514,216 +517,8 @@ class showRulev2(ft.Container):
             row.controls.append(item)
         return row
 
-
 # endregion
 
-
-# region showRule
-class showRule(ft.Container):
-    __name__ = "showRule"
-
-    def __init__(self):
-        super().__init__()
-        self.padding = 12
-        # expand=True,
-        # opacity=0.65,
-        self.width = float("inf")
-        self.border = ft.Border.all(1, DraculaColors.ORANGE)
-        self.bgcolor = DraculaColors.CRADBG
-        self.border_radius = 10
-        self.content = self.__build_card()
-
-    def did_mount(self):
-        self.running = True
-        try:
-            self.updateCard()
-        except Exception as er:
-            logr.error(f"{self.__name__} running error.", {er})
-        finally:
-            logr.info(f"{self.__name__} running over.")
-
-    def will_unmount(self):
-        self.running = False
-
-    def updateCard(self):
-        self.page.run_task(self.__update_card)
-
-    def get_lottery_text(self, exp: str):
-        spans = []
-        before, sep, after = exp.partition("+")
-        # logr.info([before.strip(), sep.strip(), after.strip()])
-        # 2. 匹配逻辑
-        match [before.strip(), sep.strip(), after.strip()]:
-            # 情况 A: 刚好两组数据（如 6+1 模式）
-            case [b, s, a] if len(b) > len(a) and s == "+":
-                # 第一组（红球）
-                spans.append(
-                    ft.TextSpan(
-                        b,
-                        ft.TextStyle(
-                            color=DraculaColors.RED,
-                            weight=ft.FontWeight.W_900,
-                            font_family="RacingSansOne-Regular",
-                        ),
-                    )
-                )
-                # 分隔符
-                spans.append(
-                    ft.TextSpan(
-                        f" {s} ",
-                        ft.TextStyle(
-                            color=DraculaColors.PURPLE,
-                            weight="W_900",
-                            font_family="RacingSansOne-Regular",
-                        ),
-                    )
-                )
-                # 第二组（紫/蓝球）
-                spans.append(
-                    ft.TextSpan(
-                        a,
-                        ft.TextStyle(
-                            color=DraculaColors.PURPLE,
-                            weight="W_900",
-                            font_family="RacingSansOne-Regular",
-                        ),
-                    )
-                )
-
-            # 情况 B: 多组数据（3组或更多）
-            case [b, s, a] if s == a == "" and b != a:
-                spans.append(
-                    ft.TextSpan(
-                        b,
-                        ft.TextStyle(
-                            color=DraculaColors.RED,
-                            weight="W_900",
-                            font_family="RacingSansOne-Regular",
-                        ),
-                    )
-                )
-        return ft.Text(
-            size=20,
-            spans=spans,
-        )
-
-    async def __load_json_setting(self):
-        apply_rule = self.page.session.store.get("settings")
-        if apply_rule:
-            return apply_rule
-        json_path = pathlib.Path(jackpot_seting)
-        if not json_path.exists():
-            return
-        try:
-            with json_path.open(mode="r", encoding="UTF-8") as r:
-                temp = json.load(r)
-                # logr.info(f'temp: {temp}')
-                self.page.session.store.set("settings", temp)
-                return temp
-        except Exception as er:
-            logr.error(f"__load_json_setting run error.", {er})
-            return
-
-    async def __update_card(self):
-        if not self.running:
-            return
-        await asyncio.sleep(0.5)
-        apply_rule = await self.__load_json_setting()
-        if not apply_rule:
-            return
-        # 在这里添加读写 json 文件的处理方式
-        logr.info(f"{apply_rule is None = }")
-        randomDatax = apply_rule.get("randomData", None)
-        if not randomDatax:
-            return
-        example = randomData(seting=randomDatax).get_exp()
-        # textlist = [LotteryBalls(example, 32, "LE"), ft.Divider()]
-        textlist = [self.get_lottery_text(example), ft.Divider()]
-        for key, item in randomDatax.items():
-            if key == "note":
-                textlist.append(
-                    ft.Text(
-                        f"{item}",
-                        size=15,
-                        weight="bold",
-                        color=DraculaColors.ORANGE,
-                        max_lines=2,
-                    )
-                )
-                continue
-            # logr.info(f'{key} {item} ==-==')
-            count_range = f"{item['range_start']} - {item['range_end']}"
-            count = item["count"]
-
-            textlist.append(
-                ft.Text(
-                    # f"Section [ {key} ].  Choose {count} number from {count_range}.",
-                    spans=[
-                        ft.TextSpan(
-                            f"{key}: ",
-                            style=ft.TextStyle(
-                                size=15,
-                                weight="bold",
-                                decoration_thickness=3,
-                            ),
-                        ),
-                        ft.TextSpan(
-                            f"Choose",
-                            style=ft.TextStyle(
-                                size=14,
-                                decoration_thickness=3,
-                                color=DraculaColors.CURRENT_LINE,
-                            ),
-                        ),
-                        ft.TextSpan(
-                            f" {count} ",
-                            style=ft.TextStyle(
-                                size=15,
-                                weight="bold",
-                                decoration_thickness=3,
-                            ),
-                        ),
-                        ft.TextSpan(
-                            f"number from",
-                            style=ft.TextStyle(
-                                size=14,
-                                decoration_thickness=3,
-                                color=DraculaColors.CURRENT_LINE,
-                            ),
-                        ),
-                        ft.TextSpan(
-                            f" {count_range} ",
-                            style=ft.TextStyle(
-                                size=15,
-                                weight="bold",
-                                decoration_thickness=3,
-                            ),
-                        ),
-                    ],
-                    max_lines=2,
-                    color=DraculaColors.PURPLE,
-                    size=15,
-                )
-            )
-        self.content.controls = textlist
-        self.update()
-
-    def __build_card(self):
-        logr.info("bulid card is running.")
-        return ft.Column(
-            tight=True,
-            controls=[
-                # LotteryBalls(exp, align="LE"),
-                # ft.Divider(),
-                # *textlist,
-                ft.Text(
-                    "💡Please add game rules. You can customize them using [new rule] or use the preset options."
-                ),
-            ],
-        )
-
-
-# endregion
 
 
 # region DefaultSettings
@@ -855,7 +650,7 @@ class DefaultSettings(ft.Container):
             on_click=self.handle_add_rule,
         )
         Regenerate = ft.Button(
-            bgcolor=DraculaColors.PINK,
+            bgcolor=ft.Colors.with_opacity(0.7, RandColor()),
             color=DraculaColors.BACKGROUND,
             icon=ft.Icons.REFRESH,
             content="Regenerate",

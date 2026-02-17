@@ -2,11 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-15 14:44:31
+# @Last Modified time: 2026-02-17 14:57:48
 
 from .jackpot_core import randomData, filter_for_pabc
-from .SnackBar import get_snack_bar
-from .DraculaTheme import DraculaColors
+from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
 import flet as ft
 import datetime
@@ -242,9 +241,9 @@ class itemC2plus(ft.Container):
         self.padding = 15
         self.border_radius = 10
         self.border = ft.Border.all(
-            1, ft.Colors.with_opacity(0.2, DraculaColors.COMMENT)
+            1, ft.Colors.with_opacity(0.2, DraculaColors.FOREGROUND)
         )
-        self.bgcolor = ft.Colors.with_opacity(0.4, DraculaColors.CRADBG)
+        self.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
         self.content = self.__build_content()
 
     def __build_tips(self):
@@ -254,28 +253,16 @@ class itemC2plus(ft.Container):
             size=13,
             color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
         )
-
-        def handle_animation_end(e):
-            if conta.offset == ft.Offset(0, 0):
-                conta.offset = ft.Offset(-0.5, 0)  # 向左移动自身宽度的 50%
-            else:
-                conta.offset = ft.Offset(0, 0)
-            conta.update()
-            # end
-
         conta = ft.Container(
             content=self.tips,
-            width=200,
             alignment=ft.Alignment.CENTER_RIGHT,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            border=ft.Border.only(
-                left=ft.BorderSide(5, ft.Colors.RED)  # 宽度为5的红色左边框
-            ),
+            # border=ft.Border.only(
+            #     left=ft.BorderSide(5, ft.Colors.RED)  # 宽度为5的红色左边框
+            # ),
             padding=ft.Padding.only(left=5),
             # 动画配置
-            animate_offset=ft.Animation(3000, ft.AnimationCurve.EASE_IN_OUT),
-            on_animation_end=handle_animation_end,
-            offset=ft.Offset(0, 0),
+            width=200,
         )
         return conta
 
@@ -313,7 +300,6 @@ class itemC2plus(ft.Container):
                 width=size,
                 height=size,
                 border_radius=size / 2,
-                # padding=ft.Padding.all(5),
                 alignment=ft.Alignment.CENTER,
             )
             row.controls.append(item)

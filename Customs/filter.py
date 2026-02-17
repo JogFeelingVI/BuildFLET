@@ -2,22 +2,18 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-16 14:19:31
+# @Last Modified time: 2026-02-17 14:52:18
 
 
-from .ColorTokenizer import Tokenizer, spiltfortarget
 from .jackpot_core import filterFunc
-from .SnackBar import get_snack_bar
-from .DraculaTheme import DraculaColors
-from .jackpot_core import randomData
+from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
 import flet as ft
 import os
 import json
-import re
 import asyncio
 import hashlib
-import random
+
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -29,10 +25,10 @@ class FilterChipV2(ft.Container):
     """高度定制 chip"""
 
     fontSize = 14
-    Alternative = ["#df6817", "#7a42b9", "#31935e"]
+    #! f"#{random.randint(0, 0xFFFFFF):06x}"
 
     def __init__(self, scd: dict, ondelete=None, onclick=None):
-        self.selectColor = random.choice(self.Alternative)
+        self.selectColor = RandColor()
         super().__init__(data=scd)
         self.padding = 5
         self.content = self.__build__content(scd)
