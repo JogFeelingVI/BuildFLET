@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-17 15:13:06
+# @Last Modified time: 2026-02-18 00:20:09
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -129,6 +129,9 @@ class input_user_rule(ft.Container):
                 ft.TextButton(
                     expand=1,
                     icon=ft.Icons.ADD_BOX,
+                    style=ft.ButtonStyle(
+                        color=self.bgX,
+                    ),
                     content="Add",
                     on_click=self.handle_add,
                 ),
@@ -137,7 +140,7 @@ class input_user_rule(ft.Container):
                     icon=ft.Icons.WINDOW,
                     style=ft.ButtonStyle(
                         bgcolor=self.bgX,
-                        color=DraculaColors.BACKGROUND,
+                        color=DraculaColors.FOREGROUND,
                         shape=ft.RoundedRectangleBorder(radius=5),
                     ),
                     content="Apply",
@@ -146,6 +149,9 @@ class input_user_rule(ft.Container):
                 ft.TextButton(
                     expand=1,
                     icon=ft.Icons.CANCEL,
+                    style=ft.ButtonStyle(
+                        color=self.bgX,
+                    ),
                     content="Cancel",
                     on_click=self.handle_Cancel,
                 ),
@@ -651,7 +657,7 @@ class DefaultSettings(ft.Container):
         )
         Regenerate = ft.Button(
             bgcolor=ft.Colors.with_opacity(0.7, RandColor()),
-            color=DraculaColors.BACKGROUND,
+            color=DraculaColors.FOREGROUND,
             icon=ft.Icons.REFRESH,
             content="Regenerate",
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),

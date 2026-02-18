@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-17 14:52:18
+# @Last Modified time: 2026-02-18 00:31:51
 
 
 from .jackpot_core import filterFunc
@@ -360,6 +360,7 @@ class FiltersList(ft.Container):
 class InputPad(ft.Container):
     def __init__(self):
         super().__init__()
+        self.bgx = RandColor()
         self.applycallback = None
         self.__FT_show = self.__load_FT_show()
         self.funcs_dc = {}
@@ -369,8 +370,9 @@ class InputPad(ft.Container):
         self.visible = False
         self.padding = 0
         self.width = float("inf")
-        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, DraculaColors.GREEN))
-        self.bgcolor = ft.Colors.with_opacity(0.3, DraculaColors.GREEN)
+        # self.width = 400
+        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.bgx))
+        self.bgcolor = ft.Colors.with_opacity(0.3, self.bgx)
         self.border_radius = 10
         self.content = self.__Pad()
 
@@ -451,7 +453,7 @@ class InputPad(ft.Container):
             spans.append(
                 ft.Container(
                     key=f"quick_{key}",
-                    content=ft.Text(f"{key}", size=17, color=DraculaColors.PURPLE),
+                    content=ft.Text(f"{key}", size=17, color=RandColor()),
                     padding=ft.Padding(5, 2, 5, 2),
                     on_click=lambda e, k=key: handle_tap(e, k),
                 )
@@ -498,7 +500,7 @@ class InputPad(ft.Container):
                     bgcolor=ft.Colors.TRANSPARENT,
                     content=ft.Text(
                         "💡This is a test plan designed to facilitate rapid data entry for filtering projects.",
-                        color=DraculaColors.BACKGROUND,
+                        color=DraculaColors.FOREGROUND,
                         size=12,
                         no_wrap=False,
                     ),
@@ -575,6 +577,7 @@ class InputPad(ft.Container):
     def __load_FT_show(self):
         return ft.Row(
             data="__load_FT_show",
+            tight=True,
             controls=[],
             wrap=True,
             spacing=2,
@@ -613,7 +616,7 @@ class InputPad(ft.Container):
                     padding=2,
                     label=f"{key}",
                     data=key,
-                    bgcolor=ft.Colors.TRANSPARENT,
+                    bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
                     leading=ft.Icon(ft.Icons.FUNCTIONS),
                     on_click=lambda _, k=key: function_click(k),
                 )
@@ -648,7 +651,7 @@ class InputPad(ft.Container):
                         padding=2,
                         label=f"{key}",
                         data=key,
-                        bgcolor=ft.Colors.TRANSPARENT,
+                        bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
                         leading=ft.Icon(ft.Icons.FACE),
                         on_click=lambda _, k=key: function_click(k),
                     )
