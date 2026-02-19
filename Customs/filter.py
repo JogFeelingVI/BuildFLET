@@ -2,9 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-18 00:31:51
+# @Last Modified time: 2026-02-19 10:06:51
 
 
+from re import U
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -577,7 +578,6 @@ class InputPad(ft.Container):
     def __load_FT_show(self):
         return ft.Row(
             data="__load_FT_show",
-            tight=True,
             controls=[],
             wrap=True,
             spacing=2,
@@ -597,6 +597,44 @@ class InputPad(ft.Container):
             self.applycallback(scriptd=self.pad_data)
         e.control.update()
 
+    def Cratefunc(self, key: str, onclick, iconindex: int = 0):
+        if not key or not onclick:
+            return
+        userColor = RandColor()
+        icon = ft.Container(
+            content=ft.Text(
+                f"{key[iconindex].upper()}",
+                size=10,
+                weight="bold",
+                color=userColor,
+                text_align=ft.TextAlign.CENTER,
+            ),
+            width=20,
+            height=20,
+            padding=2,
+            bgcolor=ft.Colors.with_opacity(0.5, userColor),
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, userColor)),
+            border_radius=10,
+            alignment=ft.Alignment.CENTER,
+        )
+        func = ft.Container(
+            data=f"{key}",
+            padding=5,
+            bgcolor=ft.Colors.with_opacity(0.3, userColor),
+            border_radius=5,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.4, userColor)),
+            on_click=lambda _, k=key: onclick(k),
+            content=ft.Row(
+                tight=True,
+                spacing=2,
+                controls=[
+                    icon,
+                    ft.Text(f"{key}", size=14, color=userColor),
+                ],
+            ),
+        )
+        return func
+
     def handle_func_click(self, e):
         def function_click(k):
             if isinstance(e.control, ft.TextSpan):
@@ -611,16 +649,7 @@ class InputPad(ft.Container):
 
         fun_items = []
         for key, item in self.funcs_dc.items():
-            fun_items.append(
-                ft.Chip(
-                    padding=2,
-                    label=f"{key}",
-                    data=key,
-                    bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
-                    leading=ft.Icon(ft.Icons.FUNCTIONS),
-                    on_click=lambda _, k=key: function_click(k),
-                )
-            )
+            fun_items.append(self.Cratefunc(key, function_click))
         self.__FT_show.controls = fun_items
         self.__FT_show.visible = True
 
@@ -646,16 +675,7 @@ class InputPad(ft.Container):
             # ? target_pn 已经装载执行下面
             target_pn_items = []
             for key in self.target_pn:
-                target_pn_items.append(
-                    ft.Chip(
-                        padding=2,
-                        label=f"{key}",
-                        data=key,
-                        bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
-                        leading=ft.Icon(ft.Icons.FACE),
-                        on_click=lambda _, k=key: function_click(k),
-                    )
-                )
+                target_pn_items.append(self.Cratefunc(key, function_click, 1))
             self.__FT_show.controls = target_pn_items
             self.__FT_show.visible = True
         except Exception as e:

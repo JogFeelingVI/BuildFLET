@@ -470,7 +470,7 @@ class showRulev2(ft.Container):
             padding=12,
             border_radius=10,
             width=float("inf"),
-            bgcolor=ft.Colors.with_opacity(0.3,RandColor()),
+            bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
             # blend_mode=ft.BlendMode.SCREEN,
             content=ft.Column(
                 spacing=0,
@@ -523,8 +523,8 @@ class showRulev2(ft.Container):
             row.controls.append(item)
         return row
 
-# endregion
 
+# endregion
 
 
 # region DefaultSettings
