@@ -95,7 +95,7 @@ class Photograph(ft.Container):
         self.update()
 
     def CreateItem(self, text: str = "", i=0):
-        userColor = RandColor(mode="Glass")
+        userColor = RandColor(mode="def")
         item = (
             ft.Container(
                 padding=5,
@@ -213,7 +213,6 @@ class Photograph(ft.Container):
 
 
 # endregion
-
 
 
 # region itemC2plus

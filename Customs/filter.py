@@ -2,10 +2,12 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-19 10:06:51
+# @Last Modified time: 2026-02-20 14:32:15
 
 
 from re import U
+
+from annotated_types import T
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -434,9 +436,12 @@ class InputPad(ft.Container):
             "bit",
             "range",
             "mod",
+            "x",
+            "x,y",
+            "list",
         ]
 
-        def handle_tap(e, k: str):
+        def handle_tap(e, k):
             tfvp = self.input_field.value
 
             if k.lower() not in tfvp:
@@ -446,7 +451,7 @@ class InputPad(ft.Container):
                     self.input_field.value += f"{k}"
                 else:
                     self.input_field.value += f" {k}"
-
+            
             logr.info(f"tap {k}")
 
         spans = []
@@ -467,6 +472,19 @@ class InputPad(ft.Container):
 
     def __Pad(self):
         """Add, Apply, Cancel"""
+        self.builder_list = []
+        self.builder = ft.Container(
+            padding=12,
+            border_radius=10,
+            bgcolor=ft.Colors.with_opacity(0.4, DraculaColors.CRADBG),
+            width=float("inf"),
+            content=ft.Row(
+                spacing=5,
+                run_spacing=5,
+                wrap=True,
+                controls=self.builder_list,
+            ),
+        )
         self.inputpad = ft.Container(
             padding=12,
             border_radius=10,
@@ -482,6 +500,7 @@ class InputPad(ft.Container):
                     self.__load_funxtarget(),
                     self.__FT_show,
                     # ft.Divider(),
+                    # self.builder,
                     self.__command_input(),
                     # self.__shadow_input(),
                     self.__quick_input(),
@@ -532,13 +551,16 @@ class InputPad(ft.Container):
             if not isinstance(e.control, ft.TextField):
                 return
             self.pad_data["condition"] = f"{e.control.value}".strip()
+            logr.info(f"input change {self.pad_data=}")
 
         self.input_field = ft.TextField(
             data="__command_input",
-            label="Execute the script",
             hint_text="exp: bit1,2 range 1,15 --z",
+            bgcolor=ft.Colors.with_opacity(0.2, DraculaColors.COMMENT),
             expand=1,
-            border=ft.InputBorder.UNDERLINE,
+            border=ft.InputBorder.NONE,
+            dense=True,
+            content_padding=ft.Padding.all(0),
             on_change=input_change,
         )
         return self.input_field
@@ -587,6 +609,7 @@ class InputPad(ft.Container):
 
     def handle_apply_click(self, e):
         if "" in self.pad_data.values():
+            self.page.show_dialog(ft.SnackBar("pad_data contains null values."))
             return
         if not isinstance(e.control, ft.Chip):
             return
@@ -620,7 +643,7 @@ class InputPad(ft.Container):
         func = ft.Container(
             data=f"{key}",
             padding=5,
-            bgcolor=ft.Colors.with_opacity(0.3, userColor),
+            bgcolor=ft.Colors.with_opacity(0.1, userColor),
             border_radius=5,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.4, userColor)),
             on_click=lambda _, k=key: onclick(k),
