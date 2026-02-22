@@ -2,12 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-20 14:32:15
+# @Last Modified time: 2026-02-22 17:33:59
 
 
-from re import U
-
-from annotated_types import T
+from .pad import paditem, quickpad
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -411,10 +409,12 @@ class InputPad(ft.Container):
                     self.pad_data["func"] = script["func"]
                     self.pad_data["target"] = script["target"]
                     self.pad_data["condition"] = script["condition"]
-                case "__command_input":
-                    if not isinstance(item, ft.TextField):
+                case "__quickpad__":
+                    if not isinstance(item, quickpad):
                         continue
-                    item.value = script["condition"]
+                    self.quickpad.clear_items()
+                    self.quickpad.add_item(script["condition"])
+                    # item.value = script["condition"]
                 case "__apply_text":
                     if not isinstance(item, ft.Row):
                         continue
@@ -429,39 +429,32 @@ class InputPad(ft.Container):
 
     # region quick input
     def __quick_input(self):
-        quick = [
-            ">",
-            "<",
-            "--",
-            "bit",
-            "range",
-            "mod",
-            "x",
-            "x,y",
-            "list",
-        ]
+        quick = {
+            ">": ">{n}",
+            "<": "<{n}",
+            "bit1": "bit{n}",
+            "bit1,2": "bit{n},{n}",
+            "mod": "mod{n}",
+            "range": "range {n},{n}",
+            "list": "{n+}",
+            "--": "--{m}",
+            "DEL": "DEL",
+        }
 
-        def handle_tap(e, k):
-            tfvp = self.input_field.value
-
-            if k.lower() not in tfvp:
-                if tfvp.endswith(" "):
-                    self.input_field.value += f"{k}"
-                elif tfvp == "":
-                    self.input_field.value += f"{k}"
-                else:
-                    self.input_field.value += f" {k}"
-            
-            logr.info(f"tap {k}")
+        def handle_tap(item:str):
+            if item=="DEL":
+                self.quickpad.pop_item(-1)
+            else:
+                self.quickpad.add_item(item)
 
         spans = []
-        for key in quick:
+        for key, item in quick.items():
             spans.append(
                 ft.Container(
                     key=f"quick_{key}",
                     content=ft.Text(f"{key}", size=17, color=RandColor()),
                     padding=ft.Padding(5, 2, 5, 2),
-                    on_click=lambda e, k=key: handle_tap(e, k),
+                    on_click=lambda _,item=item: handle_tap(item),
                 )
             )
         self.quick_input = ft.Row(
@@ -485,6 +478,7 @@ class InputPad(ft.Container):
                 controls=self.builder_list,
             ),
         )
+        self.quickpad = quickpad()
         self.inputpad = ft.Container(
             padding=12,
             border_radius=10,
@@ -499,10 +493,8 @@ class InputPad(ft.Container):
                 controls=[
                     self.__load_funxtarget(),
                     self.__FT_show,
-                    # ft.Divider(),
-                    # self.builder,
-                    self.__command_input(),
-                    # self.__shadow_input(),
+                    self.quickpad,
+                    # self.__command_input(),
                     self.__quick_input(),
                     # ft.Divider(),
                     self.__apply_text(),
@@ -608,6 +600,8 @@ class InputPad(ft.Container):
         )
 
     def handle_apply_click(self, e):
+        allcmds = self.quickpad.all_command()
+        self.pad_data["condition"] = allcmds.strip()
         if "" in self.pad_data.values():
             self.page.show_dialog(ft.SnackBar("pad_data contains null values."))
             return
@@ -665,7 +659,8 @@ class InputPad(ft.Container):
                 e.control.data = k
                 self.__FT_show.visible = False
                 self.pad_data["func"] = f"{k}".strip()
-                self.input_field.value = ""
+                # self.input_field.value = ""
+                self.quickpad.clear_items()
 
         if self.funcs_dc.__len__() == 0:
             self.funcs_dc = dict(sorted(filterFunc.getFuncName().items()))
