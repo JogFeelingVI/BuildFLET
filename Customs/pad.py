@@ -16,9 +16,9 @@ __version__ = "0.1.0"
 class paditem(ft.Container):
     def __init__(self, text: str):
         super().__init__()
-        self.userColor = RandColor()
+        self.userColor = RandColor(mode="Morandi")
         self.padding = ft.Padding(10, 5, 10, 5)
-        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.userColor))
+        # self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.userColor))
         self.border_radius = 5
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content_row()
@@ -150,7 +150,7 @@ class quickpad(ft.Container):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.data = "__quickpad__"
-        self.userColor = RandColor()
+        self.userColor = RandColor(mode="Morandi")
         self.width = float("inf")  # 设置宽度为无限，充满父容器
         self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.userColor))
         self.border_radius = 10

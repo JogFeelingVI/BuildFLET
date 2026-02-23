@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-19 14:01:57
+# @Last Modified time: 2026-02-23 03:05:25
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -228,13 +228,13 @@ class itemC2plus(ft.Container):
         self.fontSize = 25
         self.selected = False
         # 参数
-
+        self.userColor = RandColor()
         self.padding = 15
         self.border_radius = 10
         self.border = ft.Border.all(
-            1, ft.Colors.with_opacity(0.2, DraculaColors.FOREGROUND)
+            1, ft.Colors.with_opacity(0.4, self.userColor)
         )
-        self.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
+        self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
 
     def __build_tips(self):
@@ -242,7 +242,7 @@ class itemC2plus(ft.Container):
             value="Please wait...",
             no_wrap=True,
             size=13,
-            color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
+            color=ft.Colors.with_opacity(0.7, DraculaColors.FOREGROUND),
         )
         conta = ft.Container(
             content=self.tips,
@@ -259,7 +259,7 @@ class itemC2plus(ft.Container):
 
     def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
         self.tips.value = f"{value}"
-        self.tips.color = ft.Colors.with_opacity(0.5, color)
+        self.tips.color = ft.Colors.with_opacity(0.7, color)
         self.tips.tooltip = ft.Tooltip(message=f"{value}")
         # self.tips.update()
 
@@ -329,7 +329,7 @@ class itemC2plus(ft.Container):
             # e.control.selected = not e.control.selected
             # e.control.update()
             self.selected = not self.selected
-            self.check.bgcolor = DraculaColors.GREEN if self.selected else None
+            self.check.bgcolor = ft.Colors.with_opacity(0.6,DraculaColors.GREEN) if self.selected else None
             self.check.update()
             logr.info(f"{self.selected}")
             # end
@@ -350,7 +350,7 @@ class itemC2plus(ft.Container):
     def __build_Butter(self, size=30, icon=ft.Icons.REFRESH, onclick=None):
         butter = ft.Container(
             # padding=5,
-            content=ft.Icon(icon, color=DraculaColors.FOREGROUND, size=size),
+            content=ft.Icon(icon, color=self.userColor, size=size),
             # width=size,
             # height=size,
             # border_radius=size / 2,
@@ -378,10 +378,10 @@ class itemC2plus(ft.Container):
                     controls=[
                         self.__build_tips(),
                         self.__build_Butter(
-                            30, ft.Icons.REFRESH, self.handle_refresh_data
+                            26, ft.Icons.REFRESH, self.handle_refresh_data
                         ),
                         self.__build_Butter(
-                            30, ft.Icons.DELETE_FOREVER, self.handle_delete
+                            26, ft.Icons.DELETE_FOREVER, self.handle_delete
                         ),
                         self.__build__badge(text="0"),
                     ],

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-21 00:25:31
+# @Last Modified time: 2026-02-23 02:44:32
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -207,7 +207,7 @@ class input_user_rule(ft.Container):
                 ft.Container(
                     alignment=ft.Alignment.CENTER_LEFT,
                     padding=ft.Padding(12, 5, 12, 5),
-                    content=ft.Text("Add new game rules.", size=16),
+                    content=ft.Text("Add new game rules.", size=16, color=DraculaColors.BACKGROUND),
                 ),
                 ft.Container(
                     border=ft.Border(
@@ -533,6 +533,7 @@ class DefaultSettings(ft.Container):
 
     def __init__(self):
         super().__init__()
+        self.userColor = RandColor()
         self.width = float("inf")
         self.border = ft.Border.all(
             1, ft.Colors.with_opacity(0.6, DraculaColors.COMMENT)
@@ -543,6 +544,7 @@ class DefaultSettings(ft.Container):
         # self.apply_rule = {}
         self.render_filters = None
         self.add_rule = None
+        
 
     def setting_add_rule(self, add_rule=None):
         self.add_rule = add_rule
@@ -656,8 +658,8 @@ class DefaultSettings(ft.Container):
             on_click=self.handle_add_rule,
         )
         Regenerate = ft.Button(
-            bgcolor=ft.Colors.with_opacity(0.7, RandColor()),
-            color=DraculaColors.FOREGROUND,
+            bgcolor=ft.Colors.with_opacity(0.7, self.userColor),
+            color=DraculaColors.BACKGROUND,
             icon=ft.Icons.REFRESH,
             content="Regenerate",
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=8)),
