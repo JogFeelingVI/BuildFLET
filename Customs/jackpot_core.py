@@ -604,8 +604,7 @@ class filterFunc:
         if maxVale in Number_for_args:
             return True
         return False
-    
-    
+
     @staticmethod
     def min(pabc: LotteryData, args: str, target: str):
         if target == "all":
@@ -617,7 +616,7 @@ class filterFunc:
         if minVale in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def lianhao(pabc: LotteryData, args: str, target: str):
         if target == "all":
@@ -629,7 +628,7 @@ class filterFunc:
         if _lh in Number_for_args:
             return True
         return False
-    
+
     @staticmethod
     def xiangsidu(pabc: LotteryData, args: str, target: str):
         if target == "all":

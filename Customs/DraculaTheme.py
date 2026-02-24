@@ -31,18 +31,18 @@ def RandColor(mode="def", is_dark_theme=True):
     is_dark_theme: 如果为 True，将确保颜色足够亮以在深色背景下显示
     """
     h = random.random()  # 色相 (0.0 - 1.0)
-    
+
     # 根据色相调整初始亮度补偿
     # 蓝色 (0.55-0.7) 和紫色 (0.7-0.8) 需要更高的亮度补偿
     hue_step = 0.0
-    if 0.5 <= h <= 0.85: # 蓝色到紫色区间
-        hue_step = 0.15 
-    elif h < 0.1 or h > 0.9: # 红色区间
+    if 0.5 <= h <= 0.85:  # 蓝色到紫色区间
+        hue_step = 0.15
+    elif h < 0.1 or h > 0.9:  # 红色区间
         hue_step = 0.05
 
     match mode:
         case "Morandi":
-            s = random.uniform(0.25, 0.45) # 稍微提高一点点饱和度下限
+            s = random.uniform(0.25, 0.45)  # 稍微提高一点点饱和度下限
             # 深色模式下，Morandi 需要更高的亮度才能透出来
             l = random.uniform(0.65, 0.8) + hue_step
         case "Neon":
@@ -57,7 +57,7 @@ def RandColor(mode="def", is_dark_theme=True):
 
     # 最终约束：确保亮度不会超过 0.95 导致变白，也不会低于 0.6 导致看不清
     l = max(0.65 if is_dark_theme else 0.2, min(l, 0.95))
-    
+
     # HLS 转换为 RGB
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     hex_color = "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))

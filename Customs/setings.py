@@ -207,7 +207,9 @@ class input_user_rule(ft.Container):
                 ft.Container(
                     alignment=ft.Alignment.CENTER_LEFT,
                     padding=ft.Padding(12, 5, 12, 5),
-                    content=ft.Text("Add new game rules.", size=16, color=DraculaColors.BACKGROUND),
+                    content=ft.Text(
+                        "Add new game rules.", size=16, color=DraculaColors.BACKGROUND
+                    ),
                 ),
                 ft.Container(
                     border=ft.Border(
@@ -544,7 +546,6 @@ class DefaultSettings(ft.Container):
         # self.apply_rule = {}
         self.render_filters = None
         self.add_rule = None
-        
 
     def setting_add_rule(self, add_rule=None):
         self.add_rule = add_rule
@@ -638,6 +639,7 @@ class DefaultSettings(ft.Container):
                 item.unlink()
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
+        await ft.SharedPreferences().set("stored_id", self.stored_id)
         self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
 
     def __build_card(self):

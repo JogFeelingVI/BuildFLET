@@ -179,11 +179,11 @@ class quickpad(ft.Container):
         """清理项目"""
         self.conten_row.controls.clear()
         self.conten_row.update()
-        
-    def pop_item(self,index:int=-1):
+
+    def pop_item(self, index: int = -1):
         self.conten_row.controls.pop(index)
         self.conten_row.update()
-        
+
     def all_command(self):
         """获取所有项目的指令"""
         cmds = []
@@ -191,26 +191,28 @@ class quickpad(ft.Container):
             if isinstance(item, paditem):
                 cmds.append(item.command())
         return " ".join(cmds)
-    
-    def replacement(self, text:str=None):
+
+    def replacement(self, text: str = None):
         """替换所有项目的指令"""
         if "{" in text and "}" in text:
             return text
-        subs = re.compile(r'(--)([a-zA-Z0-9]+)|(\d+(?:,\d+)+)|(\d+)')
+        subs = re.compile(r"(--)([a-zA-Z0-9]+)|(\d+(?:,\d+)+)|(\d+)")
+
         def replace_func(match):
             # 1. 处理 --w012789 模式
             if match.group(1):
                 return f"{match.group(1)}{{{match.group(2)}}}"
-            
+
             # 2. 处理 4,5,6 这种逗号序列模式
             elif match.group(3):
                 return f"{{{match.group(3)}}}"
-            
+
             # 3. 处理单个数字模式
             elif match.group(4):
                 return f"{{{match.group(4)}}}"
-            
+
             return match.group(0)
+
         return subs.sub(replace_func, text)
 
     def add_item(self, text: str):

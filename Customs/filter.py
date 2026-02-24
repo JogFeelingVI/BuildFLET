@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-22 17:33:59
+# @Last Modified time: 2026-02-24 14:20:46
 
 
 from .pad import paditem, quickpad
@@ -194,6 +194,7 @@ class FiltersList(ft.Container):
             controls.remove(e_chip)
             self.filtersAll.remove(e_script)
             self.filtersAll_change = "del"
+            self.filter_data_task()
 
         def editForE(e):
             if self.filtersAll_change == "edit":
@@ -212,6 +213,7 @@ class FiltersList(ft.Container):
                 self.add_closed_stat()
             e_chip.update()
             self.filtersAll_change = "edit"
+            self.filter_data_task()
 
         self.filtersAll.append(_scd)
         controls.append(
@@ -441,8 +443,8 @@ class InputPad(ft.Container):
             "DEL": "DEL",
         }
 
-        def handle_tap(item:str):
-            if item=="DEL":
+        def handle_tap(item: str):
+            if item == "DEL":
                 self.quickpad.pop_item(-1)
             else:
                 self.quickpad.add_item(item)
@@ -454,7 +456,7 @@ class InputPad(ft.Container):
                     key=f"quick_{key}",
                     content=ft.Text(f"{key}", size=17, color=RandColor()),
                     padding=ft.Padding(5, 2, 5, 2),
-                    on_click=lambda _,item=item: handle_tap(item),
+                    on_click=lambda _, item=item: handle_tap(item),
                 )
             )
         self.quick_input = ft.Row(
@@ -745,7 +747,13 @@ class CommandList(ft.Container):
                     1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
                 )
             conter.update()
-            # end
+        
+        def handle_onclick(e):
+            if oncilck:
+                self.page.run_task(oncilck, e)
+            # Event(name='hover', data=True)
+            handle_hover(ft.Event(name="hover",control=conter, data=False))
+        # end
 
         conter = ft.Container(
             width=size,
@@ -767,7 +775,7 @@ class CommandList(ft.Container):
                 ],
             ),
             on_hover=handle_hover,
-            on_click=oncilck,
+            on_click=handle_onclick,
         )
         return conter
 
@@ -819,7 +827,7 @@ class CommandList(ft.Container):
     def setting_filte_add_item(self, filterAddItem=None):
         self.filterAddItem = filterAddItem
 
-    def handle_add(self, e):
+    async def handle_add(self, e):
         if self.running and self.addcallback:
             self.addcallback()
             icon, text = self.addclose.content.controls
@@ -830,6 +838,7 @@ class CommandList(ft.Container):
                 else:
                     text.value = "ADD"
                     icon.icon = ft.Icons.ADD
+            self.addclose.update()
 
     async def handle_Save(self, e):
         # region update save badge

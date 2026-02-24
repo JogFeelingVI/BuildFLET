@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-23 03:05:25
+# @Last Modified time: 2026-02-24 13:35:56
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -231,9 +231,7 @@ class itemC2plus(ft.Container):
         self.userColor = RandColor()
         self.padding = 15
         self.border_radius = 10
-        self.border = ft.Border.all(
-            1, ft.Colors.with_opacity(0.4, self.userColor)
-        )
+        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.userColor))
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
 
@@ -295,6 +293,10 @@ class itemC2plus(ft.Container):
             )
             row.controls.append(item)
         return row
+    
+    def setting_adjust_position(self, adjustposition:None):
+        self.adjust_position = adjustposition
+        logr.info(f'setting adjustposition.')
 
     def did_mount(self):
         if not self.running and not self.is_refreshing and self.state_exp != "done":
@@ -329,9 +331,17 @@ class itemC2plus(ft.Container):
             # e.control.selected = not e.control.selected
             # e.control.update()
             self.selected = not self.selected
-            self.check.bgcolor = ft.Colors.with_opacity(0.6,DraculaColors.GREEN) if self.selected else None
-            self.check.update()
-            logr.info(f"{self.selected}")
+            self.check.bgcolor = (
+                ft.Colors.with_opacity(0.6, DraculaColors.GREEN)
+                if self.selected
+                else None
+            )
+            rows:ft.Column = self.content
+            rows.controls[1].visible = not self.selected
+            if self.adjust_position and self.selected:
+                self.adjust_position(self)
+                logr.info("adjust_position is self.")
+            self.update()
             # end
 
         self.check = ft.Container(
@@ -507,6 +517,15 @@ class itemsList(ft.Container):
             ft.PagePlatform.IOS,
         ]
         self.max_item = 10 if is_mobile_or_web else 1000
+        
+    def adjust_position(self, item:itemC2plus):
+        if not item:
+            return
+        control:ft.Column = self.content
+        control.controls.remove(item)
+        control.controls.insert(0,item)
+        control.update()
+        logr.info("adjust_position is Done.")
 
     def add_itemc2(self, itemc2remove=None):
         control = self.content
@@ -518,9 +537,9 @@ class itemsList(ft.Container):
         ].__len__()
         if itemc2_len < self.max_item:
             temp = itemC2plus()
+            temp.setting_adjust_position(self.adjust_position)
             temp.setting_Itemc2_Remove(itemc2remove)
             control.controls.append(temp)
-            logr.info("Add itemC2plus")
             self.update()
 
     def all_refresh(self):
@@ -615,7 +634,13 @@ class commandList(ft.Container):
                     1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
                 )
             conter.update()
-            # end
+            
+        def handle_onclick(e):
+            if oncilck:
+                oncilck(e)
+            # Event(name='hover', data=True)
+            handle_hover(ft.Event(name="hover",control=conter, data=False))
+        # end
 
         conter = ft.Container(
             width=size,
@@ -637,7 +662,7 @@ class commandList(ft.Container):
                 ],
             ),
             on_hover=handle_hover,
-            on_click=oncilck,
+            on_click=handle_onclick,
         )
         return conter
 
@@ -661,16 +686,16 @@ class commandList(ft.Container):
             scroll=ft.ScrollMode.HIDDEN,
         )
 
-    def handle_export(self):
+    def handle_export(self,e):
         if self.shot_capture:
             self.page.run_task(self.shot_capture)
 
-    def handle_add(self):
+    def handle_add(self,e):
         """执行add"""
         if self.item_list_add and self.itemc2remove:
             self.item_list_add(self.itemc2remove)
 
-    def handle_refresh(self):
+    def handle_refresh(self,e):
         if self.all_refresh:
             self.all_refresh()
 
