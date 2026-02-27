@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-25 14:54:50
+# @Last Modified time: 2026-02-27 07:30:00
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -354,6 +354,10 @@ class showRulev2(ft.Container):
     async def loadpage(self):
         if self.runloadpage:
             await asyncio.sleep(0.2)
+            for _b in self.Stack.controls:
+                if _b.data == "_black":
+                    _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
+                    _b.update()
             return
 
         def offset():
@@ -365,20 +369,24 @@ class showRulev2(ft.Container):
             color = RandColor()
             size = random.randint(5, 30)
             return ft.Container(
+                data="_black",
                 width=size,
                 height=size,
                 bgcolor=ft.Colors.with_opacity(0.2, color),
                 border_radius=size / 2,
                 offset=ft.Offset(**offset()),
-                # animate=ft.Animation(10000,ft.AnimationCurve.SLOW_MIDDLE),
+                opacity=random.uniform(0.3, 1),
+                animate=300,
             )
 
-        for i in range(70):
-            tempblack = black()
-            self.Stack.controls.insert(0, tempblack)
-            self.Stack.update()
-            await asyncio.sleep(0.2)
+        [self.Stack.controls.insert(0, black()) for _ in range(70)]
+        await asyncio.sleep(0.2)
         self.runloadpage = True
+        self.Stack.update()
+        for _b in self.Stack.controls:
+            if _b.data == "_black":
+                _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
+                _b.update()
 
     def __build_content(self):
         """pass"""
@@ -388,6 +396,7 @@ class showRulev2(ft.Container):
             color=ft.Colors.with_opacity(0.6, DraculaColors.GREEN),
         )
         self.neirong = ft.Column(
+            data="_neirong",
             tight=True,
             alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.START,
@@ -481,6 +490,7 @@ class showRulev2(ft.Container):
             border_radius=10,
             width=float("inf"),
             bgcolor=ft.Colors.with_opacity(0.1, RandColor()),
+            animate=ft.Animation(600, ft.AnimationCurve.EASE),
             content=ft.Column(
                 spacing=0,
                 tight=True,
@@ -514,6 +524,7 @@ class showRulev2(ft.Container):
             width=float("inf"),
             bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
             # blend_mode=ft.BlendMode.SCREEN,
+            animate=ft.Animation(600, ft.AnimationCurve.EASE),
             content=ft.Column(
                 spacing=0,
                 tight=True,

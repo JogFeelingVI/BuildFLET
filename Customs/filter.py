@@ -37,23 +37,20 @@ class FilterChipV2(ft.Container):
         self.border_radius = 8
         # 2. 设置边框：宽度和颜色
         self.border = ft.Border.all(1, self.ColorOpx(0.3))
-        # self.on_hover = self.handle_hover
+        self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
         self.ondelete = ondelete
         self.onclick = onclick
+        self.on_hover = self.handle_hover
 
     def handle_right_hover(self, e):
         if e.data:
             self.Cright.content = ft.Icon(
                 ft.Icons.DELETE_FOREVER, color=self.ColorOpx(1)
             )
-            self.border = ft.Border.all(1, self.ColorOpx(1))
-            self.bgcolor = self.ColorOpx(0.4)
         else:
             self.Cright.content = ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.3))
-            self.border = ft.Border.all(1, self.ColorOpx(0.3))
-            self.bgcolor = self.ColorOpx(0.1)
 
-    def handle_left_hover(self, e):
+    def handle_hover(self, e):
         if e.data:
             self.border = ft.Border.all(1, self.ColorOpx(1))
             self.bgcolor = self.ColorOpx(0.4)
@@ -105,7 +102,7 @@ class FilterChipV2(ft.Container):
                         ],
                     ),
                     on_click=self.handle_left_click,
-                    on_hover=self.handle_left_hover,
+                    # on_hover=self.handle_left_hover,
                 ),
                 right := ft.Container(
                     padding=0,
@@ -765,6 +762,7 @@ class CommandList(ft.Container):
             alignment=ft.Alignment.CENTER,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
             border_radius=8,
+            animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,

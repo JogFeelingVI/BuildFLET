@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-25 08:26:26
+# @Last Modified time: 2026-02-27 08:24:45
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -96,23 +96,41 @@ class Photograph(ft.Container):
 
     def CreateItem(self, text: str = "", i=0):
         userColor = RandColor(mode="def")
+        asize = 18
         item = (
             ft.Container(
                 padding=5,
                 border=ft.Border.all(1, ft.Colors.with_opacity(0.4, userColor)),
-                bgcolor=ft.Colors.with_opacity(0.2, userColor),
+                bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
                 content=ft.Row(
                     wrap=True,
                     width=float("inf"),
                     spacing=5,
                     controls=[
+                        # ft.Text(f"{chr(65 + i)}:"),
+                        ft.Container(
+                            content=ft.Text(
+                                f"{chr(65 + i)}",
+                                size=asize * 0.6,
+                                text_align=ft.TextAlign.CENTER,
+                                color=DraculaColors.FOREGROUND,
+                            ),
+                            alignment=ft.Alignment.CENTER,
+                            border_radius=asize / 2,
+                            border=ft.Border.all(
+                                1, ft.Colors.with_opacity(0.8, userColor)
+                            ),
+                            bgcolor=ft.Colors.with_opacity(0.2, userColor),
+                            width=asize,
+                            height=asize,
+                        ),
                         ft.Text(
-                            f"{chr(65 + i)}: {text}",
-                            size=18,
+                            f"{text}",
+                            size=asize,
                             weight=ft.FontWeight.BOLD,
                             color=userColor,
-                            font_family="RacingSansOne-Regular",
+                            # font_family="RacingSansOne-Regular",
                             # style=ft.TextStyle(
                             #     shadow=ft.BoxShadow(
                             #         blur_radius=1,  # 模糊程度，数值越大越像发光
@@ -219,7 +237,7 @@ class Photograph(ft.Container):
 class itemC2plus(ft.Container):
     def __init__(self):
         super().__init__()
-        self.timeout = 30
+        self.timeout = 60
         self.threshold = 120
         self.is_refreshing = False
         self.running = False
@@ -227,6 +245,7 @@ class itemC2plus(ft.Container):
         self.Itemc2_remove = None
         self.fontSize = 25
         self.selected = False
+        self.displayshow_msg = ""
         # 参数
         self.userColor = RandColor()
         self.padding = 15
@@ -234,6 +253,7 @@ class itemC2plus(ft.Container):
         self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.userColor))
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
+        self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
 
     def __build_tips(self):
         self.tips = ft.Text(
@@ -259,7 +279,24 @@ class itemC2plus(ft.Container):
         self.tips.value = f"{value}"
         self.tips.color = ft.Colors.with_opacity(0.7, color)
         self.tips.tooltip = ft.Tooltip(message=f"{value}")
-        # self.tips.update()
+        self.tips.update()
+
+    def displayshow(self, msg: str, size=35):
+        self.displayshow_msg = msg
+        text = ft.Text(
+            value=f"{msg}",
+            size=size * 0.5,
+            weight=ft.FontWeight.BOLD,
+            color=ft.Colors.with_opacity(0.7, RandColor()),
+        )
+        row = ft.Row(
+            wrap=False,
+            scroll=ft.ScrollMode.HIDDEN,
+            expand=True,
+            spacing=5,
+            controls=[text],
+        )
+        return row
 
     def displayNumbers(self, text: str, size: int = 35):
         """用环形标示 标识出数字"""
@@ -377,7 +414,7 @@ class itemC2plus(ft.Container):
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     expand=1,
                     controls=[
-                        shownumber := self.displayNumbers("05 06 07"),
+                        shownumber := self.displayshow("initialization"),
                         self.__build_check(),
                     ],
                 ),
@@ -434,7 +471,10 @@ class itemC2plus(ft.Container):
                     break  # 成功后直接跳出循环
                 else:
                     # 失败但未达到上限，更新 UI 并稍作等待
-                    self.showNumber.controls = self.displayNumbers(tempd).controls
+                    if self.displayshow_msg != "Please wait...":
+                        self.showNumber.controls = self.displayshow(
+                            "Please wait..."
+                        ).controls
                     # self.showNumber.color = DraculaColors.ORANGE
                     self.buildBadge.content.value = f"{count}"
                     self.tips_value(
@@ -447,6 +487,9 @@ class itemC2plus(ft.Container):
                 count += 1
                 elapsed_time = time.time() - start_time
                 if elapsed_time >= self.timeout:
+                    self.showNumber.controls = self.displayshow(
+                        f"Time out {elapsed_time:.4f}"
+                    ).controls
                     self.tips_value(
                         "Count is max_retries, work stoping.", DraculaColors.RED
                     )
@@ -651,6 +694,7 @@ class commandList(ft.Container):
             alignment=ft.Alignment.CENTER,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
             border_radius=8,
+            animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,
