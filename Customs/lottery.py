@@ -2,7 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-27 08:24:45
+# @Last Modified time: 2026-02-27 09:53:38
+
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -13,6 +14,8 @@ import os
 import asyncio
 import time
 import re
+import random
+import requests
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -758,24 +761,106 @@ class lucktips(ft.Container):
         self.width = float("inf")
         self.padding = 10
         self.content = self.__build_tips()
+        self.cooldown_seconds = 900
+
+    def fetch_random_quote(self):
+        """同步方法：负责请求数据和解析数据"""
+        # 优化2：将 API URL 和对应的解析逻辑封装在一起，方便扩展
+        api_sources = [
+            {
+                "name": "Hitokoto",
+                "url": "https://v1.hitokoto.cn",
+                # 解析 hitokoto 的 JSON
+                "parse": lambda d: (
+                    f"{d.get('hitokoto', 'no motto')} —— {d.get('from_who') or 'Unknown'}"
+                ),
+            },
+            {
+                "name": "DummyJSON (英文)",
+                "url": "https://dummyjson.com/quotes/random",
+                "parse": lambda d: f'{d.get("quote", "No content")} —— {d.get("author", "Unknown")}'
+            },
+            {
+                "name": "ZenQuotes (英文)",
+                "url": "https://zenquotes.io/api/random",
+                "parse": lambda d: f'{d[0].get("q", "No content")} —— {d[0].get("a", "Unknown")}' if isinstance(d, list) and len(d) > 0 else "Parse Error"
+            }
+        ]
+
+        # 随机选择一个 API
+        source = random.choice(api_sources)
+        logr.info(f"Selected Quote API: {source['name']} - URL: {source['url']}")
+
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(source["url"],headers=headers, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+
+            # 使用对应 API 的解析函数提取文字
+            return source["parse"](data)
+
+        except Exception as ex:
+            logr.error(f"Quote API Error ({source['name']}): {ex}")
+            # 请求失败时返回默认兜底文案
+            return "愿你所有的好运都不期而遇，愿你所有的努力都有岁月的温柔回馈。✨"
+
+    def did_mount(self):
+        self.running = True
+        self.page.run_task(self.motto_loop)
+
+    def will_unmount(self):
+        self.running = False
+
+    async def motto_loop(self):
+        """异步循环任务：更新数据并等待 15 分钟"""
+        while self.running:
+            last_fetch_time = self.page.session.store.get("lucktips_last_time") or 0
+            cached_quote = self.page.session.store.get("lucktips_last_text")
+            current_time = time.time()
+            elapsed_time = current_time - last_fetch_time
+            if elapsed_time >= self.cooldown_seconds or not cached_quote:
+                # 触发真实网络请求
+                info = await asyncio.to_thread(self.fetch_random_quote)
+                
+                # 更新 Session 缓存（记录新的时间和内容）
+                self.page.session.store.set("lucktips_last_time", time.time())
+                self.page.session.store.set("lucktips_last_text", info)
+            else:
+                # 时间没到，直接使用缓存的句子
+                info = cached_quote
+
+            # 直接更新文本控件并刷新组件
+            self.motto.value = info
+            self.motto.update()
+            last_fetch_time = self.page.session.store.get("lucktips_last_time")
+            remaining_seconds = int((last_fetch_time + self.cooldown_seconds) - time.time())
+            
+            # 防止出现负数或 0 死循环
+            if remaining_seconds <= 0:
+                remaining_seconds = 1
+
+            # 开始倒计时休眠，随时监听 self.running 以便在页面切换时打断休眠
+            for _ in range(remaining_seconds):
+                if not self.running:
+                    return # 页面被切走，直接结束当前组件的后台循环
+                await asyncio.sleep(1)
 
     def __build_text(self, text: str = "Luck word."):
-        return ft.Text(
+        self.motto = ft.Text(
             value=f"{text}",
             size=15,
             color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
             max_lines=2,
         )
+        return self.motto
 
     def __build_tips(self):
         content = ft.Column(
             controls=[
                 self.__build_text(
                     "愿你所有的好运都不期而遇，愿你所有的努力都有岁月的温柔回馈。✨"
-                ),
-                self.__build_text(
-                    "May all the good luck come to you unexpectedly, and may all your hard work be rewarded with the gentleness of time. 🕊️"
-                ),
+                )
             ],
         )
         return content
