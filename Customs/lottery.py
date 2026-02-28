@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-27 09:53:38
+# @Last Modified time: 2026-02-28 12:21:28
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -248,7 +248,6 @@ class itemC2plus(ft.Container):
         self.Itemc2_remove = None
         self.fontSize = 25
         self.selected = False
-        self.displayshow_msg = ""
         # 参数
         self.userColor = RandColor()
         self.padding = 15
@@ -257,6 +256,11 @@ class itemC2plus(ft.Container):
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
+        
+    def handle_hover(self,e):
+        opac = 0.1 if not e.data else 0.3
+        self.bgcolor = ft.Colors.with_opacity(opac, self.userColor)
+        self.update()
 
     def __build_tips(self):
         self.tips = ft.Text(
@@ -285,7 +289,6 @@ class itemC2plus(ft.Container):
         self.tips.update()
 
     def displayshow(self, msg: str, size=35):
-        self.displayshow_msg = msg
         text = ft.Text(
             value=f"{msg}",
             size=size * 0.5,
@@ -336,11 +339,12 @@ class itemC2plus(ft.Container):
 
     def setting_adjust_position(self, adjustposition: None):
         self.adjust_position = adjustposition
-        logr.info(f"setting adjustposition.")
+        # logr.info(f"setting adjustposition.")
 
     def did_mount(self):
         if not self.running and not self.is_refreshing and self.state_exp != "done":
-            self.refresh(name="did_mount")
+            # self.refresh(name="did_mount")
+            self.page.run_task(self.SearchForData, name="did_mount")
 
     def will_unmount(self):
         self.running = False
@@ -357,7 +361,7 @@ class itemC2plus(ft.Container):
             padding=ft.Padding(8, 5, 8, 5),
             # width=size,
             # height=size,
-            bgcolor=DraculaColors.RED,
+            border=ft.Border.all(1, DraculaColors.RED),
             border_radius=size / 2,  # 半径设为宽高的一半即为正圆
             # alignment=ft.Alignment.CENTER,  # 确保图标在内部居中
         )
@@ -454,16 +458,21 @@ class itemC2plus(ft.Container):
     async def SearchForData(self, name: str):
         logr.info(f"SearchForData {name}")
         self.is_refreshing = True
-        count = 0
-        time
         await asyncio.sleep(0.5)
         start_time = time.time()
         try:
+            self.showNumber.controls = self.displayshow("Please wait...").controls
+            self.buildBadge.content.value = "0"
+            self.tips_value("We are searching diligently, please wait...", DraculaColors.ORANGE)
+            self.showNumber.update()
+            self.buildBadge.update()
             while True:
-                # 1. 使用 to_thread 运行耗时计算，防止界面卡死
+                # 使用 to_thread 运行耗时计算，防止界面卡死
                 # 假设 calculate_lottery 是普通的同步函数
                 # tempd, state = await asyncio.to_thread(self.calculate_lottery)
                 tempd, state = await asyncio.to_thread(self.calculate_lottery)
+                current_time = time.time()
+                elapsed_time = current_time - start_time
                 if state:
                     # 成功情况
                     self.tempd = tempd
@@ -473,35 +482,20 @@ class itemC2plus(ft.Container):
                     self.update()
                     break  # 成功后直接跳出循环
                 else:
-                    # 失败但未达到上限，更新 UI 并稍作等待
-                    if self.displayshow_msg != "Please wait...":
-                        self.showNumber.controls = self.displayshow(
-                            "Please wait..."
-                        ).controls
-                    # self.showNumber.color = DraculaColors.ORANGE
-                    self.buildBadge.content.value = f"{count}"
-                    self.tips_value(
-                        "We are searching diligently, please wait...",
-                        DraculaColors.ORANGE,
-                    )
-                    self.state_exp = "ref"
-                    self.update()
-                    await asyncio.sleep(0.1)  # 给 CPU 喘息时间，也让 UI 有机会渲染
-                count += 1
-                elapsed_time = time.time() - start_time
-                if elapsed_time >= self.timeout:
-                    self.showNumber.controls = self.displayshow(
-                        f"Time out {elapsed_time:.4f}"
-                    ).controls
-                    self.tips_value(
-                        "Count is max_retries, work stoping.", DraculaColors.RED
-                    )
-                    self.state_exp = "none"
-                    self.update()
-                    break
+                    if elapsed_time >= self.timeout:
+                        self.showNumber.controls = self.displayshow(f"Timeout after {elapsed_time:.2f}s").controls
+                        self.tips_value("Search timeout, work stopped.", DraculaColors.RED)
+                        self.state_exp = "timeout"
+                        self.update()
+                        break
+                self.buildBadge.content.value = f"{elapsed_time:.2f}"
+                self.buildBadge.update()
+                await asyncio.sleep(0.3) 
         except Exception as e:
             # 显示错误/超时界面
+            logr.error(f"Error in SearchForData: {str(e)}", exc_info=True)
             self.tips_value("Program execution error.", DraculaColors.YELLOW)
+            self.state_exp = "error"
             self.update()
         finally:
             self.is_refreshing = False
