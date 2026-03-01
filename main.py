@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-28 12:32:14
+# @Last Modified time: 2026-03-01 00:52:04
 
 from Customs.DraculaTheme import DraculaColors
 from Customs.setings import SetingsPage
@@ -46,29 +46,28 @@ async def main(page: ft.Page):
     )
 
     logr.info(f"Initialization complete.")
+    
+    view_map = {
+        0:SetingsPage(),
+        1:FilterPage(),
+        2:LotteryPage(),
+    }
 
     # --- 页面逻辑控制 ---
     def on_navigation_change(e):
         index = e.control.selected_index
-        # 切换中间的内容区域
-        if index == 0:
-            content_area.content = setting_class.view
-        elif index == 1:
-            content_area.content = filter_class.view
-        elif index == 2:
-            content_area.content = lottery_class.view
-        page.update()
-
-    setting_class = SetingsPage()
-
-    filter_class = FilterPage()
-
-    lottery_class = LotteryPage()
+        nonlocal view_map
+        
+        # 2. 切换内容
+        if index in view_map:
+            content_area.content = view_map[index].view
+            # 3. 关键优化：只 update 这个容器，不要 page.update()！
+            content_area.update()
 
     # --- 2. 界面组件定义 ---
     # 中间显示区域容器
     content_area = ft.Container(
-        content=setting_class.view,  # 默认显示设置页
+        content=view_map[0].view,  # 默认显示设置页
         expand=True,
         padding=5,
     )

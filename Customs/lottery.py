@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-28 12:21:28
+# @Last Modified time: 2026-03-01 00:30:01
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -257,11 +257,6 @@ class itemC2plus(ft.Container):
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
         
-    def handle_hover(self,e):
-        opac = 0.1 if not e.data else 0.3
-        self.bgcolor = ft.Colors.with_opacity(opac, self.userColor)
-        self.update()
-
     def __build_tips(self):
         self.tips = ft.Text(
             value="Please wait...",
@@ -345,11 +340,12 @@ class itemC2plus(ft.Container):
         if not self.running and not self.is_refreshing and self.state_exp != "done":
             # self.refresh(name="did_mount")
             self.page.run_task(self.SearchForData, name="did_mount")
+        self.running = True
 
     def will_unmount(self):
         self.running = False
 
-    def __build__badge(self, size: int = 20, text: str = "111"):
+    def __build__badge(self, size: int = 20, text: str = "0"):
         self.buildBadge = ft.Container(
             content=ft.Text(
                 f"{text}",
@@ -430,7 +426,7 @@ class itemC2plus(ft.Container):
                     spacing=5,
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
-                        self.__build_tips(),
+                        # self.__build_tips(),
                         self.__build_Butter(
                             26, ft.Icons.REFRESH, self.handle_refresh_data
                         ),
@@ -462,10 +458,8 @@ class itemC2plus(ft.Container):
         start_time = time.time()
         try:
             self.showNumber.controls = self.displayshow("Please wait...").controls
-            self.buildBadge.content.value = "0"
-            self.tips_value("We are searching diligently, please wait...", DraculaColors.ORANGE)
-            self.showNumber.update()
-            self.buildBadge.update()
+            # self.tips_value("We are searching diligently, please wait...", DraculaColors.ORANGE)
+            self.update()
             while True:
                 # 使用 to_thread 运行耗时计算，防止界面卡死
                 # 假设 calculate_lottery 是普通的同步函数
@@ -477,24 +471,27 @@ class itemC2plus(ft.Container):
                     # 成功情况
                     self.tempd = tempd
                     self.showNumber.controls = self.displayNumbers(tempd).controls
-                    self.tips_value("Search successful.", DraculaColors.GREEN)
+                    # self.tips_value("Search successful.", DraculaColors.GREEN)
                     self.state_exp = "done"
+                    self.buildBadge.content.value = f"{elapsed_time:.2f}"
                     self.update()
                     break  # 成功后直接跳出循环
                 else:
                     if elapsed_time >= self.timeout:
                         self.showNumber.controls = self.displayshow(f"Timeout after {elapsed_time:.2f}s").controls
-                        self.tips_value("Search timeout, work stopped.", DraculaColors.RED)
+                        # self.tips_value("Search timeout, work stopped.", DraculaColors.RED)
                         self.state_exp = "timeout"
+                        self.buildBadge.content.value = f"{elapsed_time:.2f}"
                         self.update()
                         break
-                self.buildBadge.content.value = f"{elapsed_time:.2f}"
-                self.buildBadge.update()
+                    if self.running:
+                        self.buildBadge.content.value = f"{elapsed_time:.2f}"
+                        self.update()
                 await asyncio.sleep(0.3) 
         except Exception as e:
             # 显示错误/超时界面
             logr.error(f"Error in SearchForData: {str(e)}", exc_info=True)
-            self.tips_value("Program execution error.", DraculaColors.YELLOW)
+            # self.tips_value("Program execution error.", DraculaColors.YELLOW)
             self.state_exp = "error"
             self.update()
         finally:
@@ -584,7 +581,7 @@ class itemsList(ft.Container):
             control.controls.append(temp)
             self.update()
 
-    def all_refresh(self):
+    async def all_refresh(self):
         """全部刷新"""
         control = self.content
         if not isinstance(control, ft.Column):
@@ -594,6 +591,7 @@ class itemsList(ft.Container):
         for item in itemc2_all:
             if item.selected == False:
                 item.refresh(name="all_refresh")
+                await asyncio.sleep(0.2)
 
     def get_item_exp(self):
         """"""
@@ -741,7 +739,7 @@ class commandList(ft.Container):
 
     def handle_refresh(self, e):
         if self.all_refresh:
-            self.all_refresh()
+            self.page.run_task(self.all_refresh)
 
 
 # endregion
