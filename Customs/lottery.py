@@ -466,8 +466,8 @@ class itemC2plus(ft.Container):
             padding=ft.Padding(8, 5, 8, 5),
             # width=size,
             # height=size,
-            border=ft.Border.all(1, DraculaColors.RED),
-            border_radius=size / 2,  # 半径设为宽高的一半即为正圆
+            # border=ft.Border.all(1, DraculaColors.RED),
+            # border_radius=size / 2,  # 半径设为宽高的一半即为正圆
             # alignment=ft.Alignment.CENTER,  # 确保图标在内部居中
         )
         return self.buildBadge

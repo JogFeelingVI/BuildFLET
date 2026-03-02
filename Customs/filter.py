@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-02 03:29:44
+# @Last Modified time: 2026-03-02 06:28:53
 
 
 from .pad import paditem, quickpad
@@ -852,24 +852,12 @@ class CommandList(ft.Container):
             self.addclose.update()
 
     async def handle_Save(self, e):
-        # region update save badge
-        async def update_e(e, msg=None):
-            e_control: ft.TextButton = e.control
-            if not isinstance(e_control, ft.TextButton):
-                return
-            e_control.badge = f"{msg}"
-            e_control.update()
-            await asyncio.sleep(3)
-            e_control.badge = None
-            e_control.update()
-
-        # endregion
         try:
             stored_id = await ft.SharedPreferences().get("stored_id")
             logr.info(f"stored_id: {stored_id}")
             if not stored_id:
                 logr.error("ID not found.")
-                await update_e(e, "NF")
+                self.page.show_dialog(ft.SnackBar(f"ID not found."))
                 return
             save_path = None
             is_mobile_or_web = self.page.web or self.page.platform in [
@@ -894,10 +882,10 @@ class CommandList(ft.Container):
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
-            await update_e(e, "done")
+                self.page.show_dialog(ft.SnackBar(f"Desktop file save complete."))
         except Exception as er:
             logr.error(f"handle_Save error: {save_path}. {er}", exc_info=True)
-            await update_e(e, "error")
+            self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path}. {er}."))
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
