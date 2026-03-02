@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-02 06:28:53
+# @Last Modified time: 2026-03-02 06:42:25
 
 
 from .pad import paditem, quickpad
@@ -896,21 +896,21 @@ class CommandList(ft.Container):
         def confirm_clear(e):
             if self.filter_clear_all:
                 self.filter_clear_all()
+                self.page.session.store.set("filters", [])
             self.page.pop_dialog()
 
         confirm_dialog = ft.AlertDialog(
             modal=True,  # 模态对话框，必须点击按钮才能关闭
-            title=ft.Text("Confirm operation", size=16, color=DraculaColors.ORANGE),
+            title=ft.Text("Confirm operation", size=16, color=RandColor()),
             content=ft.Container(
                 padding=12,
                 width=400,
-                border=ft.Border.only(bottom=ft.BorderSide(1, DraculaColors.RED)),
                 content=ft.Row(
                     wrap=True,
                     controls=ft.Text(
                         value="Are you sure you want to clear all filters? This operation cannot be undone after it has been performed?",
                         size=15,
-                        color=DraculaColors.RED,
+                        color=RandColor(),
                     ),
                 ),
             ),
@@ -918,13 +918,13 @@ class CommandList(ft.Container):
                 ft.TextButton(
                     "NO",
                     on_click=cancel_clear,
-                    style=ft.ButtonStyle(color=DraculaColors.FOREGROUND),
+                    style=ft.ButtonStyle(color=RandColor()),
                 ),
                 # 确定按钮用红色突出显示危险操作
                 ft.TextButton(
                     "YES",
                     on_click=confirm_clear,
-                    style=ft.ButtonStyle(color=DraculaColors.RED),
+                    style=ft.ButtonStyle(color=RandColor()),
                 ),
             ],
             actions_alignment=ft.MainAxisAlignment.END,  # 按钮靠右对齐

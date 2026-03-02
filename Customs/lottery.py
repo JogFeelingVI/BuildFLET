@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-02 02:20:53
+# @Last Modified time: 2026-03-02 09:10:35
 
-
+from .Savedialogbox import savedialog
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -20,221 +20,6 @@ import requests
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-
-
-# region Photograph
-
-
-class Photograph(ft.Container):
-    def __init__(self):
-        super().__init__()
-        self.content = self.__build__Container()
-        self.visible = False
-        self.padding = 12
-        self.width = float("inf")
-        self.border = ft.Border.all(
-            1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
-        )
-        self.border_radius = 10
-
-    def did_mount(self):
-        self.running = True
-        # print(f"Photograph did_mount. {self.running=}")
-        self.initialization()
-
-    def will_unmount(self):
-        self.running = False
-
-    def setting_get_exp_all(self, getexpall: list = None):
-        self.get_exp_all = getexpall
-
-    async def update_tips(self, text: str = ""):
-        self.tips.value = f"{text}"
-        self.tips.update()
-        await asyncio.sleep(1)
-
-    def initialization(self):
-        is_mobile_or_web = self.page.web or self.page.platform in [
-            ft.PagePlatform.ANDROID,
-            ft.PagePlatform.IOS,
-        ]
-        self.conter.width = 400 if is_mobile_or_web else float("inf")
-
-    def contentlist(self):
-        self.neirong = ft.Column(
-            tight=True,
-            controls=[ft.Text("Photograph", size=16, color=RandColor())],
-        )
-        conters = ft.Container(
-            padding=12,
-            width=float("inf"),
-            border=ft.Border(
-                top=ft.BorderSide(1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)),
-                bottom=ft.BorderSide(
-                    1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
-                ),
-            ),
-            blend_mode=ft.BlendMode.OVERLAY,
-            content=self.neirong,
-        )
-        return conters
-
-    def footer(self):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        self.genid = randomData.generate_secure_string(8)
-        return ft.Row(
-            controls=[
-                ft.Text(f"{now}-{self.genid}", size=14, color=DraculaColors.ORANGE)
-            ],
-            alignment=ft.MainAxisAlignment.END,
-        )
-
-    async def espcap_windows(self):
-        count = 3
-        while count > 0:
-            await self.update_tips(f"The window will close in {count} seconds.")
-            count -= 1
-        self.visible = False
-        self.update()
-
-    def CreateItem(self, text: str = "", i=0):
-        userColor = RandColor(mode="def")
-        asize = 18
-        item = (
-            ft.Container(
-                padding=5,
-                border=ft.Border.all(1, ft.Colors.with_opacity(0.4, userColor)),
-                bgcolor=ft.Colors.with_opacity(0.1, userColor),
-                border_radius=5,
-                content=ft.Row(
-                    wrap=True,
-                    width=float("inf"),
-                    spacing=5,
-                    controls=[
-                        # ft.Text(f"{chr(65 + i)}:"),
-                        ft.Container(
-                            content=ft.Text(
-                                f"{chr(65 + i)}",
-                                size=asize * 0.6,
-                                text_align=ft.TextAlign.CENTER,
-                                color=DraculaColors.FOREGROUND,
-                            ),
-                            alignment=ft.Alignment.CENTER,
-                            border_radius=asize / 2,
-                            border=ft.Border.all(
-                                1, ft.Colors.with_opacity(0.8, userColor)
-                            ),
-                            bgcolor=ft.Colors.with_opacity(0.2, userColor),
-                            width=asize,
-                            height=asize,
-                        ),
-                        ft.Text(
-                            f"{text}",
-                            size=asize,
-                            weight=ft.FontWeight.BOLD,
-                            color=userColor,
-                            # font_family="RacingSansOne-Regular",
-                            # style=ft.TextStyle(
-                            #     shadow=ft.BoxShadow(
-                            #         blur_radius=1,  # 模糊程度，数值越大越像发光
-                            #         color=ft.Colors.with_opacity(
-                            #             0.2, "#ffffff"
-                            #         ),  # 阴影颜色
-                            #         offset=ft.Offset(1, 1),  # 阴影偏移量 (x, y)
-                            #     )
-                            # ),
-                        ),
-                    ],
-                ),
-            )
-            if i >= 0
-            else ft.Container(padding=5, height=10)
-        )
-        return item
-
-    async def schot_exp_capture(self):
-        if not self.running or not self.get_exp_all:
-            self.update_tips("running is not or get_exp_all is None.")
-            return
-        exp_all = self.get_exp_all()
-        if not exp_all:
-            await self.update_tips("No data was obtained.")
-            return
-        await self.update_tips(f"Retrieve {len(exp_all)} data entries.")
-        items = []
-        for i, _exp in enumerate(exp_all):
-            items.append(self.CreateItem(_exp, i))
-            if (i + 1) % 5 == 0 and (i + 1) < len(_exp):
-                items.append(self.CreateItem("", -1))
-        self.neirong.controls = items
-        self.visible = True
-        self.update()
-        # ? 这里可以考虑增加一个“正在生成图片”的提示，或者在外部调用这个函数前就显示提示，毕竟如果数据很多，生成图片可能需要一点时间
-        is_mobile_or_web = self.page.web or self.page.platform in [
-            ft.PagePlatform.ANDROID,
-            ft.PagePlatform.IOS,
-        ]
-        try:
-            image = await self.Screenshot.capture()
-            png_name = f"{self.genid}.png"
-            logr.info(f"{image.__sizeof__()=} {png_name=}")
-
-            save_png = await ft.FilePicker().save_file(
-                file_type=ft.FilePickerFileType.CUSTOM,
-                allowed_extensions=["png"],
-                file_name=png_name,
-                src_bytes=image,
-            )
-            logr.info(f"save_path: {save_png}")
-            if save_png and not is_mobile_or_web:
-                with open(save_png, "wb") as f:
-                    f.write(image)
-                await self.update_tips(f"Storage file directory {png_name}.")
-            await self.update_tips(f"Storage task completed.")
-        except Exception as er:
-            await self.update_tips(f"Image saving error.")
-        finally:
-            await self.espcap_windows()
-
-    def __build__Container(self):
-        self.tips = ft.Text("Photograph", size=16, color=DraculaColors.ORANGE)
-        self.title = ft.Text(
-            "Jackpot Lotter",
-            size=28,
-            weight="bold",
-            font_family="RacingSansOne-Regular",
-            color=DraculaColors.ORANGE,
-            italic=True,
-        )
-        self.footer = self.footer()
-        self.conter = ft.Container(
-            padding=12,
-            bgcolor=DraculaColors.CURRENT_LINE,
-            content=ft.Column(
-                tight=True,
-                spacing=0,
-                controls=[
-                    self.title,
-                    self.contentlist(),
-                    self.footer,
-                ],
-            ),
-        )
-        self.Screenshot = ft.Screenshot(content=self.conter)
-
-        content = ft.Column(
-            controls=[
-                self.Screenshot,
-                self.tips,
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            tight=True,
-        )
-        return content
-
-
-# endregion
-
 
 # region itemC2plus
 class itemC2plus(ft.Container):
@@ -464,11 +249,6 @@ class itemC2plus(ft.Container):
                 text_align=ft.TextAlign.CENTER,
             ),
             padding=ft.Padding(8, 5, 8, 5),
-            # width=size,
-            # height=size,
-            # border=ft.Border.all(1, DraculaColors.RED),
-            # border_radius=size / 2,  # 半径设为宽高的一半即为正圆
-            # alignment=ft.Alignment.CENTER,  # 确保图标在内部居中
         )
         return self.buildBadge
 
@@ -710,12 +490,16 @@ class commandList(ft.Container):
         self.itemc2remove = None
         self.all_refresh = None
         self.shot_capture = None
+        self.get_exp_all = None
 
     def did_mount(self):
         self.running = True
 
     def will_unmount(self):
         self.running = False
+
+    def setting_get_exp_all(self, getexpall: list = None):
+        self.get_exp_all = getexpall
 
     def setting_shot_capture(self, capture=None):
         self.shot_capture = capture
@@ -795,8 +579,11 @@ class commandList(ft.Container):
         )
 
     def handle_export(self, e):
-        if self.shot_capture:
-            self.page.run_task(self.shot_capture)
+        # if self.shot_capture:
+        #     self.page.run_task(self.shot_capture)
+        sdb = savedialog()
+        sdb.seting_get_all_exp(self.get_exp_all)
+        self.page.show_dialog(sdb)
 
     def handle_add(self, e):
         """执行add"""
@@ -938,16 +725,17 @@ class lucktips(ft.Container):
 # region LotteryPage
 class LotteryPage:
     def __init__(self):
-        self.Photograph = Photograph()
+        # self.Photograph = Photograph()
         self.itemslist = itemsList()
         self.comandlist = commandList()
         # self.serendipitous_Capture = serendipitousCapture()
 
-        self.Photograph.setting_get_exp_all(self.itemslist.get_item_exp)
+        # self.Photograph.setting_get_exp_all(self.itemslist.get_item_exp)
         self.comandlist.setting_item_list_add(
             self.itemslist.add_itemc2, self.itemslist.remove_item
         )
-        self.comandlist.setting_shot_capture(self.Photograph.schot_exp_capture)
+        self.comandlist.setting_get_exp_all(self.itemslist.get_item_exp)
+        # self.comandlist.setting_shot_capture(self.Photograph.schot_exp_capture)
         self.comandlist.setting_all_refresh(self.itemslist.all_refresh)
         self.luckTips = lucktips()
         self.view = self.get_data_view()
@@ -967,7 +755,7 @@ class LotteryPage:
                 self.luckTips,
                 self.itemslist,
                 self.comandlist,
-                self.Photograph,
+                # self.Photograph,
             ],
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
