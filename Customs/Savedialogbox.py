@@ -92,7 +92,7 @@ class savedialog(ft.AlertDialog):
             try:
                 image = await self.Screenshot.capture()
                 png_name = f"{self.genid}.png"
-                print(f"{image.__sizeof__()=} {png_name=}")
+                # print(f"{image.__sizeof__()=} {png_name=}")
 
                 save_png = await ft.FilePicker().save_file(
                     file_type=ft.FilePickerFileType.CUSTOM,
@@ -100,14 +100,14 @@ class savedialog(ft.AlertDialog):
                     file_name=png_name,
                     src_bytes=image,
                 )
-                print(f"save_path: {save_png}")
+                # print(f"save_path: {save_png}")
                 if save_png and not is_mobile_or_web:
                     with open(save_png, "wb") as f:
                         f.write(image)
-                    await self.update_tips(f"Storage file directory {png_name}.")
-                print(f"Storage task completed.")
+                # print(f"Storage task completed.")
             except Exception as er:
-                print(f"Image saving error.")
+                # print(f"Image saving error.")
+                pass
             finally:
                 await asyncio.sleep(1)
                 self.page.pop_dialog()

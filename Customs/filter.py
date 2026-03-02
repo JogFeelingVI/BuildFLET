@@ -871,20 +871,19 @@ class CommandList(ft.Container):
                 logr.info(
                     f"content_bytes: {content_bytes.__sizeof__()} open pick -> save_file."
                 )
-                save_path = await ft.FilePicker().save_file(
-                    file_type=ft.FilePickerFileType.CUSTOM,
-                    allowed_extensions=["dict"],
-                    file_name="jackpot_filters.dict",
-                    src_bytes=content_bytes,
-                )
-                logr.info(f"save_path: {save_path}")
+            save_path = await ft.FilePicker().save_file(
+                file_type=ft.FilePickerFileType.CUSTOM,
+                allowed_extensions=["dict"],
+                file_name="jackpot_filters.dict",
+                src_bytes=content_bytes,
+            )
+            logr.info(f"save_path: {save_path}")
             if save_path and not is_mobile_or_web:
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
                 self.page.show_dialog(ft.SnackBar(f"Desktop file save complete."))
         except Exception as er:
-            logr.error(f"handle_Save error: {save_path}. {er}", exc_info=True)
             self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path}. {er}."))
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
