@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-01 00:30:01
+# @Last Modified time: 2026-03-02 02:20:53
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -244,10 +244,14 @@ class itemC2plus(ft.Container):
         self.threshold = 120
         self.is_refreshing = False
         self.running = False
-        self.state_exp = "none"  # "ref" "done"
         self.Itemc2_remove = None
         self.fontSize = 25
         self.selected = False
+        self.calc_task_running = False  # 控制后台计算任务是否在运行
+        self.state_exp = "init"  # 状态: init, calculating, done, timeout, error
+        self.elapsed_time = 0.0  # 记录已消耗时间
+        self.tempd = None  # 记录计算结果
+        self.start_time = 0.0
         # 参数
         self.userColor = RandColor()
         self.padding = 15
@@ -256,7 +260,94 @@ class itemC2plus(ft.Container):
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
-        
+
+    # region generate_data_background
+    async def generate_data_background(self, name: str):
+        if self.calc_task_running:
+            return  # 如果已经在后台计算了，就不重复启动
+
+        logr.info(f"Start Data Generation {name}")
+        self.calc_task_running = True
+        self.state_exp = "calculating"
+        self.start_time = time.time()
+
+        try:
+            while self.state_exp == "calculating":
+                # 后台计算数据
+                tempd, state = await asyncio.to_thread(self.calculate_lottery)
+                current_time = time.time()
+                self.elapsed_time = current_time - self.start_time
+
+                if state:
+                    # 计算成功
+                    self.tempd = tempd
+                    self.state_exp = "done"
+                    break  # 退出计算循环
+                else:
+                    # 超时判断
+                    if self.elapsed_time >= self.timeout:
+                        self.state_exp = "timeout"
+                        break
+                await asyncio.sleep(0.3)  # 给CPU喘息的机会
+
+        except Exception as e:
+            logr.error(f"Error in background data generation: {str(e)}", exc_info=True)
+            self.state_exp = "error"
+        finally:
+            self.calc_task_running = False
+
+    # endregion
+
+    # region update ui
+    async def ui_update_loop(self):
+        # 只要页面在显示（mounted），就持续轮询刷新UI
+        while self.running:
+            self.sync_ui_to_state()
+
+            # 如果状态已经结束，刷新最后一次后跳出UI轮询
+            if self.state_exp in ["done", "timeout", "error"]:
+                break
+
+            await asyncio.sleep(0.3)  # UI 刷新频率
+
+    # ==========================================
+    # 辅助方法：根据当前状态渲染界面
+    # ==========================================
+    def sync_ui_to_state(self):
+        # 安全检查：防止在 unmount 的瞬间调用更新
+        if self.running == False:
+            return
+
+        self.buildBadge.content.value = f"{self.elapsed_time:.2f}"
+        self.buildBadge.update()
+
+        last_state = getattr(self, "_last_state_exp", None)
+        if self.state_exp == last_state:
+            # 如果状态没有发生改变 则直接跳出
+            return
+
+        if self.state_exp == "calculating":
+            self.showNumber.controls = self.displayshow("Please wait...").controls
+
+        elif self.state_exp == "done":
+            self.showNumber.controls = self.displayNumbers(self.tempd).controls
+
+        elif self.state_exp == "timeout":
+            self.showNumber.controls = self.displayshow(
+                f"Timeout after {self.elapsed_time:.2f}s"
+            ).controls
+
+        elif self.state_exp == "error":
+            self.showNumber.controls = self.displayshow(
+                f"TProgram execution error."
+            ).controls
+
+        self._last_state_exp = self.state_exp
+
+        self.showNumber.update()
+
+    # endregion
+
     def __build_tips(self):
         self.tips = ft.Text(
             value="Please wait...",
@@ -336,14 +427,32 @@ class itemC2plus(ft.Container):
         self.adjust_position = adjustposition
         # logr.info(f"setting adjustposition.")
 
+    # region did_mount
     def did_mount(self):
-        if not self.running and not self.is_refreshing and self.state_exp != "done":
-            # self.refresh(name="did_mount")
-            self.page.run_task(self.SearchForData, name="did_mount")
+        # if not self.running and not self.is_refreshing and self.state_exp != "done":
+        #     # self.refresh(name="did_mount")
+        #     self.page.run_task(self.SearchForData, name="did_mount")
         self.running = True
+        # 1. 启动后台计算任务（如果还没启动，且当前还没计算完成）
+        if not self.calc_task_running and self.state_exp not in [
+            "done",
+            "timeout",
+            "error",
+        ]:
+            self.state_exp = "calculating"
+            self.page.run_task(self.generate_data_background, name="background_task")
+
+        # 2. 页面重新显示时，无条件进行一次UI强同步，保证不漏掉后台已经在算的结果
+        self.sync_ui_to_state()
+
+        # 3. 如果后台还在计算中，启动 UI 刷新轮询
+        if self.state_exp == "calculating":
+            self.page.run_task(self.ui_update_loop)
 
     def will_unmount(self):
         self.running = False
+
+    # endregion
 
     def __build__badge(self, size: int = 20, text: str = "0"):
         self.buildBadge = ft.Container(
@@ -427,13 +536,13 @@ class itemC2plus(ft.Container):
                     alignment=ft.MainAxisAlignment.END,
                     controls=[
                         # self.__build_tips(),
+                        self.__build__badge(text="0"),
                         self.__build_Butter(
                             26, ft.Icons.REFRESH, self.handle_refresh_data
                         ),
                         self.__build_Butter(
                             26, ft.Icons.DELETE_FOREVER, self.handle_delete
                         ),
-                        self.__build__badge(text="0"),
                     ],
                 ),
             ],
@@ -445,59 +554,16 @@ class itemC2plus(ft.Container):
         self.Itemc2_remove = itemc2remove
 
     def refresh(self, name: str = "None"):
-        if self.is_refreshing or self.selected:
+        if self.calc_task_running or self.selected:
             return
         # logr.info(f"markdata is running. {name}")
-        self.page.run_task(self.SearchForData, name)
+        self.state_exp = "calculating"
+        self.page.run_task(self.generate_data_background, name=name)
+        self.sync_ui_to_state()
 
-    # region SearchForData
-    async def SearchForData(self, name: str):
-        logr.info(f"SearchForData {name}")
-        self.is_refreshing = True
-        await asyncio.sleep(0.5)
-        start_time = time.time()
-        try:
-            self.showNumber.controls = self.displayshow("Please wait...").controls
-            # self.tips_value("We are searching diligently, please wait...", DraculaColors.ORANGE)
-            self.update()
-            while True:
-                # 使用 to_thread 运行耗时计算，防止界面卡死
-                # 假设 calculate_lottery 是普通的同步函数
-                # tempd, state = await asyncio.to_thread(self.calculate_lottery)
-                tempd, state = await asyncio.to_thread(self.calculate_lottery)
-                current_time = time.time()
-                elapsed_time = current_time - start_time
-                if state:
-                    # 成功情况
-                    self.tempd = tempd
-                    self.showNumber.controls = self.displayNumbers(tempd).controls
-                    # self.tips_value("Search successful.", DraculaColors.GREEN)
-                    self.state_exp = "done"
-                    self.buildBadge.content.value = f"{elapsed_time:.2f}"
-                    self.update()
-                    break  # 成功后直接跳出循环
-                else:
-                    if elapsed_time >= self.timeout:
-                        self.showNumber.controls = self.displayshow(f"Timeout after {elapsed_time:.2f}s").controls
-                        # self.tips_value("Search timeout, work stopped.", DraculaColors.RED)
-                        self.state_exp = "timeout"
-                        self.buildBadge.content.value = f"{elapsed_time:.2f}"
-                        self.update()
-                        break
-                    if self.running:
-                        self.buildBadge.content.value = f"{elapsed_time:.2f}"
-                        self.update()
-                await asyncio.sleep(0.3) 
-        except Exception as e:
-            # 显示错误/超时界面
-            logr.error(f"Error in SearchForData: {str(e)}", exc_info=True)
-            # self.tips_value("Program execution error.", DraculaColors.YELLOW)
-            self.state_exp = "error"
-            self.update()
-        finally:
-            self.is_refreshing = False
-
-    # endregion
+        # 3. 如果后台还在计算中，启动 UI 刷新轮询
+        if self.state_exp == "calculating":
+            self.page.run_task(self.ui_update_loop)
 
     def calculate_lottery(self):
         settings = self.page.session.store.get("settings")
@@ -770,13 +836,19 @@ class lucktips(ft.Container):
             {
                 "name": "DummyJSON (英文)",
                 "url": "https://dummyjson.com/quotes/random",
-                "parse": lambda d: f'{d.get("quote", "No content")} —— {d.get("author", "Unknown")}'
+                "parse": lambda d: (
+                    f"{d.get('quote', 'No content')} —— {d.get('author', 'Unknown')}"
+                ),
             },
             {
                 "name": "ZenQuotes (英文)",
                 "url": "https://zenquotes.io/api/random",
-                "parse": lambda d: f'{d[0].get("q", "No content")} —— {d[0].get("a", "Unknown")}' if isinstance(d, list) and len(d) > 0 else "Parse Error"
-            }
+                "parse": lambda d: (
+                    f"{d[0].get('q', 'No content')} —— {d[0].get('a', 'Unknown')}"
+                    if isinstance(d, list) and len(d) > 0
+                    else "Parse Error"
+                ),
+            },
         ]
 
         # 随机选择一个 API
@@ -784,8 +856,8 @@ class lucktips(ft.Container):
         logr.info(f"Selected Quote API: {source['name']} - URL: {source['url']}")
 
         try:
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(source["url"],headers=headers, timeout=5)
+            headers = {"User-Agent": "Mozilla/5.0"}
+            response = requests.get(source["url"], headers=headers, timeout=5)
             response.raise_for_status()
             data = response.json()
 
@@ -814,7 +886,7 @@ class lucktips(ft.Container):
             if elapsed_time >= self.cooldown_seconds or not cached_quote:
                 # 触发真实网络请求
                 info = await asyncio.to_thread(self.fetch_random_quote)
-                
+
                 # 更新 Session 缓存（记录新的时间和内容）
                 self.page.session.store.set("lucktips_last_time", time.time())
                 self.page.session.store.set("lucktips_last_text", info)
@@ -826,8 +898,10 @@ class lucktips(ft.Container):
             self.motto.value = info
             self.motto.update()
             last_fetch_time = self.page.session.store.get("lucktips_last_time")
-            remaining_seconds = int((last_fetch_time + self.cooldown_seconds) - time.time())
-            
+            remaining_seconds = int(
+                (last_fetch_time + self.cooldown_seconds) - time.time()
+            )
+
             # 防止出现负数或 0 死循环
             if remaining_seconds <= 0:
                 remaining_seconds = 1
@@ -835,7 +909,7 @@ class lucktips(ft.Container):
             # 开始倒计时休眠，随时监听 self.running 以便在页面切换时打断休眠
             for _ in range(remaining_seconds):
                 if not self.running:
-                    return # 页面被切走，直接结束当前组件的后台循环
+                    return  # 页面被切走，直接结束当前组件的后台循环
                 await asyncio.sleep(1)
 
     def __build_text(self, text: str = "Luck word."):
