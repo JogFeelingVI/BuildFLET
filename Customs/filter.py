@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-03 03:21:44
+# @Last Modified time: 2026-03-03 07:31:27
 
 
 from .pad import paditem, quickpad
@@ -860,17 +860,13 @@ class CommandList(ft.Container):
                 self.page.show_dialog(ft.SnackBar(f"ID not found."))
                 return
             save_path = None
-            is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
-                ft.PagePlatform.IOS,
-            ]
-
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
             logr.info(
                 f"content_bytes: {content_bytes[0:20]} open pick -> save_file."
             )
+            
             save_path = await ft.FilePicker().save_file(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
@@ -878,14 +874,13 @@ class CommandList(ft.Container):
                 src_bytes=content_bytes,
             )
             logr.info(f"save_path: {save_path}")
-            if save_path and not is_mobile_or_web:
+            if self.page.platform.is_apple() or self.page.platform.is_desktop():
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
                 logr.info("Desktop file save complete.")
                 self.page.show_dialog(ft.SnackBar(f"Desktop file save complete."))
         except Exception as er:
-            # self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path}. {er}."))
-            pass
+            self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path=} {self.page.platform=}. {er}."))
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -994,11 +989,7 @@ class CommandList(ft.Container):
             logr.info(f"selsect file: {pick_result}")
             if not pick_result:
                 return
-            is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
-                ft.PagePlatform.IOS,
-            ]
-            if is_mobile_or_web:
+            if self.page.platform.is_mobile() or self.page.web:
                 uplpads = [
                     ft.FilePickerUploadFile(
                         self.page.get_upload_url(f"filter/{pick_result[0].name}", 600),
@@ -1009,7 +1000,7 @@ class CommandList(ft.Container):
                 ]
                 logr.info(uplpads)
                 await pick.upload(uplpads)
-            else:
+            if self.page.platform.is_desktop() or self.page.platform.is_apple():
                 logr.info(f"{pick_result[0]}")
                 fiter_data = []
                 if self.filter_clear_all:
