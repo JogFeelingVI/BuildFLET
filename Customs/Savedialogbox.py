@@ -104,6 +104,9 @@ class savedialog(ft.AlertDialog):
                 if save_png and not is_mobile_or_web:
                     with open(save_png, "wb") as f:
                         f.write(image)
+                        self.page.show_dialog(
+                            ft.SnackBar(f"{self.page.platform} file save complete.")
+                        )
                 # print(f"Storage task completed.")
             except Exception as er:
                 # print(f"Image saving error.")

@@ -21,6 +21,7 @@ app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
 jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
+
 # region itemC2plus
 class itemC2plus(ft.Container):
     def __init__(self):
