@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-02 06:42:25
+# @Last Modified time: 2026-03-03 03:21:44
 
 
 from .pad import paditem, quickpad
@@ -868,9 +868,9 @@ class CommandList(ft.Container):
             with open(stored_id, "r", encoding="utf-8") as f:
                 content = f.read()
                 content_bytes = content.encode("utf-8")
-                logr.info(
-                    f"content_bytes: {content_bytes.__sizeof__()} open pick -> save_file."
-                )
+            logr.info(
+                f"content_bytes: {content_bytes[0:20]} open pick -> save_file."
+            )
             save_path = await ft.FilePicker().save_file(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
@@ -884,7 +884,8 @@ class CommandList(ft.Container):
                 logr.info("Desktop file save complete.")
                 self.page.show_dialog(ft.SnackBar(f"Desktop file save complete."))
         except Exception as er:
-            self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path}. {er}."))
+            # self.page.show_dialog(ft.SnackBar(f"handle_Save error: {save_path}. {er}."))
+            pass
         finally:
             logr.info(f"Filter saved successfully. {save_path}")
 
@@ -994,7 +995,7 @@ class CommandList(ft.Container):
             if not pick_result:
                 return
             is_mobile_or_web = self.page.web or self.page.platform in [
-                # ft.PagePlatform.ANDROID,
+                ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
             if is_mobile_or_web:
