@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-03 08:36:59
+# @Last Modified time: 2026-03-03 10:01:03
 
 
 from .pad import paditem, quickpad
@@ -1001,8 +1001,8 @@ class CommandList(ft.Container):
             if not pick_result:
                 return
             is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
-                ft.PagePlatform.IOS,
+                # ft.PagePlatform.ANDROID,
+                # ft.PagePlatform.IOS,
             ]
             if is_mobile_or_web:
                 uplpads = [
@@ -1013,7 +1013,7 @@ class CommandList(ft.Container):
                         pick_result[0].name,
                     )
                 ]
-                logr.info(uplpads)
+                logr.info(f'uplpads: {uplpads}')
                 await pick.upload(uplpads)
             else:
                 logr.info(f"{pick_result[0]}")
