@@ -10,7 +10,7 @@ from Customs.filter import FilterPage
 from Customs.lottery import LotteryPage
 from Customs.jackpot_core import randomData
 from Customs.loger import logr
-from Customs.loadfonts import FontManager, FastSourcePicker
+from Customs.loadfonts import FontManager
 import flet as ft
 import os
 
