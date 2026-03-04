@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 01:08:08
+# @Last Modified time: 2026-03-04 09:25:06
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -344,8 +344,9 @@ class showRulev2(ft.Container):
 
     def did_mount(self):
         self.running = True
+        if not self.runloadpage:
         # self.page.run_task(self.loadpage)
-        self.page.run_task(self.__update_card)
+            self.page.run_task(self.__update_card)
 
     def will_unmount(self):
         self.running = False
@@ -353,7 +354,7 @@ class showRulev2(ft.Container):
     async def loadpage(self):
         if self.runloadpage:
             await asyncio.sleep(0.2)
-            for _b in self.Stack.controls:
+            for _b in self._stack.controls:
                 if _b.data == "_black":
                     _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
                     _b.update()
@@ -378,11 +379,11 @@ class showRulev2(ft.Container):
                 animate=300,
             )
 
-        [self.Stack.controls.insert(0, black()) for _ in range(70)]
+        [self._stack.controls.insert(0, black()) for _ in range(70)]
         await asyncio.sleep(0.2)
         self.runloadpage = True
-        self.Stack.update()
-        for _b in self.Stack.controls:
+        self._stack.update()
+        for _b in self._stack.controls:
             if _b.data == "_black":
                 _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
                 _b.update()
@@ -394,7 +395,7 @@ class showRulev2(ft.Container):
             size=15,
             color=ft.Colors.with_opacity(0.6, DraculaColors.GREEN),
         )
-        self.neirong = ft.Column(
+        self._content_column = ft.Column(
             data="_neirong",
             tight=True,
             alignment=ft.MainAxisAlignment.START,
@@ -402,18 +403,18 @@ class showRulev2(ft.Container):
             controls=[self.tips],
         )
 
-        self.Stack = ft.Stack(
+        self._stack = ft.Stack(
             width=float("inf"),
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             controls=[
                 ft.Container(
                     padding=12,
                     width=float("inf"),
-                    content=self.neirong,
+                    content=self._content_column,
                 ),
             ],
         )
-        return self.Stack
+        return self._stack
 
     def update_tips(self, value: str, color: str):
         self.tips.value = f"💡 {value}"
@@ -458,11 +459,12 @@ class showRulev2(ft.Container):
         if not randomDatax:
             self.update_tips("No relevant data was found for randomData.", "#ee290f")
             return
-        self.neirong.controls = [
+        self._content_column.controls = [
             self.display_note(randomDatax["note"]),
             self.display_rules(randomDatax),
         ]
-        self.neirong.update()
+        self._content_column.update()
+        self.runloadpage = True
 
     def display_rules(self, pn: dict):
         rules = []
@@ -484,62 +486,51 @@ class showRulev2(ft.Container):
                 )
                 # end
         example = randomData(seting=pn).get_exp()
-        conter = ft.Container(
-            padding=12,
-            border_radius=10,
-            width=float("inf"),
-            bgcolor=ft.Colors.with_opacity(0.1, RandColor()),
-            animate=ft.Animation(600, ft.AnimationCurve.EASE),
-            content=ft.Column(
-                spacing=0,
-                tight=True,
-                controls=[
-                    ft.Text(
-                        "Basic number selection rules".upper(),
-                        size=10,
-                        color=ft.Colors.with_opacity(
-                            0.3, color=DraculaColors.FOREGROUND
-                        ),
-                    ),
-                    *rules,
-                    ft.Text(
-                        "Example Number".upper(),
-                        size=10,
-                        color=ft.Colors.with_opacity(
-                            0.3, color=DraculaColors.FOREGROUND
-                        ),
-                    ),
-                    self.displayNumbers(example, 25),
-                    # ft.Text(f'{note}', color=DraculaColors.FOREGROUND, size=16),
-                ],
-            ),
+        return self._create_card_container(
+            bgcolor_opacity=0.1,
+            controls=[
+                ft.Text(
+                    "BASIC NUMBER SELECTION RULES",
+                    size=10,
+                    color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
+                ),
+                *rules,
+                ft.Text(
+                    "EXAMPLE NUMBER",
+                    size=10,
+                    color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
+                ),
+                self.displayNumbers(example, 25),
+            ]
         )
-        return conter
 
     def display_note(self, note: str):
-        conter = ft.Container(
+        return self._create_card_container(
+            bgcolor_opacity=0.3,
+            controls=[
+                ft.Text(
+                    "RULES AND REGULATIONS",
+                    size=10,
+                    color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
+                ),
+                ft.Text(f"{note}", color=DraculaColors.FOREGROUND, size=16),
+            ]
+        )
+    
+    def _create_card_container(self, bgcolor_opacity: float, controls: list):
+        """提取的公共卡片容器样式构建器"""
+        return ft.Container(
             padding=12,
             border_radius=10,
             width=float("inf"),
-            bgcolor=ft.Colors.with_opacity(0.3, RandColor()),
-            # blend_mode=ft.BlendMode.SCREEN,
+            bgcolor=ft.Colors.with_opacity(bgcolor_opacity, RandColor()),
             animate=ft.Animation(600, ft.AnimationCurve.EASE),
             content=ft.Column(
-                spacing=0,
+                spacing=5,
                 tight=True,
-                controls=[
-                    ft.Text(
-                        "Rules and Regulations".upper(),
-                        size=10,
-                        color=ft.Colors.with_opacity(
-                            0.3, color=DraculaColors.FOREGROUND
-                        ),
-                    ),
-                    ft.Text(f"{note}", color=DraculaColors.FOREGROUND, size=16),
-                ],
+                controls=controls,
             ),
         )
-        return conter
 
     def displayNumbers(self, text: str, size: int = 35):
         """用环形标示 标识出数字"""
