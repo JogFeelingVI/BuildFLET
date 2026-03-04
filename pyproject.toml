@@ -8,8 +8,9 @@ authors = [
 ]
 
 dependencies = [
-  "flet==0.81.0",
+  "flet>=0.81.0",
   "requests",
+  "urllib3",
 ]
 
 [tool.flet]
