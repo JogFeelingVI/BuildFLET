@@ -864,9 +864,7 @@ class CommandList(ft.Container):
                 content_bytes = content.encode("utf-8")
         except Exception as ex:
             logr.info(f"read {stored_id} is error. {ex}")
-            self.page.show_dialog(
-                ft.SnackBar(f"read {stored_id} is error. {ex}")
-            )
+            self.page.show_dialog(ft.SnackBar(f"read {stored_id} is error. {ex}"))
             return
         try:
             is_mobile_or_web = self.page.web or self.page.platform in [
@@ -877,7 +875,7 @@ class CommandList(ft.Container):
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
                 file_name="jackpot_filters.dict",
-                src_bytes=content_bytes
+                src_bytes=content_bytes,
             )
             logr.info(f"save_path: {save_path}")
             if save_path and not is_mobile_or_web:
@@ -1000,10 +998,14 @@ class CommandList(ft.Container):
             logr.info(f"selsect file: {pick_result}")
             if not pick_result:
                 return
-            is_mobile_or_web = self.page.web or self.page.platform in [
-                # ft.PagePlatform.ANDROID,
-                # ft.PagePlatform.IOS,
-            ]
+            is_mobile_or_web = (
+                self.page.web
+                or self.page.platform
+                in [
+                    # ft.PagePlatform.ANDROID,
+                    # ft.PagePlatform.IOS,
+                ]
+            )
             if is_mobile_or_web:
                 uplpads = [
                     ft.FilePickerUploadFile(
@@ -1013,7 +1015,7 @@ class CommandList(ft.Container):
                         pick_result[0].name,
                     )
                 ]
-                logr.info(f'uplpads: {uplpads}')
+                logr.info(f"uplpads: {uplpads}")
                 await pick.upload(uplpads)
             else:
                 logr.info(f"{pick_result[0]}")

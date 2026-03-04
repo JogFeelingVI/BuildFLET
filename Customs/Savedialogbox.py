@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-02 12:36:32
+# @Last Modified time: 2026-03-04 01:01:08
 import datetime
 from .jackpot_core import randomData
 from .DraculaTheme import DraculaColors, RandColor
@@ -124,15 +124,16 @@ class savedialog(ft.AlertDialog):
 
     def will_unmount(self):
         self.running = False
-        print(f"will_unmount")
 
     async def load_exp(self):
         self.exps_is_build = False
         if not self.getallexp:
-            print("not is getallexp func.")
+            # print("not is getallexp func.")
+            return
         all_exp = self.getallexp()
         if len(all_exp) == 0:
-            print("len all_exp is zero.")
+            # print("len all_exp is zero.")
+            return
         items = []
         for i, _exp in enumerate(all_exp):
             items.append(self.CreateItem(_exp, i))

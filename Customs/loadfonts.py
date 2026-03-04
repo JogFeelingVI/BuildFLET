@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-04 05:32:13
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-06 14:59:29
+# @Last Modified time: 2026-03-04 01:13:02
 
 
 import requests
@@ -32,7 +32,7 @@ class FontManager:
         """尝试自动获取 assets 目录路径"""
         # 在 Flet 安卓环境中，通常脚本运行在根目录，assets 就在同级
         assets_path = pathlib.Path(__file__).parent.parent
-        print(f"debug: {assets_path}")
+        # print(f"debug: {assets_path}")
         return assets_path / "assets"
 
     def _generate_font_map(self) -> Dict[str, str]:

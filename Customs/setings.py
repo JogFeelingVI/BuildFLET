@@ -2,11 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-27 07:30:00
+# @Last Modified time: 2026-03-04 01:08:08
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
-from dataclasses import dataclass, field
 from .loger import logr
 import flet as ft
 import json
@@ -345,7 +344,7 @@ class showRulev2(ft.Container):
 
     def did_mount(self):
         self.running = True
-        self.page.run_task(self.loadpage)
+        # self.page.run_task(self.loadpage)
         self.page.run_task(self.__update_card)
 
     def will_unmount(self):
