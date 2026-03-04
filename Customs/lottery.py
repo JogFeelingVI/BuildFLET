@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 01:01:21
+# @Last Modified time: 2026-03-04 11:15:03
 
 from .Savedialogbox import savedialog
 from .jackpot_core import randomData, filter_for_pabc
@@ -105,6 +105,7 @@ class itemC2plus(ft.Container):
 
         self.buildBadge.content.value = f"{self.elapsed_time:.2f}"
         self.buildBadge.update()
+        # logr.info(f'update time {self.elapsed_time:.2f}')
 
         last_state = getattr(self, "_last_state_exp", None)
         if self.state_exp == last_state:
@@ -133,25 +134,6 @@ class itemC2plus(ft.Container):
 
     # endregion
 
-    def __build_tips(self):
-        self.tips = ft.Text(
-            value="Please wait...",
-            no_wrap=True,
-            size=13,
-            color=ft.Colors.with_opacity(0.7, DraculaColors.FOREGROUND),
-        )
-        conta = ft.Container(
-            content=self.tips,
-            alignment=ft.Alignment.CENTER_RIGHT,
-            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
-            # border=ft.Border.only(
-            #     left=ft.BorderSide(5, ft.Colors.RED)  # 宽度为5的红色左边框
-            # ),
-            padding=ft.Padding.only(left=5),
-            # 动画配置
-            width=200,
-        )
-        return conta
 
     def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
         self.tips.value = f"{value}"
@@ -228,11 +210,10 @@ class itemC2plus(ft.Container):
             self.page.run_task(self.generate_data_background, name="background_task")
 
         # 2. 页面重新显示时，无条件进行一次UI强同步，保证不漏掉后台已经在算的结果
-        self.sync_ui_to_state()
-
+        # self.sync_ui_to_state()
         # 3. 如果后台还在计算中，启动 UI 刷新轮询
-        if self.state_exp == "calculating":
-            self.page.run_task(self.ui_update_loop)
+        # if self.state_exp == "calculating":
+        self.page.run_task(self.ui_update_loop)
 
     def will_unmount(self):
         self.running = False
@@ -665,6 +646,7 @@ class lucktips(ft.Container):
 
     async def motto_loop(self):
         """异步循环任务：更新数据并等待 15 分钟"""
+        await asyncio.sleep(1)
         while self.running:
             last_fetch_time = self.page.session.store.get("lucktips_last_time") or 0
             cached_quote = self.page.session.store.get("lucktips_last_text")
