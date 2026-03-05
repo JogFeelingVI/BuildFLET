@@ -2,14 +2,15 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 02:38:51
+# @Last Modified time: 2026-03-05 07:16:33
 import datetime
-from .jackpot_core import randomData
+from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 import asyncio
 import flet as ft
 
-#region savedialog
+
+# region savedialog
 class savedialog(ft.AlertDialog):
     def __init__(self):
         super().__init__()
@@ -186,10 +187,12 @@ class savedialog(ft.AlertDialog):
             else ft.Container(padding=5, height=10)
         )
         return item
-    
-#endregion
 
-#region test
+
+# endregion
+
+
+# region test
 class testdialog(ft.AlertDialog):
     def __init__(self):
         super().__init__()
@@ -199,19 +202,22 @@ class testdialog(ft.AlertDialog):
         self.content_padding = ft.Padding.all(15)
 
         self.running = False
-        
+
     def did_mount(self):
         self.running = True
-        
+
     def will_unmount(self):
         self.running = False
-        
+
     def __handle_Close(self, e):
-        self.page.pop_dialog()
-    
+        if self.running:
+            self.page.pop_dialog()
+
     def __handle_start(self, e):
-        self.page.pop_dialog()
-        
+        if self.running:
+            self.page.run_task(self.start_testing)
+            # self.page.pop_dialog()
+
     def __build_action(self):
         acts = [
             ft.TextButton(
@@ -227,7 +233,7 @@ class testdialog(ft.AlertDialog):
             ),
         ]
         return acts
-    
+
     def __build_contens(self):
         title = ft.Text(
             "Filter test",
@@ -237,6 +243,13 @@ class testdialog(ft.AlertDialog):
             color=DraculaColors.ORANGE,
             italic=True,
         )
+        self.info_display = ft.Column(
+            tight=True,
+            spacing=5,
+            controls=[
+                self.info("Click the `Start testing` button to begin the test."),
+            ],
+        )
         conter = ft.Container(
             width=400,
             padding=5,
@@ -245,10 +258,53 @@ class testdialog(ft.AlertDialog):
             content=ft.Column(
                 tight=True,
                 spacing=5,
+                height=500,
                 controls=[
                     title,
+                    self.info_display,
                 ],
+                scroll=ft.ScrollMode.HIDDEN,
             ),
         )
         return conter
-#endregion
+
+    def info(self, msg: str = None):
+        if not msg:
+            return
+        info = ft.Text(f"{msg}", size=15, color=RandColor(mode="Glass"))
+        return info
+    
+    #region start_testing
+    async def start_testing(self):
+        if not self.running:
+            return
+        settings = self.page.session.store.get("settings")
+        filtersAll = self.page.session.store.get("filters")
+        self.info_display.controls.clear()
+        self.info_display.controls.append(
+            self.info(f"The total number of filters is {len(filtersAll)}")
+        )
+        self.info_display.controls.append(
+            self.info(f"Game Rules: {settings['randomData']['note']}")
+        )
+        
+        if settings and filtersAll:
+            _rdpn = randomData(seting=settings["randomData"])
+            results = []
+            for i in range(1000):
+                results.append(_rdpn.get_pabc())
+        self.info_display.controls.append(
+            self.info(f"results len: {len(results)}")
+        )
+        self.info_display.update()
+        for _fitem in filtersAll:
+            print(f'{_fitem}')
+            _f2func = filter_for_pabc(filters=[_fitem])
+            pass_rate = sum([1 for r in results if _f2func.handle(r)])/len(results) * 100
+            prinfo = f"{_fitem['func']} `{_fitem['target']}` -> `{_fitem['condition']}` PR [ {pass_rate:.2f}% ]"
+            self.info_display.controls.append(self.info(f"{prinfo}"))
+        self.info_display.update()
+    # endregion
+
+
+# endregion

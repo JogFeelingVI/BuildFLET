@@ -345,7 +345,7 @@ class showRulev2(ft.Container):
     def did_mount(self):
         self.running = True
         if not self.runloadpage:
-        # self.page.run_task(self.loadpage)
+            # self.page.run_task(self.loadpage)
             self.page.run_task(self.__update_card)
 
     def will_unmount(self):
@@ -501,7 +501,7 @@ class showRulev2(ft.Container):
                     color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
                 ),
                 self.displayNumbers(example, 25),
-            ]
+            ],
         )
 
     def display_note(self, note: str):
@@ -514,9 +514,9 @@ class showRulev2(ft.Container):
                     color=ft.Colors.with_opacity(0.3, DraculaColors.FOREGROUND),
                 ),
                 ft.Text(f"{note}", color=DraculaColors.FOREGROUND, size=16),
-            ]
+            ],
         )
-    
+
     def _create_card_container(self, bgcolor_opacity: float, controls: list):
         """提取的公共卡片容器样式构建器"""
         return ft.Container(

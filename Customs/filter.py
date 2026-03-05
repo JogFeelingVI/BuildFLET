@@ -338,6 +338,7 @@ class FiltersList(ft.Container):
                 break
             if self.running:
                 sw.update()
+
     # region saveTodict
     async def saveTodict(self):
         if self.filtersAll_change == "none":
@@ -356,7 +357,9 @@ class FiltersList(ft.Container):
             self.filtersAll_change = "none"
         except Exception as er:
             logr.info(f"Auto Save error. {er}", exc_info=True)
-    #endregion
+
+    # endregion
+
 
 # endregion
 

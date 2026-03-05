@@ -133,7 +133,6 @@ class itemC2plus(ft.Container):
 
     # endregion
 
-
     def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
         self.tips.value = f"{value}"
         self.tips.color = ft.Colors.with_opacity(0.7, color)
@@ -560,8 +559,8 @@ class commandList(ft.Container):
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
         )
-        
-    def handle_test(self,e):
+
+    def handle_test(self, e):
         tdb = testdialog()
         self.page.show_dialog(tdb)
 
