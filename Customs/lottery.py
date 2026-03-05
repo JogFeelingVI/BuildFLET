@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 11:15:03
+# @Last Modified time: 2026-03-05 02:48:25
 
-from .Savedialogbox import savedialog
+from .Savedialogbox import savedialog, testdialog
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -26,7 +26,6 @@ class itemC2plus(ft.Container):
     def __init__(self):
         super().__init__()
         self.timeout = 60
-        self.threshold = 120
         self.is_refreshing = False
         self.running = False
         self.Itemc2_remove = None
@@ -343,7 +342,7 @@ class itemC2plus(ft.Container):
 
     def handle_refresh_data(self, e):
         """右滑逻辑：刷新数据"""
-        logr.info("向右滑动：正在刷新数据...")
+        # logr.info("向右滑动：正在刷新数据...")
         self.refresh(name="refresh_data")
         self.page.show_dialog(ft.SnackBar(f"handle refresh data."))
 
@@ -528,7 +527,7 @@ class commandList(ft.Container):
                 controls=[
                     ft.Icon(icon, size=size * 0.45, color=DraculaColors.PURPLE),
                     ft.Text(
-                        value=f"{name.upper()}",
+                        value=f"{name}",
                         size=size * 0.15,
                         text_align=ft.TextAlign.CENTER,
                     ),
@@ -547,7 +546,10 @@ class commandList(ft.Container):
                     icon=ft.Icons.INSERT_EMOTICON, name="ADD", oncilck=self.handle_add
                 ),
                 self.__build_butter(
-                    icon=ft.Icons.REFRESH, name="Refresh", oncilck=self.handle_refresh
+                    icon=ft.Icons.SCIENCE, name="TEST", oncilck=self.handle_test
+                ),
+                self.__build_butter(
+                    icon=ft.Icons.REFRESH, name="REFRESH", oncilck=self.handle_refresh
                 ),
                 self.__build_butter(
                     icon=ft.Icons.SAVE_AS, name="Export", oncilck=self.handle_export
@@ -558,6 +560,10 @@ class commandList(ft.Container):
             expand=True,
             scroll=ft.ScrollMode.HIDDEN,
         )
+        
+    def handle_test(self,e):
+        tdb = testdialog()
+        self.page.show_dialog(tdb)
 
     def handle_export(self, e):
         # if self.shot_capture:

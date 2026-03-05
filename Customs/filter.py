@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-03 10:01:03
+# @Last Modified time: 2026-03-05 02:11:37
 
 
 from .pad import paditem, quickpad
@@ -338,7 +338,7 @@ class FiltersList(ft.Container):
                 break
             if self.running:
                 sw.update()
-
+    # region saveTodict
     async def saveTodict(self):
         if self.filtersAll_change == "none":
             return
@@ -346,6 +346,7 @@ class FiltersList(ft.Container):
         stored_id = await ft.SharedPreferences().get("stored_id")
         if not stored_id:
             logr.error("ID not found.")
+            self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
         try:
             with open(stored_id, "w", encoding="utf-8") as f:
@@ -355,7 +356,7 @@ class FiltersList(ft.Container):
             self.filtersAll_change = "none"
         except Exception as er:
             logr.info(f"Auto Save error. {er}", exc_info=True)
-
+    #endregion
 
 # endregion
 
@@ -486,11 +487,6 @@ class InputPad(ft.Container):
             padding=12,
             border_radius=10,
             bgcolor=ft.Colors.with_opacity(0.6, DraculaColors.CRADBG),
-            # border=ft.Border(
-            #     top=ft.BorderSide(
-            #         1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
-            #     ),  # 宽度为 3, 颜色为蓝色
-            # ),
             width=float("inf"),
             content=ft.Column(
                 controls=[
@@ -858,15 +854,14 @@ class CommandList(ft.Container):
             logr.error("ID not found.")
             self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
+        filtersAll = self.page.session.store.get("filters")
+        if not filtersAll:
+            logr.info(f"read filters is error.")
+            self.page.show_dialog(ft.SnackBar(f"read filters is error."))
         try:
-            with open(stored_id, "r", encoding="utf-8") as f:
-                content = f.read()
-                content_bytes = content.encode("utf-8")
-        except Exception as ex:
-            logr.info(f"read {stored_id} is error. {ex}")
-            self.page.show_dialog(ft.SnackBar(f"read {stored_id} is error. {ex}"))
-            return
-        try:
+            content_bytes = ""
+            for _fitem in filtersAll:
+                content_bytes += json.dumps(_fitem) + "\n"
             is_mobile_or_web = self.page.web or self.page.platform in [
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
@@ -875,7 +870,7 @@ class CommandList(ft.Container):
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
                 file_name="jackpot_filters.dict",
-                src_bytes=content_bytes,
+                src_bytes=content_bytes.encode("utf-8"),
             )
             logr.info(f"save_path: {save_path}")
             if save_path and not is_mobile_or_web:

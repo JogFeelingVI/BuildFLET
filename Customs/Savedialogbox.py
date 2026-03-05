@@ -2,14 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 01:01:08
+# @Last Modified time: 2026-03-05 02:38:51
 import datetime
 from .jackpot_core import randomData
 from .DraculaTheme import DraculaColors, RandColor
 import asyncio
 import flet as ft
 
-
+#region savedialog
 class savedialog(ft.AlertDialog):
     def __init__(self):
         super().__init__()
@@ -186,3 +186,69 @@ class savedialog(ft.AlertDialog):
             else ft.Container(padding=5, height=10)
         )
         return item
+    
+#endregion
+
+#region test
+class testdialog(ft.AlertDialog):
+    def __init__(self):
+        super().__init__()
+        self.modal = True
+        self.content = self.__build_contens()
+        self.actions = self.__build_action()
+        self.content_padding = ft.Padding.all(15)
+
+        self.running = False
+        
+    def did_mount(self):
+        self.running = True
+        
+    def will_unmount(self):
+        self.running = False
+        
+    def __handle_Close(self, e):
+        self.page.pop_dialog()
+    
+    def __handle_start(self, e):
+        self.page.pop_dialog()
+        
+    def __build_action(self):
+        acts = [
+            ft.TextButton(
+                "Close",
+                on_click=self.__handle_Close,
+                style=ft.ButtonStyle(color=RandColor()),
+            ),
+            # 确定按钮用红色突出显示危险操作
+            ft.TextButton(
+                "Start testing",
+                on_click=self.__handle_start,
+                style=ft.ButtonStyle(color=RandColor()),
+            ),
+        ]
+        return acts
+    
+    def __build_contens(self):
+        title = ft.Text(
+            "Filter test",
+            size=28,
+            weight="bold",
+            font_family="RacingSansOne-Regular",
+            color=DraculaColors.ORANGE,
+            italic=True,
+        )
+        conter = ft.Container(
+            width=400,
+            padding=5,
+            border_radius=0,
+            bgcolor=DraculaColors.BACKGROUND,
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                controls=[
+                    title,
+                ],
+            ),
+        )
+        return conter
+#endregion
