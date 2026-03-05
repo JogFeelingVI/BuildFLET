@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 07:16:33
+# @Last Modified time: 2026-03-05 13:13:46
 import datetime
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -243,11 +243,12 @@ class testdialog(ft.AlertDialog):
             color=DraculaColors.ORANGE,
             italic=True,
         )
-        self.info_display = ft.Column(
+        self.info_display = ft.Row(
             tight=True,
             spacing=5,
+            scroll=ft.ScrollMode.HIDDEN,
             controls=[
-                self.info("Click the `Start testing` button to begin the test."),
+                # self.info("Click the `Start testing` button to begin the test."),
             ],
         )
         conter = ft.Container(
@@ -258,52 +259,74 @@ class testdialog(ft.AlertDialog):
             content=ft.Column(
                 tight=True,
                 spacing=5,
-                height=500,
                 controls=[
                     title,
                     self.info_display,
                 ],
-                scroll=ft.ScrollMode.HIDDEN,
             ),
         )
         return conter
 
-    def info(self, msg: str = None):
-        if not msg:
-            return
-        info = ft.Text(f"{msg}", size=15, color=RandColor(mode="Glass"))
+    def info(self, f, t, c, pr):
+        # info = ft.Text(f"{msg}", size=15, color=RandColor(mode="Glass"))
+        def text(t: str, bold=False):
+            return ft.Text(
+                f"{t}",
+                size=15,
+                color=RandColor(mode="Glass"),
+                weight="bold" if bold else None,
+            )
+
+        info = ft.Container(
+            padding=10,
+            # width=120,
+            # height=120 * 1.35,
+            border_radius=10,
+            bgcolor=ft.Colors.with_opacity(0.1, RandColor(mode="Glass")),
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                controls=[
+                    text(f"{f}"),
+                    text(f"{t}",bold=True),
+                    text(f"{c}"),
+                    ft.Divider(),
+                    text(f"{pr}",bold=True),
+                ],
+            ),
+        )
+        print(f'run info')
         return info
-    
-    #region start_testing
+
+    # region start_testing
     async def start_testing(self):
         if not self.running:
             return
         settings = self.page.session.store.get("settings")
         filtersAll = self.page.session.store.get("filters")
         self.info_display.controls.clear()
-        self.info_display.controls.append(
-            self.info(f"The total number of filters is {len(filtersAll)}")
-        )
-        self.info_display.controls.append(
-            self.info(f"Game Rules: {settings['randomData']['note']}")
-        )
-        
+        self.info_display.controls.append(self.info("filtersAll",f"len {len(filtersAll)}","",""))
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
             results = []
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
-        self.info_display.controls.append(
-            self.info(f"results len: {len(results)}")
-        )
         self.info_display.update()
         for _fitem in filtersAll:
-            print(f'{_fitem}')
+            print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
-            pass_rate = sum([1 for r in results if _f2func.handle(r)])/len(results) * 100
-            prinfo = f"{_fitem['func']} `{_fitem['target']}` -> `{_fitem['condition']}` PR [ {pass_rate:.2f}% ]"
-            self.info_display.controls.append(self.info(f"{prinfo}"))
+            pass_rate = (
+                sum([1 for r in results if _f2func.handle(r)]) / len(results) * 100
+            )
+            prinfo = [
+                f"{_fitem['func']}",
+                f"{_fitem['target']}",
+                f"{_fitem['condition']}",
+                f"PR {pass_rate:.2f} %",
+            ]
+            self.info_display.controls.append(self.info(*prinfo))
         self.info_display.update()
+
     # endregion
 
 

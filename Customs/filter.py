@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 02:11:37
+# @Last Modified time: 2026-03-05 11:03:40
 
 
 from .pad import paditem, quickpad
@@ -851,12 +851,6 @@ class CommandList(ft.Container):
             self.addclose.update()
 
     async def handle_Save(self, e):
-        stored_id = await ft.SharedPreferences().get("stored_id")
-        logr.info(f"stored_id: {stored_id}")
-        if not stored_id:
-            logr.error("ID not found.")
-            self.page.show_dialog(ft.SnackBar(f"ID not found."))
-            return
         filtersAll = self.page.session.store.get("filters")
         if not filtersAll:
             logr.info(f"read filters is error.")
