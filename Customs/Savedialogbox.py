@@ -4,8 +4,6 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-06 07:02:44
 import datetime
-
-from annotated_types import T
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 import asyncio
