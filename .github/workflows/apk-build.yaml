@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-03 21:33:23
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-03 21:49:12
+# @Last Modified time: 2026-03-06 09:56:50
 name: Flet Builds
 
 on:
@@ -27,12 +27,12 @@ jobs:
       matrix:
         include:
           # -------- Desktop --------
-          # - name: linux
-          #   enabled: false
-          #   runner: ubuntu-latest
-          #   build_cmd: "flet build linux --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
-          #   artifact_path: build/linux
-          #   needs_linux_deps: true
+          - name: linux
+            enabled: false
+            runner: ubuntu-latest
+            build_cmd: "flet build linux --yes --verbose --build-number=$BUILD_NUMBER --build-version=$BUILD_VERSION"
+            artifact_path: build/linux
+            needs_linux_deps: true
 
           # - name: macos
           #   enabled: false
