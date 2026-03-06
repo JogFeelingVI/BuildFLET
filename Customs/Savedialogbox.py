@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 13:13:46
+# @Last Modified time: 2026-03-06 00:45:43
 import datetime
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -245,17 +245,17 @@ class testdialog(ft.AlertDialog):
         )
         self.info_display = ft.Row(
             tight=True,
-            spacing=5,
+            spacing=8,
             scroll=ft.ScrollMode.HIDDEN,
+            vertical_alignment=ft.CrossAxisAlignment.START,
             controls=[
-                # self.info("Click the `Start testing` button to begin the test."),
+                self.error("Click the `Start testing` button to begin the test."),
             ],
         )
         conter = ft.Container(
             width=400,
             padding=5,
             border_radius=0,
-            bgcolor=DraculaColors.BACKGROUND,
             content=ft.Column(
                 tight=True,
                 spacing=5,
@@ -267,35 +267,44 @@ class testdialog(ft.AlertDialog):
         )
         return conter
 
-    def info(self, f, t, c, pr):
+    def error(self, msg):
+        conter = ft.Container(
+            padding=15,
+            content=ft.Row(
+                spacing=5,
+                controls=[ft.Icon(ft.Icons.ERROR), ft.Text(f"{msg}", size=15)],
+            ),
+        )
+        return conter
+
+    def info(self, *args):
         # info = ft.Text(f"{msg}", size=15, color=RandColor(mode="Glass"))
+        infoColor = RandColor()
+        opc = lambda op: ft.Colors.with_opacity(op, infoColor)
+
         def text(t: str, bold=False):
+            if t == t.upper() or "%" in t:
+                bold = True
             return ft.Text(
                 f"{t}",
                 size=15,
-                color=RandColor(mode="Glass"),
+                color=infoColor,
                 weight="bold" if bold else None,
             )
 
+        msgs = [text(f"{x}") for x in args if x not in [None, ""]]
         info = ft.Container(
-            padding=10,
-            # width=120,
-            # height=120 * 1.35,
+            padding=15,
             border_radius=10,
-            bgcolor=ft.Colors.with_opacity(0.1, RandColor(mode="Glass")),
+            border=ft.Border(left=ft.BorderSide(5, opc(1))),
+            bgcolor=opc(0.1),
             content=ft.Column(
                 tight=True,
                 spacing=5,
-                controls=[
-                    text(f"{f}"),
-                    text(f"{t}",bold=True),
-                    text(f"{c}"),
-                    ft.Divider(),
-                    text(f"{pr}",bold=True),
-                ],
+                controls=[*msgs],
             ),
         )
-        print(f'run info')
+        # print(f'run info')
         return info
 
     # region start_testing
@@ -305,7 +314,9 @@ class testdialog(ft.AlertDialog):
         settings = self.page.session.store.get("settings")
         filtersAll = self.page.session.store.get("filters")
         self.info_display.controls.clear()
-        self.info_display.controls.append(self.info("filtersAll",f"len {len(filtersAll)}","",""))
+        if not filtersAll:
+            self.info_display.controls.append(self.error("filters is Null."))
+            self.info_display.update()
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
             results = []
@@ -313,7 +324,7 @@ class testdialog(ft.AlertDialog):
                 results.append(_rdpn.get_pabc())
         self.info_display.update()
         for _fitem in filtersAll:
-            print(f"{_fitem}")
+            # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
             pass_rate = (
                 sum([1 for r in results if _f2func.handle(r)]) / len(results) * 100

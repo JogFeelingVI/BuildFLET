@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 11:03:40
+# @Last Modified time: 2026-03-06 01:40:07
 
 
 from .pad import paditem, quickpad
@@ -36,7 +36,7 @@ class FilterChipV2(ft.Container):
         self.bgcolor = self.ColorOpx(0.1)
         self.border_radius = 8
         # 2. 设置边框：宽度和颜色
-        self.border = ft.Border.all(1, self.ColorOpx(0.3))
+        self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.3)))
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
         self.ondelete = ondelete
         self.onclick = onclick
@@ -52,11 +52,11 @@ class FilterChipV2(ft.Container):
 
     def handle_hover(self, e):
         if e.data:
-            self.border = ft.Border.all(1, self.ColorOpx(1))
-            self.bgcolor = self.ColorOpx(0.4)
+            self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.9)))
+            # self.bgcolor = self.ColorOpx(0.4)
         else:
-            self.border = ft.Border.all(1, self.ColorOpx(0.3))
-            self.bgcolor = self.ColorOpx(0.1)
+            self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.3)))
+            # self.bgcolor = self.ColorOpx(0.1)
 
     def handle_left_click(self, e):
         e.control = self
@@ -235,44 +235,42 @@ class FiltersList(ft.Container):
         width = 35
         heigth = 20
 
-        active_color = "#50fa7b"
-        default_color = "#a3a3a3"
+        active_color = "#0ea600"
+        default_color = "#4f4f4f"
+        
 
         def toggle_switch(e):
             if switch.data == "def":
                 switch.data = "act"
-                switch.alignment = ft.Alignment.CENTER_RIGHT
-                switch.border = ft.Border.all(
-                    1, ft.Colors.with_opacity(0.8, active_color)
-                )
-                handle.bgcolor = ft.Colors.with_opacity(0.8, active_color)
+                switch.bgcolor=active_color
+                switch.alignment=ft.Alignment.CENTER_RIGHT
+                handle.bgcolor = default_color
             else:
                 switch.data = "def"
-                switch.alignment = ft.Alignment.CENTER_LEFT
-                switch.border = ft.Border.all(
-                    1, ft.Colors.with_opacity(0.6, default_color)
-                )
-                handle.bgcolor = ft.Colors.with_opacity(0.8, default_color)
+                switch.bgcolor = default_color
+                switch.alignment=ft.Alignment.CENTER_LEFT
+                handle.bgcolor = active_color
             # end
+            switch.update()
             if onswitch:
                 onswitch(switch)
-
         handle = ft.Container(
-            width=14,
-            height=14,
-            border_radius=3,
-            bgcolor=ft.Colors.with_opacity(0.8, default_color),
+            height= 12,
+            width=12,
+            border_radius=6,
+            bgcolor=active_color,
+            border=ft.Border.all(1, "#ffffff"),
         )
         switch = ft.Container(
             data="def",
             width=width,
             height=heigth,
             padding=3,
-            border_radius=5,
+            border_radius=heigth/2,
             alignment=ft.Alignment.CENTER_LEFT,
-            border=ft.Border.all(1, ft.Colors.with_opacity(0.6, default_color)),
+            border=ft.Border.all(1,default_color),
             animate=ft.Animation(500, "decelerate"),
-            bgcolor=ft.Colors.TRANSPARENT,
+            bgcolor=default_color,
             content=handle,
             tooltip=ft.Tooltip(message="It saves automatically every 20 seconds."),
             on_click=toggle_switch,
@@ -957,7 +955,7 @@ class CommandList(ft.Container):
 
     async def handle_upload(self, e):
         await asyncio.sleep(0.5)
-        logr.info(f"handle upload {e}")
+        # logr.info(f"handle upload {e}")
         if e.progress == 1.0 and e.error == None:
             filepath = os.path.join(app_temp_path, f"filter/{e.file_name}")
             logr.info(f"upload Fullpath {filepath}")

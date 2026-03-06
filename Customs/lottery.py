@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-05 02:48:25
+# @Last Modified time: 2026-03-06 00:32:57
 
 from .Savedialogbox import savedialog, testdialog
 from .jackpot_core import randomData, filter_for_pabc
@@ -38,9 +38,9 @@ class itemC2plus(ft.Container):
         self.start_time = 0.0
         # 参数
         self.userColor = RandColor()
-        self.padding = 15
+        self.padding = 8
         self.border_radius = 10
-        self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.userColor))
+        # self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.userColor))
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
@@ -132,12 +132,6 @@ class itemC2plus(ft.Container):
         self.showNumber.update()
 
     # endregion
-
-    def tips_value(self, value: str, color: str = DraculaColors.FOREGROUND):
-        self.tips.value = f"{value}"
-        self.tips.color = ft.Colors.with_opacity(0.7, color)
-        self.tips.tooltip = ft.Tooltip(message=f"{value}")
-        self.tips.update()
 
     def displayshow(self, msg: str, size=35):
         text = ft.Text(
@@ -246,6 +240,14 @@ class itemC2plus(ft.Container):
             )
             rows: ft.Column = self.content
             rows.controls[1].visible = not self.selected
+            if self.selected:
+                self.border = ft.Border(
+                    left=ft.BorderSide(5, ft.Colors.with_opacity(1, self.userColor)),
+                )
+            else:
+                # self.border_radius = 10
+                self.border = None
+
             if self.adjust_position and self.selected:
                 self.adjust_position(self)
                 logr.info("adjust_position is self.")
