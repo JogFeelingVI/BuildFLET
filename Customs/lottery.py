@@ -513,12 +513,12 @@ class commandList(ft.Container):
             handle_hover(ft.Event(name="hover", control=conter, data=False))
 
         # end
-
+        uColor = RandColor(mode="Morandi")
         conter = ft.Container(
             width=size,
             height=size,
             alignment=ft.Alignment.CENTER,
-            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, uColor)),
             border_radius=8,
             animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
@@ -526,7 +526,7 @@ class commandList(ft.Container):
                 spacing=5,
                 alignment=ft.MainAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(icon, size=size * 0.45, color=DraculaColors.PURPLE),
+                    ft.Icon(icon, size=size * 0.45, color=uColor),
                     ft.Text(
                         value=f"{name}",
                         size=size * 0.15,

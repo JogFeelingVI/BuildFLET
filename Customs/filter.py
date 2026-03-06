@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-06 01:40:07
+# @Last Modified time: 2026-03-06 07:09:29
 
 
 from .pad import paditem, quickpad
@@ -237,25 +237,25 @@ class FiltersList(ft.Container):
 
         active_color = "#0ea600"
         default_color = "#4f4f4f"
-        
 
         def toggle_switch(e):
             if switch.data == "def":
                 switch.data = "act"
-                switch.bgcolor=active_color
-                switch.alignment=ft.Alignment.CENTER_RIGHT
+                switch.bgcolor = active_color
+                switch.alignment = ft.Alignment.CENTER_RIGHT
                 handle.bgcolor = default_color
             else:
                 switch.data = "def"
                 switch.bgcolor = default_color
-                switch.alignment=ft.Alignment.CENTER_LEFT
+                switch.alignment = ft.Alignment.CENTER_LEFT
                 handle.bgcolor = active_color
             # end
             switch.update()
             if onswitch:
                 onswitch(switch)
+
         handle = ft.Container(
-            height= 12,
+            height=12,
             width=12,
             border_radius=6,
             bgcolor=active_color,
@@ -266,9 +266,9 @@ class FiltersList(ft.Container):
             width=width,
             height=heigth,
             padding=3,
-            border_radius=heigth/2,
+            border_radius=heigth / 2,
             alignment=ft.Alignment.CENTER_LEFT,
-            border=ft.Border.all(1,default_color),
+            border=ft.Border.all(1, default_color),
             animate=ft.Animation(500, "decelerate"),
             bgcolor=default_color,
             content=handle,
@@ -759,12 +759,12 @@ class CommandList(ft.Container):
             handle_hover(ft.Event(name="hover", control=conter, data=False))
 
         # end
-
+        uColor = RandColor(mode="Morandi")
         conter = ft.Container(
             width=size,
             height=size,
             alignment=ft.Alignment.CENTER,
-            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)),
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.2, uColor)),
             border_radius=8,
             animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
@@ -772,7 +772,7 @@ class CommandList(ft.Container):
                 spacing=5,
                 alignment=ft.MainAxisAlignment.CENTER,
                 controls=[
-                    ft.Icon(icon, size=size * 0.45, color=DraculaColors.PURPLE),
+                    ft.Icon(icon, size=size * 0.45, color=uColor),
                     ft.Text(
                         value=f"{name.upper()}",
                         size=size * 0.15,
@@ -857,6 +857,11 @@ class CommandList(ft.Container):
             content_bytes = ""
             for _fitem in filtersAll:
                 content_bytes += json.dumps(_fitem) + "\n"
+            content_bytes = (
+                content_bytes
+                if isinstance(content_bytes, bytes)
+                else content_bytes.encode("utf-8")
+            )
             is_mobile_or_web = self.page.web or self.page.platform in [
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
@@ -865,7 +870,7 @@ class CommandList(ft.Container):
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
                 file_name="jackpot_filters.dict",
-                src_bytes=content_bytes.encode("utf-8"),
+                src_bytes=content_bytes,
             )
             logr.info(f"save_path: {save_path}")
             if save_path and not is_mobile_or_web:

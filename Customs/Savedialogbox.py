@@ -2,8 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-06 00:45:43
+# @Last Modified time: 2026-03-06 07:02:44
 import datetime
+
+from annotated_types import T
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 import asyncio
@@ -243,13 +245,12 @@ class testdialog(ft.AlertDialog):
             color=DraculaColors.ORANGE,
             italic=True,
         )
-        self.info_display = ft.Row(
+        self.info_display = ft.Column(
             tight=True,
-            spacing=8,
+            spacing=3,
             scroll=ft.ScrollMode.HIDDEN,
-            vertical_alignment=ft.CrossAxisAlignment.START,
             controls=[
-                self.error("Click the `Start testing` button to begin the test."),
+                self.info("Click the `Start testing` to begin the test."),
             ],
         )
         conter = ft.Container(
@@ -267,45 +268,37 @@ class testdialog(ft.AlertDialog):
         )
         return conter
 
-    def error(self, msg):
+
+    def info(self, *msg):
+        bold = False
+        size = 14
+        spans = []
+        for m in msg:
+            if m == f"{m}".upper() or "%" in f"{m}":
+                bold = True
+            spans.append(
+                ft.TextSpan(
+                    f"{m} ",
+                    style=ft.TextStyle(
+                        size=size + 1 if bold else size - 1,
+                        color=RandColor(mode="Morandi"),
+                        weight="bold" if bold else None,
+                        italic=bold,
+                    ),
+                )
+            )
+            bold = False
         conter = ft.Container(
-            padding=15,
+            padding=0,
             content=ft.Row(
                 spacing=5,
-                controls=[ft.Icon(ft.Icons.ERROR), ft.Text(f"{msg}", size=15)],
+                controls=[
+                    ft.Icon(ft.Icons.INFO, size=size),
+                    ft.Text(spans=spans),
+                ],
             ),
         )
         return conter
-
-    def info(self, *args):
-        # info = ft.Text(f"{msg}", size=15, color=RandColor(mode="Glass"))
-        infoColor = RandColor()
-        opc = lambda op: ft.Colors.with_opacity(op, infoColor)
-
-        def text(t: str, bold=False):
-            if t == t.upper() or "%" in t:
-                bold = True
-            return ft.Text(
-                f"{t}",
-                size=15,
-                color=infoColor,
-                weight="bold" if bold else None,
-            )
-
-        msgs = [text(f"{x}") for x in args if x not in [None, ""]]
-        info = ft.Container(
-            padding=15,
-            border_radius=10,
-            border=ft.Border(left=ft.BorderSide(5, opc(1))),
-            bgcolor=opc(0.1),
-            content=ft.Column(
-                tight=True,
-                spacing=5,
-                controls=[*msgs],
-            ),
-        )
-        # print(f'run info')
-        return info
 
     # region start_testing
     async def start_testing(self):
@@ -315,14 +308,14 @@ class testdialog(ft.AlertDialog):
         filtersAll = self.page.session.store.get("filters")
         self.info_display.controls.clear()
         if not filtersAll:
-            self.info_display.controls.append(self.error("filters is Null."))
+            self.info_display.controls.append(self.info("filters is Null."))
             self.info_display.update()
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
             results = []
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
-        self.info_display.update()
+        filed = []
         for _fitem in filtersAll:
             # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
@@ -333,9 +326,16 @@ class testdialog(ft.AlertDialog):
                 f"{_fitem['func']}",
                 f"{_fitem['target']}",
                 f"{_fitem['condition']}",
-                f"PR {pass_rate:.2f} %",
+                f"{pass_rate:.0f}%",
             ]
-            self.info_display.controls.append(self.info(*prinfo))
+            filed.append(prinfo)
+        sorted_data = sorted(filed, key=lambda x: x[-1])
+        max_num = max(item[-1] for item in sorted_data)
+        min_num = min(item[-1] for item in sorted_data)
+        for _s in list(sorted_data)[0:10]:
+            self.info_display.controls.append(self.info(*_s))
+        zuida = f"Max {max_num} Min: {min_num} filters len {len(filtersAll)}"
+        self.info_display.controls.append(self.info(zuida))
         self.info_display.update()
 
     # endregion
