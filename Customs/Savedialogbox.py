@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 14:06:57
+# @Last Modified time: 2026-03-07 14:14:01
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
@@ -290,7 +290,7 @@ class _tadbx:
         for i, m in enumerate(msg):
             if i == len(msg) - 1:
                 bold = True
-                m = f"{m}%" if m != "0" else f"{m}%"
+                m = f"{m}%" if m != "0" else f"{m}% ✖"
             spans.append(
                 ft.TextSpan(
                     f"{m} ",
