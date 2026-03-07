@@ -235,7 +235,7 @@ class FiltersList(ft.Container):
         width = 35
         heigth = 20
 
-        active_color = "#0ea600"
+        active_color = RandColor(mode="Glass")
         default_color = "#4f4f4f"
 
         def toggle_switch(e):
