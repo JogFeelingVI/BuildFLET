@@ -9,9 +9,6 @@ authors = [
 
 dependencies = [
   "flet>=0.81.0",
-  "requests==2.32.5",
-  "urllib3==2.5.0",
-  "chardet==6.0.0"
 ]
 
 [tool.flet]
@@ -20,3 +17,7 @@ bundle_id = "com.flet.lotter"
 
 [tool.uv]
 managed = true # 声明由 uv 管理
+
+# "requests==2.32.5",
+# "urllib3==2.5.0",
+# "chardet==6.0.0"
