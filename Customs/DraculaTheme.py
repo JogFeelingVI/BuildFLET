@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 04:20:46
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-02-25 03:05:46
+# @Last Modified time: 2026-03-07 09:21:35
 from typing import Final
 import random
 import colorsys
@@ -30,7 +30,7 @@ class DraculaColors:
 def RandColor(mode="def", is_dark_theme=True):
     """
     针对移动端深色背景优化的颜色生成器
-    is_dark_theme: 如果为 True，将确保颜色足够亮以在深色背景下显示
+    is_dark_theme: 如果为 True, 将确保颜色足够亮以在深色背景下显示
     """
     global _last_h
     _last_h = (_last_h + 0.618033988749895) % 1.0

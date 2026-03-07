@@ -2,28 +2,29 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 00:19:57
-import datetime
+# @Last Modified time: 2026-03-07 13:37:45
+
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
+from .adbox import adbx
 import asyncio
 import flet as ft
+import datetime
 
 
-# region savedialog
-class savedialog(ft.AlertDialog):
+# region _savedialog
+class _savedialog:
     def __init__(self):
-        super().__init__()
-        self.modal = True
-        self.content = self.__build_contens()
-        self.actions = self.__build_action()
-        self.content_padding = ft.Padding.all(15)
-
-        self.running = False
+        self.conten = self.__builde_conter()
+        self.adb = adbx(None, self.conten)
+        self.adb.setting_did_mount_callback(self.load_exp)
         self.exps_is_build = True
         self.getallexp = None
 
-    def __build_contens(self):
+    def seting_get_all_exp(self, getallexp=None):
+        self.getallexp = getallexp
+
+    def __builde_conter(self):
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.genid = randomData.generate_secure_string(8)
         footer = ft.Row(
@@ -43,8 +44,25 @@ class savedialog(ft.AlertDialog):
         self.exps = ft.Column(
             spacing=5,
         )
+        acts = ft.Row(
+            alignment=ft.MainAxisAlignment.END,
+            controls=[
+                ft.TextButton(
+                    "Cancel",
+                    on_click=self.__handle_cancel,
+                    style=ft.ButtonStyle(color=RandColor()),
+                ),
+                # 确定按钮用红色突出显示危险操作
+                ft.TextButton(
+                    "Save to png",
+                    on_click=self.__handle_save,
+                    style=ft.ButtonStyle(color=RandColor()),
+                ),
+            ],
+        )
+
         conter = ft.Container(
-            width=400,
+            # width=400,
             padding=5,
             border_radius=0,
             bgcolor=DraculaColors.BACKGROUND,
@@ -55,6 +73,7 @@ class savedialog(ft.AlertDialog):
                     title,
                     self.exps,
                     footer,
+                    acts,
                 ],
             ),
         )
@@ -64,67 +83,6 @@ class savedialog(ft.AlertDialog):
             tight=True,
         )
         return content
-
-    def __build_action(self):
-        acts = [
-            ft.TextButton(
-                "Cancel",
-                on_click=self.__handle_no,
-                style=ft.ButtonStyle(color=RandColor()),
-            ),
-            # 确定按钮用红色突出显示危险操作
-            ft.TextButton(
-                "Save to png",
-                on_click=self.__handle_yes,
-                style=ft.ButtonStyle(color=RandColor()),
-            ),
-        ]
-        return acts
-
-    def __handle_no(self, e):
-        self.page.pop_dialog()
-
-    async def __handle_yes(self, e):
-        if self.exps_is_build:
-            is_mobile_or_web = self.page.web or self.page.platform in [
-                ft.PagePlatform.ANDROID,
-                ft.PagePlatform.IOS,
-            ]
-            try:
-                image = await self.Screenshot.capture()
-                png_name = f"{self.genid}.png"
-                # print(f"{image.__sizeof__()=} {png_name=}")
-
-                save_png = await ft.FilePicker().save_file(
-                    file_type=ft.FilePickerFileType.CUSTOM,
-                    allowed_extensions=["png"],
-                    file_name=png_name,
-                    src_bytes=image,
-                )
-                # print(f"save_path: {save_png}")
-                if save_png and not is_mobile_or_web:
-                    with open(save_png, "wb") as f:
-                        f.write(image)
-                        self.page.show_dialog(
-                            ft.SnackBar(f"{self.page.platform} file save complete.")
-                        )
-                # print(f"Storage task completed.")
-            except Exception as er:
-                # print(f"Image saving error.")
-                pass
-            finally:
-                await asyncio.sleep(1)
-                self.page.pop_dialog()
-
-    def seting_get_all_exp(self, getallexp=None):
-        self.getallexp = getallexp
-
-    def did_mount(self):
-        self.running = True
-        self.page.run_task(self.load_exp)
-
-    def will_unmount(self):
-        self.running = False
 
     async def load_exp(self):
         self.exps_is_build = False
@@ -143,6 +101,10 @@ class savedialog(ft.AlertDialog):
         self.exps.controls = items
         self.exps.update()
         self.exps_is_build = True
+
+    def __handle_cancel(self):
+        if self.adb.running:
+            self.adb.page.pop_dialog()
 
     def CreateItem(self, text: str = "", i=0):
         userColor = RandColor(mode="def")
@@ -188,126 +150,66 @@ class savedialog(ft.AlertDialog):
         )
         return item
 
+    async def __handle_save(self):
+        if self.exps_is_build:
+            is_mobile_or_web = self.adb.page.web or self.adb.page.platform in [
+                ft.PagePlatform.ANDROID,
+                ft.PagePlatform.IOS,
+            ]
+            try:
+                image = await self.Screenshot.capture()
+                png_name = f"{self.genid}.png"
+                # print(f"{image.__sizeof__()=} {png_name=}")
+
+                save_png = await ft.FilePicker().save_file(
+                    file_type=ft.FilePickerFileType.CUSTOM,
+                    allowed_extensions=["png"],
+                    file_name=png_name,
+                    src_bytes=image,
+                )
+                # print(f"save_path: {save_png}")
+                if save_png and not is_mobile_or_web:
+                    with open(save_png, "wb") as f:
+                        f.write(image)
+                        self.adb.page.show_dialog(
+                            ft.SnackBar(f"{self.adb.page.platform} file save complete.")
+                        )
+                # print(f"Storage task completed.")
+            except Exception as er:
+                # print(f"Image saving error.")
+                pass
+            finally:
+                await asyncio.sleep(1)
+                self.adb.page.pop_dialog()
+
 
 # endregion
 
 
-# region test
-class testdialog(ft.AlertDialog):
+# region _tadbx
+class _tadbx:
     def __init__(self):
-        super().__init__()
-        self.modal = True
-        self.content = self.__build_contens()
-        self.actions = self.__build_action()
-        self.content_padding = ft.Padding.all(15)
-
-        self.running = False
-
-    def did_mount(self):
-        self.running = True
-
-    def will_unmount(self):
-        self.running = False
+        self.conten = self.__builde_conter()
+        self.adb = adbx(None, self.conten)
 
     def __handle_Close(self, e):
-        if self.running:
-            self.page.pop_dialog()
+        if self.adb.running:
+            self.adb.page.pop_dialog()
 
     def __handle_start(self, e):
-        if self.running:
-            self.page.run_task(self.start_testing)
-            # self.page.pop_dialog()
+        if self.adb.running:
+            self.adb.page.run_task(self.start_testing)
 
-    def __build_action(self):
-        acts = [
-            ft.TextButton(
-                "Close",
-                on_click=self.__handle_Close,
-                style=ft.ButtonStyle(color=RandColor()),
-            ),
-            # 确定按钮用红色突出显示危险操作
-            ft.TextButton(
-                "Start testing",
-                on_click=self.__handle_start,
-                style=ft.ButtonStyle(color=RandColor()),
-            ),
-        ]
-        return acts
-
-    def __build_contens(self):
-        title = ft.Text(
-            "Filter test",
-            size=28,
-            weight="bold",
-            font_family="RacingSansOne-Regular",
-            color=DraculaColors.ORANGE,
-            italic=True,
-        )
-        self.info_display = ft.Column(
-            tight=True,
-            spacing=3,
-            scroll=ft.ScrollMode.HIDDEN,
-            controls=[
-                self.info("Click the `Start testing` to begin the test."),
-            ],
-        )
-        conter = ft.Container(
-            width=400,
-            padding=5,
-            border_radius=0,
-            content=ft.Column(
-                tight=True,
-                spacing=5,
-                controls=[
-                    title,
-                    self.info_display,
-                ],
-            ),
-        )
-        return conter
-
-
-    def info(self, *msg):
-        bold = False
-        size = 14
-        spans = []
-        for m in msg:
-            if m == f"{m}".upper() or "%" in f"{m}":
-                bold = True
-            spans.append(
-                ft.TextSpan(
-                    f"{m} ",
-                    style=ft.TextStyle(
-                        size=size + 1 if bold else size - 1,
-                        color=RandColor(mode="Morandi"),
-                        weight="bold" if bold else None,
-                        italic=bold,
-                    ),
-                )
-            )
-            bold = False
-        conter = ft.Container(
-            padding=0,
-            content=ft.Row(
-                spacing=5,
-                controls=[
-                    ft.Icon(ft.Icons.INFO, size=size),
-                    ft.Text(spans=spans),
-                ],
-            ),
-        )
-        return conter
-
-    # region start_testing
     async def start_testing(self):
-        if not self.running:
+        if not self.adb.running:
             return
-        settings = self.page.session.store.get("settings")
-        filtersAll = self.page.session.store.get("filters")
+        settings = self.adb.page.session.store.get("settings")
+        filtersAll = self.adb.page.session.store.get("filters")
         self.info_display.controls.clear()
         if not filtersAll:
             self.info_display.controls.append(self.info("filters is Null."))
             self.info_display.update()
+            return
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
             results = []
@@ -324,7 +226,7 @@ class testdialog(ft.AlertDialog):
                 f"{_fitem['func']}",
                 f"{_fitem['target']}",
                 f"{_fitem['condition']}",
-                f"{pass_rate:.0f}%",
+                f"{pass_rate:.0f}",
             ]
             filed.append(prinfo)
         sorted_data = sorted(filed, key=lambda x: x[-1])
@@ -336,7 +238,85 @@ class testdialog(ft.AlertDialog):
         self.info_display.controls.append(self.info(zuida))
         self.info_display.update()
 
-    # endregion
+    def __builde_conter(self):
+        title = ft.Text(
+            "Filter test",
+            size=28,
+            weight="bold",
+            font_family="RacingSansOne-Regular",
+            color=DraculaColors.ORANGE,
+            italic=True,
+        )
+        self.info_display = ft.Column(
+            tight=True,
+            spacing=3,
+            scroll=ft.ScrollMode.HIDDEN,
+            controls=[
+                ft.Text("Click the `Start testing` to begin the test."),
+            ],
+        )
+        acts = ft.Row(
+            alignment=ft.MainAxisAlignment.END,
+            controls=[
+                ft.TextButton(
+                    "Close",
+                    on_click=self.__handle_Close,
+                    style=ft.ButtonStyle(color=RandColor()),
+                ),
+                # 确定按钮用红色突出显示危险操作
+                ft.TextButton(
+                    "Start testing",
+                    on_click=self.__handle_start,
+                    style=ft.ButtonStyle(color=RandColor()),
+                ),
+            ],
+        )
+        conter = ft.Container(
+            # width=400,
+            padding=5,
+            border_radius=0,
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                controls=[title, self.info_display, acts],
+            ),
+        )
+        return conter
+
+    def info(self, *msg):
+        bold = False
+        size = 14
+        spans = []
+        for i, m in enumerate(msg):
+            if i == len(msg) - 1:
+                bold = True
+                m = f"{m}%" if m != "0" else f"{m}% ✖"
+            spans.append(
+                ft.TextSpan(
+                    f"{m} ",
+                    style=ft.TextStyle(
+                        size=size + 1 if bold else size - 1,
+                        color=RandColor(mode="Morandi")
+                        if bold
+                        else ft.Colors.with_opacity(0.5, RandColor(mode="Morandi")),
+                        weight="bold" if bold else None,
+                        italic=bold,
+                    ),
+                )
+            )
+            bold = False
+        conter = ft.Container(
+            padding=0,
+            content=ft.Row(
+                spacing=5,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    # ft.Icon(ft.Icons.INFO, size=size),
+                    ft.Text(spans=spans),
+                ],
+            ),
+        )
+        return conter
 
 
 # endregion

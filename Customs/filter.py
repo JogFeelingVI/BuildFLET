@@ -2,9 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-06 07:09:29
+# @Last Modified time: 2026-03-07 11:52:53
 
-
+from .adbox import adbx
 from .pad import paditem, quickpad
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor
@@ -898,36 +898,39 @@ class CommandList(ft.Container):
                 self.page.session.store.set("filters", [])
             self.page.pop_dialog()
 
-        confirm_dialog = ft.AlertDialog(
-            modal=True,  # 模态对话框，必须点击按钮才能关闭
-            title=ft.Text("Confirm operation", size=16, color=RandColor()),
-            content=ft.Container(
-                padding=12,
-                width=400,
-                content=ft.Row(
-                    wrap=True,
-                    controls=ft.Text(
-                        value="Are you sure you want to clear all filters? This operation cannot be undone after it has been performed?",
-                        size=15,
-                        color=RandColor(),
-                    ),
+        content = ft.Row(
+            wrap=True,
+            controls=[
+                ft.Text(
+                    "Confirm operation",
+                    size=16,
+                    weight=ft.FontWeight.BOLD,
+                    color="#ffb006",
                 ),
-            ),
-            actions=[
-                ft.TextButton(
-                    "NO",
-                    on_click=cancel_clear,
-                    style=ft.ButtonStyle(color=RandColor()),
+                ft.Text(
+                    value="Are you sure you want to clear all filters?",
+                    size=15,
+                    color="#8bf1fc",
                 ),
-                # 确定按钮用红色突出显示危险操作
-                ft.TextButton(
-                    "YES",
-                    on_click=confirm_clear,
-                    style=ft.ButtonStyle(color=RandColor()),
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.END,
+                    controls=[
+                        ft.TextButton(
+                            "NO",
+                            on_click=cancel_clear,
+                            style=ft.ButtonStyle(color="#06ff97"),
+                        ),
+                        # 确定按钮用红色突出显示危险操作
+                        ft.TextButton(
+                            "YES",
+                            on_click=confirm_clear,
+                            style=ft.ButtonStyle(color="#ff0606"),
+                        ),
+                    ],
                 ),
             ],
-            actions_alignment=ft.MainAxisAlignment.END,  # 按钮靠右对齐
         )
+        confirm_dialog = adbx(None, content)
         self.page.show_dialog(confirm_dialog)
         logr.info(f"long press run cls.")
 

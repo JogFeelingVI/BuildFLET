@@ -4,7 +4,8 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-06 00:32:57
 
-from .Savedialogbox import savedialog, testdialog
+
+from .Savedialogbox import _savedialog, _tadbx
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -563,15 +564,15 @@ class commandList(ft.Container):
         )
 
     def handle_test(self, e):
-        tdb = testdialog()
-        self.page.show_dialog(tdb)
+        tdb = _tadbx()
+        self.page.show_dialog(tdb.adb)
 
     def handle_export(self, e):
         # if self.shot_capture:
         #     self.page.run_task(self.shot_capture)
-        sdb = savedialog()
+        sdb = _savedialog()
         sdb.seting_get_all_exp(self.get_exp_all)
-        self.page.show_dialog(sdb)
+        self.page.show_dialog(sdb.adb)
 
     def handle_add(self, e):
         """执行add"""

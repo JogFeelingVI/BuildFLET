@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 09:25:06
+# @Last Modified time: 2026-03-07 10:25:32
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -576,7 +576,7 @@ class DefaultSettings(ft.Container):
 
     def __init__(self):
         super().__init__()
-        self.userColor = RandColor()
+        self.userColor = RandColor(mode="Glass")
         self.width = float("inf")
         self.border = ft.Border.all(
             1, ft.Colors.with_opacity(0.6, DraculaColors.COMMENT)
@@ -613,10 +613,20 @@ class DefaultSettings(ft.Container):
             for k, item in Lotter_Data.items():
                 description = item.get("description", "")
                 button_list.append(
-                    ft.TextButton(
-                        content=f"{k}",
+                    # ft.TextButton(
+                    #     content=f"{k}",
+                    #     tooltip=ft.Tooltip(message=description),
+                    #     # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
+                    #     on_click=lambda e, name=k, data=item, desc=description: (
+                    #         self.save_preset_to_file(name, data, desc)
+                    #     ),
+                    # )
+                    ft.Container(
+                        padding=3,
+                        border_radius=3,
+                        bgcolor=ft.Colors.TRANSPARENT,
+                        content=ft.Text(f"{k}", size=15, color=RandColor(mode="Glass")),
                         tooltip=ft.Tooltip(message=description),
-                        # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
                         on_click=lambda e, name=k, data=item, desc=description: (
                             self.save_preset_to_file(name, data, desc)
                         ),
@@ -692,7 +702,7 @@ class DefaultSettings(ft.Container):
             alignment=ft.MainAxisAlignment.START,
         )
         add_rule = ft.Button(
-            bgcolor=DraculaColors.GREEN,
+            bgcolor=ft.Colors.with_opacity(0.8, RandColor(mode="Glass")),
             color=DraculaColors.BACKGROUND,
             icon=ft.Icons.ADD_CIRCLE_OUTLINE,
             content="new rule",
@@ -701,7 +711,7 @@ class DefaultSettings(ft.Container):
             on_click=self.handle_add_rule,
         )
         Regenerate = ft.Button(
-            bgcolor=ft.Colors.with_opacity(0.7, self.userColor),
+            bgcolor=ft.Colors.with_opacity(0.8, RandColor(mode="Glass")),
             color=DraculaColors.BACKGROUND,
             icon=ft.Icons.REFRESH,
             content="Regenerate",
