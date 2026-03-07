@@ -2,10 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-06 00:32:57
+# @Last Modified time: 2026-03-07 14:41:46
 
 
-from .Savedialogbox import _savedialog, _tadbx
+from .Savedialogbox import savedialog, tadbx
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 from .loger import logr
@@ -564,13 +564,13 @@ class commandList(ft.Container):
         )
 
     def handle_test(self, e):
-        tdb = _tadbx()
+        tdb = tadbx()
         self.page.show_dialog(tdb.adb)
 
     def handle_export(self, e):
         # if self.shot_capture:
         #     self.page.run_task(self.shot_capture)
-        sdb = _savedialog()
+        sdb = savedialog()
         sdb.seting_get_all_exp(self.get_exp_all)
         self.page.show_dialog(sdb.adb)
 

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-07 11:39:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 13:36:09
+# @Last Modified time: 2026-03-07 14:38:38
 
 
 from .DraculaTheme import DraculaColors, RandColor
@@ -56,3 +56,5 @@ class adbx(ft.AlertDialog):
         )
         conter.content = self._ucontent if self._ucontent else None
         return conter
+    
+    

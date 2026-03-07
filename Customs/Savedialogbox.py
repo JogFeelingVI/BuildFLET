@@ -13,7 +13,7 @@ import datetime
 
 
 # region _savedialog
-class _savedialog:
+class savedialog:
     def __init__(self):
         self.conten = self.__builde_conter()
         self.adb = adbx(None, self.conten)
@@ -187,7 +187,7 @@ class _savedialog:
 
 
 # region _tadbx
-class _tadbx:
+class tadbx:
     def __init__(self):
         self.conten = self.__builde_conter()
         self.adb = adbx(None, self.conten)
