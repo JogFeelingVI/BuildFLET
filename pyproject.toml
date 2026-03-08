@@ -10,6 +10,7 @@ authors = [
 dependencies = [
   "flet>=0.82.0",
   "binaryornot==0.4.4",
+  "requests",
 ]
 
 [tool.flet]
