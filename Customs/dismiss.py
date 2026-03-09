@@ -333,5 +333,3 @@ class listext_onlong(ft.Card):
                 await asyncio.sleep(0.1)
         finally:
             self.is_refreshing = False
-
-

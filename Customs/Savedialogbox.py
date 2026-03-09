@@ -2,11 +2,12 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 14:14:01
+# @Last Modified time: 2026-03-09 07:28:26
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor
 from .adbox import adbx
+from dataclasses import dataclass, field
 import asyncio
 import flet as ft
 import datetime
@@ -187,35 +188,66 @@ class savedialog:
 
 
 # region _tadbx
+@dataclass
+class TaskState:
+    result: list = field(default_factory=list)
+    info: str = ""
+    task: str = "none"
+
+    async def addinfo(self, text: str) -> str:
+        self.info = f"{text}"
+        await asyncio.sleep(0.3)
+
+    def getinfo(self) -> str:
+        info = self.info
+        self.info = None
+        return info
+
+    def additem(self, item):
+        self.result.append(item)
+
+    def getitems(self, sord: bool = False):
+        if sord == False:
+            return self.result[-10:]
+        else:
+            temp = list(sorted(self.result, key=lambda x: x[-1]))
+            return temp
+
+
 class tadbx:
     def __init__(self):
         self.conten = self.__builde_conter()
         self.adb = adbx(None, self.conten)
+        self.detectstatus = TaskState()
 
     def __handle_Close(self, e):
-        if self.adb.running:
+        if self.adb.running and self.detectstatus.task == "none":
             self.adb.page.pop_dialog()
 
     def __handle_start(self, e):
-        if self.adb.running:
-            self.adb.page.run_task(self.start_testing)
+        if self.adb.running and self.detectstatus.task == "none":
+            self.detectstatus.task = "Detection"
+            self.adb.page.run_task(self.Detection)
+            self.adb.page.run_task(self.showresult)
 
-    async def start_testing(self):
-        if not self.adb.running:
-            return
+    async def Detection(self):
+        await self.detectstatus.addinfo("Load 'settings' and 'filters' data.")
+        # await asyncio.sleep(0.3)
         settings = self.adb.page.session.store.get("settings")
         filtersAll = self.adb.page.session.store.get("filters")
-        self.info_display.controls.clear()
         if not filtersAll:
-            self.info_display.controls.append(self.info("filters is Null."))
-            self.info_display.update()
+            await self.detectstatus.addinfo("If filters is empty, skip the detection.")
+            # await asyncio.sleep(0.3)
+            self.detectstatus.task = "none"
             return
+        
+        await self.detectstatus.addinfo("Create a data pool.")
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
             results = []
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
-        filed = []
+        await asyncio.sleep(0.3)
         for _fitem in filtersAll:
             # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
@@ -226,17 +258,42 @@ class tadbx:
                 f"{_fitem['func']}",
                 f"{_fitem['target']}",
                 f"{_fitem['condition']}",
-                f"{pass_rate:.0f}",
+                int(pass_rate),
             ]
-            filed.append(prinfo)
-        sorted_data = sorted(filed, key=lambda x: x[-1])
+            self.detectstatus.additem(prinfo)
+            await self.detectstatus.addinfo(f"{_fitem['condition']} Test completed.")
+        # await asyncio.sleep(0.3)
+        await self.detectstatus.addinfo("Data sorting.")
+        sorted_data = sorted(self.detectstatus.getitems(True), key=lambda x: x[-1])
         max_num = max(item[-1] for item in sorted_data)
         min_num = min(item[-1] for item in sorted_data)
-        for _s in list(sorted_data)[0:10]:
-            self.info_display.controls.append(self.info(*_s))
+        self.detectstatus.result = sorted_data[0:9]
         zuida = f"Max {max_num} Min: {min_num} filters len {len(filtersAll)}"
-        self.info_display.controls.append(self.info(zuida))
-        self.info_display.update()
+        await self.detectstatus.addinfo(zuida)
+        # await asyncio.sleep(0.3)
+        self.detectstatus.task = "sorted"
+        print(f"Detection run done")
+
+    async def showresult(self):
+        while self.detectstatus.task == "Detection":
+            await asyncio.sleep(0.3)
+            text = self.detectstatus.getinfo()
+            if text:
+                if self.info_display.controls.__len__() >= 10:
+                    self.info_display.controls.pop(0)
+                self.info_display.controls.append(self.info(text))
+                self.info_display.update()
+        while self.detectstatus.task == "sorted":
+            await asyncio.sleep(0.3)
+            if self.info_display.controls.__len__() >= 10:
+                self.info_display.controls.pop(0)
+            popItem = self.detectstatus.result.pop(0)
+            self.info_display.controls.append(self.info(*popItem))
+            self.info_display.update()
+            if self.detectstatus.result.__len__() == 0:
+                self.detectstatus.task = "none"
+        print(f"showresult run done")
+
 
     def __builde_conter(self):
         title = ft.Text(
@@ -289,6 +346,8 @@ class tadbx:
         spans = []
         for i, m in enumerate(msg):
             if i == len(msg) - 1:
+                bold = True
+            if isinstance(m, int):
                 bold = True
                 m = f"{m}%" if m != "0" else f"{m}% ✖"
             spans.append(

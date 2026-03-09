@@ -67,5 +67,3 @@ def RandColor(mode="def", is_dark_theme=True):
     r, g, b = colorsys.hls_to_rgb(h, l, s)
     hex_color = "#{:02x}{:02x}{:02x}".format(int(r * 255), int(g * 255), int(b * 255))
     return hex_color
-
-

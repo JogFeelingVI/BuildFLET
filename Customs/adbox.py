@@ -14,7 +14,7 @@ class adbx(ft.AlertDialog):
         self.userColor = uc if uc else RandColor(mode="Galss")
         self.shape = ft.RoundedRectangleBorder(
             radius=10,
-            side=ft.BorderSide(2, self.userColor),
+            side=ft.BorderSide(2, self.userColor),  # 宽度为2，颜色为蓝色
         )
         self._ucontent = content
         self.running = False
@@ -48,10 +48,10 @@ class adbx(ft.AlertDialog):
             border=ft.Border.all(1, self.userColor),
             bgcolor=ft.Colors.with_opacity(0.9, "#252525"),
             shadow=ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=self.userColor,
-                offset=ft.Offset(0, 0),
+                spread_radius=1,  # 阴影扩散范围
+                blur_radius=15,  # 模糊程度（数值越大光越柔和）
+                color=self.userColor,  # 阴影颜色
+                offset=ft.Offset(0, 0),  # 阴影偏移
             ),
         )
         conter.content = self._ucontent if self._ucontent else None

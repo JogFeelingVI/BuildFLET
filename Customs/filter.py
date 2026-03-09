@@ -905,12 +905,12 @@ class CommandList(ft.Container):
                     "Confirm operation",
                     size=16,
                     weight=ft.FontWeight.BOLD,
-                    color="#ffb006",
+                    color=DraculaColors.ORANGE,
                 ),
                 ft.Text(
                     value="Are you sure you want to clear all filters?",
                     size=15,
-                    color="#8bf1fc",
+                    color=RandColor(mode="Glass"),
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.END,
@@ -918,13 +918,13 @@ class CommandList(ft.Container):
                         ft.TextButton(
                             "NO",
                             on_click=cancel_clear,
-                            style=ft.ButtonStyle(color="#06ff97"),
+                            style=ft.ButtonStyle(color=RandColor(mode="Glass")),
                         ),
                         # 确定按钮用红色突出显示危险操作
                         ft.TextButton(
                             "YES",
                             on_click=confirm_clear,
-                            style=ft.ButtonStyle(color="#ff0606"),
+                            style=ft.ButtonStyle(color=RandColor(mode="Glass")),
                         ),
                     ],
                 ),

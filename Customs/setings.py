@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 10:25:32
+# @Last Modified time: 2026-03-08 12:48:16
 
 from .DraculaTheme import DraculaColors, RandColor
 from .jackpot_core import randomData
@@ -94,7 +94,7 @@ class input_user_rule(ft.Container):
         super().__init__()
         self.textbox_list = []
         self.visible = False
-        self.userColor = RandColor()
+        self.userColor = RandColor(mode="Galss")
         self.content = self.__build_card()
         self.render_filters = None
         self.row_name_char = 65
@@ -262,7 +262,7 @@ class input_user_rule(ft.Container):
                     content=ft.Text(
                         "Add new game rules.",
                         size=16,
-                        color=ft.Colors.with_opacity(0.6, self.userColor),
+                        color=ft.Colors.with_opacity(0.6, RandColor(mode="Glass")),
                     ),
                 ),
                 ft.Container(
@@ -473,11 +473,12 @@ class showRulev2(ft.Container):
                 # PA Number Selection Rules: Choose 5 out of 36.
                 if item["enabled"] == False:
                     continue
-                ranges = item.get("range_end", 0)
+                rangea = item.get("range_start", 0)
+                rangeb = item.get("range_end", 0)
                 count = item.get("count", 0)
                 rules.append(
                     ft.Text(
-                        value=f"{key} Number Selection Rules: Choose {count} out of {ranges}.",
+                        value=f"{key} from {rangea}-{rangeb}, select {count} numbers.",
                         size=16,
                         color=ft.Colors.with_opacity(
                             0.6, color=DraculaColors.FOREGROUND
