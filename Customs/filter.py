@@ -2,12 +2,12 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 11:52:53
+# @Last Modified time: 2026-03-10 08:17:31
 
 from .adbox import adbx
 from .pad import paditem, quickpad
 from .jackpot_core import filterFunc
-from .DraculaTheme import DraculaColors, RandColor
+from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
 import flet as ft
 import os
@@ -26,10 +26,12 @@ class FilterChipV2(ft.Container):
     """高度定制 chip"""
 
     fontSize = 14
-    #! f"#{random.randint(0, 0xFFFFFF):06x}"
 
     def __init__(self, scd: dict, ondelete=None, onclick=None):
-        self.selectColor = RandColor()
+        self.selectColor = RandColor(mode="neon")
+        self.bgc = HarmonyColors(
+            base_hex_color=self.selectColor, harmony_type="split", mode="neon"
+        )
         super().__init__(data=scd)
         self.padding = 5
         self.content = self.__build__content(scd)
@@ -235,18 +237,20 @@ class FiltersList(ft.Container):
         width = 35
         heigth = 20
 
-        active_color = RandColor(mode="Glass")
-        default_color = "#4f4f4f"
+        active_color = RandColor(hue="red")
+        default_color, borde_color = HarmonyColors(
+            base_hex_color=active_color, harmony_type="triadic"
+        )
 
         def toggle_switch(e):
             if switch.data == "def":
                 switch.data = "act"
-                switch.bgcolor = active_color
+                switch.bgcolor = ft.Colors.with_opacity(0.3, active_color)
                 switch.alignment = ft.Alignment.CENTER_RIGHT
                 handle.bgcolor = default_color
             else:
                 switch.data = "def"
-                switch.bgcolor = default_color
+                switch.bgcolor = ft.Colors.with_opacity(0.3, default_color)
                 switch.alignment = ft.Alignment.CENTER_LEFT
                 handle.bgcolor = active_color
             # end
@@ -259,7 +263,7 @@ class FiltersList(ft.Container):
             width=12,
             border_radius=6,
             bgcolor=active_color,
-            border=ft.Border.all(1, "#ffffff"),
+            border=ft.Border.all(1, borde_color),
         )
         switch = ft.Container(
             data="def",
@@ -268,9 +272,9 @@ class FiltersList(ft.Container):
             padding=3,
             border_radius=heigth / 2,
             alignment=ft.Alignment.CENTER_LEFT,
-            border=ft.Border.all(1, default_color),
+            border=ft.Border.all(1, borde_color),
             animate=ft.Animation(500, "decelerate"),
-            bgcolor=default_color,
+            bgcolor=ft.Colors.with_opacity(0.3, default_color),
             content=handle,
             tooltip=ft.Tooltip(message="It saves automatically every 20 seconds."),
             on_click=toggle_switch,
@@ -898,6 +902,13 @@ class CommandList(ft.Container):
                 self.page.session.store.set("filters", [])
             self.page.pop_dialog()
 
+        title_color = RandColor(mode="neon")
+        text_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="analogous", mode="neon"
+        )
+        act_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="split", mode="neon"
+        )
         content = ft.Row(
             wrap=True,
             controls=[
@@ -905,12 +916,12 @@ class CommandList(ft.Container):
                     "Confirm operation",
                     size=16,
                     weight=ft.FontWeight.BOLD,
-                    color=DraculaColors.ORANGE,
+                    color=title_color,
                 ),
                 ft.Text(
                     value="Are you sure you want to clear all filters?",
                     size=15,
-                    color=RandColor(mode="Glass"),
+                    color=text_color[0],
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.END,
@@ -918,13 +929,13 @@ class CommandList(ft.Container):
                         ft.TextButton(
                             "NO",
                             on_click=cancel_clear,
-                            style=ft.ButtonStyle(color=RandColor(mode="Glass")),
+                            style=ft.ButtonStyle(color=act_color[0]),
                         ),
                         # 确定按钮用红色突出显示危险操作
                         ft.TextButton(
                             "YES",
                             on_click=confirm_clear,
-                            style=ft.ButtonStyle(color=RandColor(mode="Glass")),
+                            style=ft.ButtonStyle(color=act_color[1]),
                         ),
                     ],
                 ),

@@ -2,10 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-09 07:28:26
+# @Last Modified time: 2026-03-10 13:11:28
 
 from .jackpot_core import randomData, filter_for_pabc
-from .DraculaTheme import DraculaColors, RandColor
+from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .adbox import adbx
 from dataclasses import dataclass, field
 import asyncio
@@ -26,12 +26,17 @@ class savedialog:
         self.getallexp = getallexp
 
     def __builde_conter(self):
+        title_color = DraculaColors.ORANGE
+        text_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="analogous", mode="neon"
+        )
+        act_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="split", mode="neon"
+        )
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.genid = randomData.generate_secure_string(8)
         footer = ft.Row(
-            controls=[
-                ft.Text(f"{now} {self.genid}", size=14, color=DraculaColors.ORANGE)
-            ],
+            controls=[ft.Text(f"{now} {self.genid}", size=14, color=text_color[0])],
             alignment=ft.MainAxisAlignment.END,
         )
         title = ft.Text(
@@ -39,7 +44,7 @@ class savedialog:
             size=28,
             weight="bold",
             font_family="RacingSansOne-Regular",
-            color=DraculaColors.ORANGE,
+            color=title_color,
             italic=True,
         )
         self.exps = ft.Column(
@@ -51,13 +56,13 @@ class savedialog:
                 ft.TextButton(
                     "Cancel",
                     on_click=self.__handle_cancel,
-                    style=ft.ButtonStyle(color=RandColor()),
+                    style=ft.ButtonStyle(color=act_color[0]),
                 ),
                 # 确定按钮用红色突出显示危险操作
                 ft.TextButton(
                     "Save to png",
                     on_click=self.__handle_save,
-                    style=ft.ButtonStyle(color=RandColor()),
+                    style=ft.ButtonStyle(color=act_color[1]),
                 ),
             ],
         )
@@ -108,7 +113,7 @@ class savedialog:
             self.adb.page.pop_dialog()
 
     def CreateItem(self, text: str = "", i=0):
-        userColor = RandColor(mode="def")
+        userColor = RandColor(mode="neon")
         asize = 18
         item = (
             ft.Container(
@@ -240,7 +245,7 @@ class tadbx:
             # await asyncio.sleep(0.3)
             self.detectstatus.task = "none"
             return
-        
+
         await self.detectstatus.addinfo("Create a data pool.")
         if settings and filtersAll:
             _rdpn = randomData(seting=settings["randomData"])
@@ -272,7 +277,6 @@ class tadbx:
         await self.detectstatus.addinfo(zuida)
         # await asyncio.sleep(0.3)
         self.detectstatus.task = "sorted"
-        print(f"Detection run done")
 
     async def showresult(self):
         while self.detectstatus.task == "Detection":
@@ -292,16 +296,23 @@ class tadbx:
             self.info_display.update()
             if self.detectstatus.result.__len__() == 0:
                 self.detectstatus.task = "none"
-        print(f"showresult run done")
-
+        self.info_display.controls.append(self.info("Test complete ✔"))
+        self.info_display.update()
 
     def __builde_conter(self):
+        title_color = DraculaColors.ORANGE
+        text_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="analogous", mode="neon"
+        )
+        act_color = HarmonyColors(
+            base_hex_color=title_color, harmony_type="split", mode="neon"
+        )
         title = ft.Text(
             "Filter test",
             size=28,
             weight="bold",
             font_family="RacingSansOne-Regular",
-            color=DraculaColors.ORANGE,
+            color=title_color,
             italic=True,
         )
         self.info_display = ft.Column(
@@ -309,7 +320,9 @@ class tadbx:
             spacing=3,
             scroll=ft.ScrollMode.HIDDEN,
             controls=[
-                ft.Text("Click the `Start testing` to begin the test."),
+                ft.Text(
+                    "Click the `Start testing` to begin the test.", color=text_color[0]
+                ),
             ],
         )
         acts = ft.Row(
@@ -318,13 +331,13 @@ class tadbx:
                 ft.TextButton(
                     "Close",
                     on_click=self.__handle_Close,
-                    style=ft.ButtonStyle(color=RandColor()),
+                    style=ft.ButtonStyle(color=act_color[0]),
                 ),
                 # 确定按钮用红色突出显示危险操作
                 ft.TextButton(
                     "Start testing",
                     on_click=self.__handle_start,
-                    style=ft.ButtonStyle(color=RandColor()),
+                    style=ft.ButtonStyle(color=act_color[1]),
                 ),
             ],
         )
@@ -355,9 +368,9 @@ class tadbx:
                     f"{m} ",
                     style=ft.TextStyle(
                         size=size + 1 if bold else size - 1,
-                        color=RandColor(mode="Morandi")
+                        color=RandColor(mode="neon")
                         if bold
-                        else ft.Colors.with_opacity(0.5, RandColor(mode="Morandi")),
+                        else ft.Colors.with_opacity(0.5, RandColor(mode="neon")),
                         weight="bold" if bold else None,
                         italic=bold,
                     ),
@@ -376,6 +389,88 @@ class tadbx:
             ),
         )
         return conter
+
+
+# endregion
+
+
+# region upstash token
+
+
+class upstashtoken:
+    def __init__(self):
+        self.conten = self.__builde_conter()
+        self.adb = adbx(None, self.conten)
+        self.detectstatus = TaskState()
+
+    def __builde_conter(self):
+        title = ft.Column(
+            tight=True,
+            width=float("inf"),
+            spacing=0,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Text("Configuration", size=17, color=DraculaColors.FOREGROUND),
+                ft.Text(
+                    "Adjust your preferences below",
+                    size=14,
+                    color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
+                ),
+            ],
+        )
+        apitoken = ft.Column(
+            tight=True,
+            width=float("inf"),
+            spacing=0,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.START,
+            controls=[
+                ft.Text(
+                    "API Token",
+                    size=14,
+                    color=ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND),
+                ),
+                ft.TextField(hint_text="Enter your token", border=ft.InputBorder.NONE),
+            ],
+        )
+        acts = ft.Row(
+            alignment=ft.MainAxisAlignment.END,
+            controls=[
+                ft.TextButton(
+                    "Cancel",
+                    on_click=self.handle_cancel,
+                    style=ft.ButtonStyle(
+                        color=ft.Colors.with_opacity(0.8, DraculaColors.FOREGROUND)
+                    ),
+                ),
+                # 确定按钮用红色突出显示危险操作
+                ft.TextButton(
+                    "Apply",
+                    on_click=self.handle_apply,
+                    style=ft.ButtonStyle(color=RandColor(hue="blue")),
+                ),
+            ],
+        )
+        conter = ft.Container(
+            # width=400,
+            padding=5,
+            border_radius=0,
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[title, apitoken, acts],
+            ),
+        )
+        return conter
+
+    def handle_cancel(self):
+        self.adb.page.pop_dialog()
+
+    def handle_apply(self):
+        self.adb.page.pop_dialog()
 
 
 # endregion

@@ -2,12 +2,12 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-07 14:41:46
+# @Last Modified time: 2026-03-10 07:42:36
 
 
 from .Savedialogbox import savedialog, tadbx
 from .jackpot_core import randomData, filter_for_pabc
-from .DraculaTheme import DraculaColors, RandColor
+from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
 import flet as ft
 import os
@@ -38,11 +38,15 @@ class itemC2plus(ft.Container):
         self.tempd = None  # 记录计算结果
         self.start_time = 0.0
         # 参数
-        self.userColor = RandColor()
+        self.userColor = RandColor(mode="neon")
+        self.bgc = HarmonyColors(
+            base_hex_color=self.userColor, harmony_type="split", mode="neon"
+        )
         self.padding = 8
         self.border_radius = 10
-        # self.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, self.userColor))
-        self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
+        self.gradient = ft.LinearGradient(
+            colors=[ft.Colors.with_opacity(0.2, x) for x in self.bgc]
+        )
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
 
@@ -139,7 +143,7 @@ class itemC2plus(ft.Container):
             value=f"{msg}",
             size=size * 0.5,
             weight=ft.FontWeight.BOLD,
-            color=ft.Colors.with_opacity(0.7, RandColor()),
+            color=ft.Colors.with_opacity(0.7, RandColor(mode="neon")),
         )
         row = ft.Row(
             wrap=False,
@@ -235,7 +239,7 @@ class itemC2plus(ft.Container):
             # e.control.update()
             self.selected = not self.selected
             self.check.bgcolor = (
-                ft.Colors.with_opacity(0.6, DraculaColors.GREEN)
+                ft.Colors.with_opacity(0.6, RandColor(mode="neon", hue="Green"))
                 if self.selected
                 else None
             )
