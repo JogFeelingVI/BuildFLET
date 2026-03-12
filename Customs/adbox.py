@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-07 11:39:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-10 08:09:10
+# @Last Modified time: 2026-03-12 05:00:48
 
 
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -47,13 +47,14 @@ class adbx(ft.AlertDialog):
         conter = ft.Container(
             padding=12,
             width=400,
+            blur=ft.Blur(sigma_x=5, sigma_y=5, tile_mode=ft.BlurTileMode.MIRROR),
             border_radius=10,
-            border=ft.Border.all(1, shadow_color[0]),
-            bgcolor=ft.Colors.with_opacity(0.8, "#252525"),
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.3, shadow_color[0])),
+            bgcolor=ft.Colors.TRANSPARENT,
             shadow=ft.BoxShadow(
                 spread_radius=1,  # 阴影扩散范围
                 blur_radius=8,  # 模糊程度（数值越大光越柔和）
-                color=ft.Colors.with_opacity(0.64, shadow_color[1]),  # 阴影颜色
+                color=ft.Colors.with_opacity(0.2, shadow_color[1]),  # 阴影颜色
                 offset=ft.Offset(0, 0),  # 阴影偏移
             ),
         )

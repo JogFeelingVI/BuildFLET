@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-10 10:51:48
+# @Last Modified time: 2026-03-12 07:48:09
 
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .jackpot_core import randomData
@@ -694,8 +694,8 @@ class DefaultSettings(ft.Container):
 
     async def Regenerate_handle_click(self, e):
         id = f"{randomData.generate_secure_string(8)}"
-        self.stored_id = os.path.join(app_temp_path, f"gen_{id}.dict")
-        filePath = pathlib.Path(self.stored_id)
+        self.stored_path = os.path.join(app_temp_path, f"gen_{id}.dict")
+        filePath = pathlib.Path(self.stored_path)
         for item in filePath.parent.iterdir():
             if (
                 item.is_file() or item.is_symlink() and item.name.startswith("gen_")
@@ -704,7 +704,8 @@ class DefaultSettings(ft.Container):
                 item.unlink()
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
-        await ft.SharedPreferences().set("stored_id", self.stored_id)
+        storedid = {"path": self.stored_path, "id": id}
+        await ft.SharedPreferences().set("storedid", json.dumps(storedid))
         self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
 
     def __build_card(self):
@@ -790,11 +791,25 @@ class rsup(ft.Container):
         self.border_radius = 14
         self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.splitColor[0]))
         self.alignment = ft.Alignment.CENTER
+        self.running = False
         self.content = self.__build_conter()
+
+    def did_mount(self):
+        self.running = True
+        self.page.run_task(self.verdict_shows)
+
+    def will_unmount(self):
+        self.running = False
+
+    async def verdict_shows(self):
+        jsondata = await ft.SharedPreferences().get("upstash")
+        if jsondata:
+            self.tokenbt.content = f"Token Activation"
+            self.tokenbt.update()
 
     def __build_conter(self):
         bgc = RandColor(mode="neon", hue="green")
-        return ft.Row(
+        row = ft.Row(
             spacing=5,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER,
@@ -806,7 +821,7 @@ class rsup(ft.Container):
                     repeat=ft.ImageRepeat.NO_REPEAT,
                     fit=ft.BoxFit.CONTAIN,
                 ),
-                ft.Button(
+                tokenbt := ft.Button(
                     content="Enter your token",
                     icon=ft.Icons.TOKEN,
                     icon_color=ft.Colors.BLACK,
@@ -816,6 +831,8 @@ class rsup(ft.Container):
                 ),
             ],
         )
+        self.tokenbt = tokenbt
+        return row
 
     def __gradient(self):
         grd = ft.LinearGradient(
@@ -827,9 +844,21 @@ class rsup(ft.Container):
         )
         return grd
 
-    def handle_cilck(self):
+    async def handle_cilck(self):
         token = upstashtoken()
+        token.setting_apply_callback(self.handle_callback)
         self.page.show_dialog(token.adb)
+        jsondata = await ft.SharedPreferences().get("upstash")
+        if jsondata:
+            token.setting_valid_info(jsondata=jsondata)
+
+    async def handle_callback(self, jsondata: str):
+        if jsondata:
+            # logr.info(f"callback: {jsondata}")
+            if isinstance(jsondata, dict):
+                jsondata = json.dumps(jsondata)
+            await ft.SharedPreferences().set("upstash", json.dumps(jsondata))
+            self.page.run_task(self.verdict_shows)
 
 
 # endregion

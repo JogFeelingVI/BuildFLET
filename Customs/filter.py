@@ -2,9 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-10 08:17:31
+# @Last Modified time: 2026-03-12 08:42:42
 
 from .adbox import adbx
+from .asyncredis import RedisAPI
+from .Savedialogbox import CustomSwitch
 from .pad import paditem, quickpad
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -139,6 +141,10 @@ class FiltersList(ft.Container):
         self.padding = 10
         self.border_radius = 10
         self.startedit = False
+        self.upstash = None
+        self.config_id = "async_jackpot_settings"
+        self.local_last_update = 0
+        self.needs_update_run = False
 
     def setting_edit_Callback(self, edit_item_callback=None):
         self.editItemCallback = edit_item_callback
@@ -151,11 +157,12 @@ class FiltersList(ft.Container):
 
     def did_mount(self):
         self.running = True
+        self.page.run_task(self.load_upstash_confing)
 
     def will_unmount(self):
         self.running = False
 
-    def addFilter(self, scriptd: dict):
+    def addFilter(self, scriptd: dict, redis_async: bool = False):
         _scd = scriptd.copy()
         if "" in _scd.values():
             logr.info(f"add filter error {_scd}.")
@@ -224,63 +231,14 @@ class FiltersList(ft.Container):
             # endregion
         )
         self.startedit = False
-        self.filtersAll_change = "add"
+        self.filtersAll_change = "add" if not redis_async else "none"
         self.content.update()
-        self.filter_data_task()
+        if not redis_async:
+            self.filter_data_task()
 
     def filter_data_task(self):
         # self.page.session.store.set("filters", fiter_data)
         self.page.session.store.set("filters", self.filtersAll)
-
-    def Custom_Switch(self, onswitch=None):
-        """Custom Switch"""
-        width = 35
-        heigth = 20
-
-        active_color = RandColor(hue="red")
-        default_color, borde_color = HarmonyColors(
-            base_hex_color=active_color, harmony_type="triadic"
-        )
-
-        def toggle_switch(e):
-            if switch.data == "def":
-                switch.data = "act"
-                switch.bgcolor = ft.Colors.with_opacity(0.3, active_color)
-                switch.alignment = ft.Alignment.CENTER_RIGHT
-                handle.bgcolor = default_color
-            else:
-                switch.data = "def"
-                switch.bgcolor = ft.Colors.with_opacity(0.3, default_color)
-                switch.alignment = ft.Alignment.CENTER_LEFT
-                handle.bgcolor = active_color
-            # end
-            switch.update()
-            if onswitch:
-                onswitch(switch)
-
-        handle = ft.Container(
-            height=12,
-            width=12,
-            border_radius=6,
-            bgcolor=active_color,
-            border=ft.Border.all(1, borde_color),
-        )
-        switch = ft.Container(
-            data="def",
-            width=width,
-            height=heigth,
-            padding=3,
-            border_radius=heigth / 2,
-            alignment=ft.Alignment.CENTER_LEFT,
-            border=ft.Border.all(1, borde_color),
-            animate=ft.Animation(500, "decelerate"),
-            bgcolor=ft.Colors.with_opacity(0.3, default_color),
-            content=handle,
-            tooltip=ft.Tooltip(message="It saves automatically every 20 seconds."),
-            on_click=toggle_switch,
-        )
-
-        return switch
 
     def __command_button(self):
         """Add, Apply, Cancel"""
@@ -297,7 +255,7 @@ class FiltersList(ft.Container):
                             color=DraculaColors.COMMENT,
                             italic=True,
                         ),
-                        self.Custom_Switch(onswitch=self.handle_switch),
+                        CustomSwitch(on_change=self.handle_switch),
                     ],
                 ),
                 # "Various filter commands can be added to narrow down the massive pool of phone numbers."
@@ -318,26 +276,34 @@ class FiltersList(ft.Container):
         row.update()
 
     def handle_switch(self, e):
-        if not isinstance(e, ft.Container):
-            return
-        if e.data == "def":
-            e.badge = None
-            return
         self.page.run_task(self.auto_save, e, 10)
 
-    async def auto_save(self, sw: ft.Container, time: int = 10):
+    async def auto_save(self, sw: CustomSwitch, time: int = 10):
         _time = time
-        while _time != 0:
-            await asyncio.sleep(2)
-            _time -= 1
-            sw.badge = f"{_time}"
-            if self.filtersAll:
-                await self.saveTodict()
-            if _time == 0:
-                _time = time
-            if sw.data == "def":
-                sw.badge = None
+        # 使用 while True 更符合你周期性重置时间的逻辑
+        while sw.value:
+            # 建议将 sleep 改为 1 秒，2秒倒计时在 UI 上体验会有一点卡顿感
+            await asyncio.sleep(1)
+
+            # 🔴 关键修复：醒来后的第一件事，必须先检查开关是否已经被关闭！
+            # 如果关闭了，直接退出，绝对不要再去碰 sw.badge
+            if not sw.value:
+                sw.setingbadge(-1)
                 break
+
+            # 正常倒计时逻辑
+            _time -= 1
+            sw.setingbadge(_time)
+
+            # 时间到了触发保存
+            if _time <= 0:
+                self.page.run_task(self.needs_update)
+                if getattr(self, "filtersAll", False):
+                    # 注意：如果 saveTodict 耗时较长，UI上的数字会暂停变化直到保存结束
+                    await self.saveTodict()
+                _time = time  # 重置时间，开启下一轮
+
+            # 统一在这里更新 UI
             if self.running:
                 sw.update()
 
@@ -346,19 +312,79 @@ class FiltersList(ft.Container):
         if self.filtersAll_change == "none":
             return
         self.page.session.store.set("filters", self.filtersAll)
-        stored_id = await ft.SharedPreferences().get("stored_id")
-        if not stored_id:
+        storedid = await ft.SharedPreferences().get("storedid")
+        if not storedid:
             logr.error("ID not found.")
             self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
         try:
-            with open(stored_id, "w", encoding="utf-8") as f:
+            storedid = json.loads(storedid)
+            self.page.run_task(self.update_redis)
+            with open(storedid["path"], "w", encoding="utf-8") as f:
                 for item in self.filtersAll:
                     f.write(json.dumps(item, ensure_ascii=False) + "\n")
             logr.info(f"saveTodict is run.")
             self.filtersAll_change = "none"
         except Exception as er:
             logr.info(f"Auto Save error. {er}", exc_info=True)
+
+    async def load_upstash_confing(self):
+        jsondata = await ft.SharedPreferences().get("upstash")
+        if not jsondata:
+            logr.info("Failed to obtain upstash token.")
+            self.upstash = None
+            return
+        while isinstance(jsondata, str):
+            jsondata = json.loads(jsondata)
+        self.upstash = jsondata
+        logr.info("load_upstash_confing done.")
+
+    async def update_redis(self):
+        if self.needs_update_run:
+            return
+        if not self.upstash or not self.upstash.get("sync"):
+            return
+        settings = self.page.session.store.get("settings")
+        my_settings = {"setting": settings, "filters": self.filtersAll}
+        api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
+        success, timestamp = await api.save_sync_data(self.config_id, my_settings)
+        logr.info(f"Upstash successfully stored data. {success} {timestamp}")
+        self.local_last_update = timestamp
+
+    async def needs_update(self):
+        if self.needs_update_run:
+            return
+        if not self.upstash or not self.upstash.get("sync"):
+            return
+        self.needs_update_run = True
+        api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
+        needs_update = await api.check_needs_update(
+            self.config_id, self.local_last_update
+        )
+        if needs_update:
+            logr.info("💡 New configuration detected in the cloud...")
+
+            # 2. 拉取完整字典
+            cloud_data = await api.get_sync_data(self.config_id)
+
+            if cloud_data:
+                logr.info("✅ Retrieval successful.")
+                self.page.session.store.set("settings", cloud_data["setting"])
+                self.page.session.store.set("filters", cloud_data["filters"])
+                self.clear_all()
+                for _f in cloud_data["filters"]:
+                    self.addFilter(_f, redis_async=True)
+                    await asyncio.sleep(0.2)
+                # 3. 更新本地的时间戳，留作下次对比
+                self.local_last_update = cloud_data.get("_updated_at", 0)
+                logr.info(
+                    f"⚡The local timestamp has been updated!: {self.local_last_update}"
+                )
+        else:
+            logr.info(
+                "⚡ My local system is already configured with the latest settings!"
+            )
+        self.needs_update_run = False
 
     # endregion
 
@@ -902,26 +928,32 @@ class CommandList(ft.Container):
                 self.page.session.store.set("filters", [])
             self.page.pop_dialog()
 
-        title_color = RandColor(mode="neon")
-        text_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="analogous", mode="neon"
-        )
-        act_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="split", mode="neon"
-        )
-        content = ft.Row(
-            wrap=True,
+        title = ft.Row(
+            tight=True,
+            width=float("inf"),
+            spacing=0,
+            alignment=ft.MainAxisAlignment.CENTER,
             controls=[
                 ft.Text(
-                    "Confirm operation",
-                    size=16,
+                    "Confirm".upper(),
+                    size=18,
                     weight=ft.FontWeight.BOLD,
-                    color=title_color,
+                    color=DraculaColors.FOREGROUND,
                 ),
+            ],
+        )
+        content = ft.Column(
+            tight=True,
+            width=float("inf"),
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                title,
                 ft.Text(
                     value="Are you sure you want to clear all filters?",
                     size=15,
-                    color=text_color[0],
+                    weight=ft.FontWeight.BOLD,
+                    color=DraculaColors.RED,
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.END,
@@ -929,13 +961,17 @@ class CommandList(ft.Container):
                         ft.TextButton(
                             "NO",
                             on_click=cancel_clear,
-                            style=ft.ButtonStyle(color=act_color[0]),
+                            style=ft.ButtonStyle(
+                                color=ft.Colors.with_opacity(
+                                    0.8, DraculaColors.FOREGROUND
+                                )
+                            ),
                         ),
                         # 确定按钮用红色突出显示危险操作
                         ft.TextButton(
                             "YES",
                             on_click=confirm_clear,
-                            style=ft.ButtonStyle(color=act_color[1]),
+                            style=ft.ButtonStyle(color=RandColor(hue="red")),
                         ),
                     ],
                 ),
@@ -946,8 +982,8 @@ class CommandList(ft.Container):
         logr.info(f"long press run cls.")
 
     async def handle_Open(self, e):
-        stored_id = await ft.SharedPreferences().get("stored_id")
-        if not stored_id:
+        storedid = await ft.SharedPreferences().get("storedid")
+        if not storedid:
             self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
 
@@ -955,7 +991,8 @@ class CommandList(ft.Container):
         if self.filter_clear_all:
             self.filter_clear_all()
         try:
-            with open(stored_id, "r", encoding="utf-8") as f:
+            storedid = json.loads(storedid)
+            with open(storedid["path"], "r", encoding="utf-8") as f:
                 for line in f:
                     # 去掉行尾换行符并确保行不为空
                     line = line.strip()
