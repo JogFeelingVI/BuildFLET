@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 08:42:42
+# @Last Modified time: 2026-03-12 10:49:00
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -297,7 +297,7 @@ class FiltersList(ft.Container):
 
             # 时间到了触发保存
             if _time <= 0:
-                self.page.run_task(self.needs_update)
+                await self.needs_update()
                 if getattr(self, "filtersAll", False):
                     # 注意：如果 saveTodict 耗时较长，UI上的数字会暂停变化直到保存结束
                     await self.saveTodict()
@@ -319,7 +319,7 @@ class FiltersList(ft.Container):
             return
         try:
             storedid = json.loads(storedid)
-            self.page.run_task(self.update_redis)
+            await self.update_redis()
             with open(storedid["path"], "w", encoding="utf-8") as f:
                 for item in self.filtersAll:
                     f.write(json.dumps(item, ensure_ascii=False) + "\n")
