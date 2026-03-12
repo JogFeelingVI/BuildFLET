@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 10:49:00
+# @Last Modified time: 2026-03-12 13:50:24
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -955,25 +955,18 @@ class CommandList(ft.Container):
                     weight=ft.FontWeight.BOLD,
                     color=DraculaColors.RED,
                 ),
-                ft.Row(
-                    alignment=ft.MainAxisAlignment.END,
-                    controls=[
-                        ft.TextButton(
-                            "NO",
-                            on_click=cancel_clear,
-                            style=ft.ButtonStyle(
-                                color=ft.Colors.with_opacity(
-                                    0.8, DraculaColors.FOREGROUND
-                                )
-                            ),
-                        ),
-                        # 确定按钮用红色突出显示危险操作
-                        ft.TextButton(
-                            "YES",
-                            on_click=confirm_clear,
-                            style=ft.ButtonStyle(color=RandColor(hue="red")),
-                        ),
-                    ],
+                ft.Button(
+                    icon=ft.Icons.CLEAR_ALL,
+                    bgcolor=DraculaColors.RED,
+                    color=DraculaColors.FOREGROUND,
+                    content="Yes, Confirm all cleanup!",
+                    on_click=confirm_clear,
+                ),
+                ft.Button(
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    color=DraculaColors.FOREGROUND,
+                    content="Do not clean",
+                    on_click=cancel_clear,
                 ),
             ],
         )

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 09:03:55
+# @Last Modified time: 2026-03-12 14:57:40
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -199,6 +199,9 @@ class savedialog:
 @dataclass
 class TaskState:
     result: list = field(default_factory=list)
+    max_value: int = 100
+    min_value: int = 0
+    jdu: float = 0.0
     info: str = ""
     task: str = "none"
 
@@ -213,6 +216,9 @@ class TaskState:
 
     def additem(self, item):
         self.result.append(item)
+        temp = [item[-1] for item in self.result]
+        self.max_value = max(temp)
+        self.min_value = min(temp)
 
     def getitems(self, sord: bool = False):
         if sord == False:
@@ -246,7 +252,7 @@ class tadbx:
         if not filtersAll:
             await self.detectstatus.addinfo("If filters is empty, skip the detection.")
             # await asyncio.sleep(0.3)
-            self.detectstatus.task = "none"
+            self.detectstatus.task = "skip"
             return
 
         await self.detectstatus.addinfo("Create a data pool.")
@@ -256,7 +262,7 @@ class tadbx:
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
         await asyncio.sleep(0.3)
-        for _fitem in filtersAll:
+        for i, _fitem in enumerate(filtersAll):
             # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
             pass_rate = (
@@ -268,48 +274,38 @@ class tadbx:
                 f"{_fitem['condition']}",
                 int(pass_rate),
             ]
+            self.detectstatus.jdu = (i + 1) / len(filtersAll)
             self.detectstatus.additem(prinfo)
-            await self.detectstatus.addinfo(f"{_fitem['condition']} Test completed.")
-        # await asyncio.sleep(0.3)
-        await self.detectstatus.addinfo("Data sorting.")
-        sorted_data = sorted(self.detectstatus.getitems(True), key=lambda x: x[-1])
-        max_num = max(item[-1] for item in sorted_data)
-        min_num = min(item[-1] for item in sorted_data)
-        self.detectstatus.result = sorted_data[0:9]
-        zuida = f"Max {max_num} Min: {min_num} filters len {len(filtersAll)}"
-        await self.detectstatus.addinfo(zuida)
-        # await asyncio.sleep(0.3)
-        self.detectstatus.task = "sorted"
+            await self.detectstatus.addinfo(
+                f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
+            )
+            if pass_rate == 0:
+                self.detectstatus.task = "pass_rate_zero"
+                return
+
+        self.detectstatus.task = "none"
 
     async def showresult(self):
-        while self.detectstatus.task == "Detection":
+        while self.detectstatus.task in ["Detection", "pass_rate_zero","skip"]:
             await asyncio.sleep(0.3)
             text = self.detectstatus.getinfo()
             if text:
-                if self.info_display.controls.__len__() >= 10:
-                    self.info_display.controls.pop(0)
-                self.info_display.controls.append(self.info(text))
-                self.info_display.update()
-        while self.detectstatus.task == "sorted":
-            await asyncio.sleep(0.3)
-            if self.info_display.controls.__len__() >= 10:
-                self.info_display.controls.pop(0)
-            popItem = self.detectstatus.result.pop(0)
-            self.info_display.controls.append(self.info(*popItem))
-            self.info_display.update()
-            if self.detectstatus.result.__len__() == 0:
+                self.info_display.controls[0].value = text
+            self.smax.content.value = self.detectstatus.max_value
+            self.smin.content.value = self.detectstatus.min_value
+            self.pbar.value = self.detectstatus.jdu
+            self.tips.value = (
+                f"Testing in progress... {self.pbar.value * 100:.0f}% complete"
+            )
+            self.adb.content.update()
+            if self.detectstatus.task in ["pass_rate_zero","skip"]:
                 self.detectstatus.task = "none"
-        self.info_display.controls.append(self.info("Test complete ✔"))
-        self.info_display.update()
+                return
+
+        self.info_display.controls[0].value = "Test complete ✔"
+        self.info_display.controls[0].update()
 
     def __builde_conter(self):
-        title_color = DraculaColors.ORANGE
-        text_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="analogous", mode="neon"
-        )
-        act_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="split", mode="neon"
-        )
         title = ft.Row(
             spacing=3,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -324,47 +320,89 @@ class tadbx:
             ],
         )
         maxmin = ft.Row(
-            spacing=3,
+            spacing=10,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                ft.Container(
+                _smax := ft.Container(
                     expand=1,
                     height=65,
                     # 1. 删除 padding=10，避免上下空间被挤压
                     # 2. 加上 alignment，让内部文字完美水平+垂直居中
                     alignment=ft.Alignment.CENTER,
                     border_radius=10,
-                    bgcolor=ft.Colors.TRANSPARENT,
+                    bgcolor=ft.Colors.with_opacity(
+                        0.1, RandColor(mode="neon", hue="green")
+                    ),
                     border=ft.Border.all(
-                        1, ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND)
+                        1,
+                        ft.Colors.with_opacity(
+                            0.2, RandColor(mode="neon", hue="green")
+                        ),
                     ),
                     content=ft.Text(
                         "78",
                         size=40,
-                        color="#80fa42",
+                        color=ft.Colors.with_opacity(
+                            0.4, RandColor(mode="neon", hue="green")
+                        ),
                         # text_align="center" # 其实加了 alignment 后，这个可以不写了
                     ),
                 ),
-                ft.Container(
+                _smin := ft.Container(
                     expand=1,
                     height=65,
                     alignment=ft.Alignment.CENTER,  # 同上，完美居中
                     border_radius=10,
-                    bgcolor=ft.Colors.TRANSPARENT,
-                    border=ft.Border.all(
-                        1, ft.Colors.with_opacity(0.5, DraculaColors.FOREGROUND)
+                    bgcolor=ft.Colors.with_opacity(
+                        0.1, RandColor(mode="neon", hue="red")
                     ),
-                    content=ft.Text("23", size=40, color="#fc3131"),
+                    border=ft.Border.all(
+                        1,
+                        ft.Colors.with_opacity(0.2, RandColor(mode="neon", hue="red")),
+                    ),
+                    content=ft.Text(
+                        "23",
+                        size=40,
+                        color=ft.Colors.with_opacity(
+                            0.4, RandColor(mode="neon", hue="red")
+                        ),
+                    ),
                 ),
             ],
         )
+        self.smax = _smax
+        self.smin = _smin
+        schedule = ft.Column(
+            tight=True,
+            spacing=5,
+            controls=[
+                tips := ft.Text(
+                    "Testing in progress...84% complete",
+                    size=15,
+                    weight="bold",
+                    color=RandColor(mode="neon", hue="blue"),
+                    text_align=ft.TextAlign.END,
+                ),
+                pbar := ft.ProgressBar(
+                    value=0.5,
+                    expand=1,
+                    height=10,
+                    color=RandColor(mode="neon"),
+                    border_radius=5,
+                ),
+            ],
+        )
+        self.tips = tips
+        self.pbar = pbar
         self.info_display = ft.Column(
             tight=True,
             spacing=3,
             scroll=ft.ScrollMode.HIDDEN,
             controls=[
                 ft.Text(
-                    "Click the `Start testing` to begin the test.", color=text_color[0]
+                    "Click the `Start testing` to begin the test.",
+                    italic=True,
+                    color=ft.Colors.with_opacity(0.7, "#bebebe"),
                 ),
             ],
         )
@@ -373,14 +411,17 @@ class tadbx:
             controls=[
                 ft.TextButton(
                     "Close",
+                    expand=1,
                     on_click=self.__handle_Close,
-                    style=ft.ButtonStyle(color=act_color[0]),
+                    style=ft.ButtonStyle(color="#dfdfdf"),
                 ),
                 # 确定按钮用红色突出显示危险操作
-                ft.TextButton(
+                ft.Button(
                     "Start testing",
+                    expand=3,
+                    color=DraculaColors.FOREGROUND,
+                    bgcolor=DraculaColors.RED,
                     on_click=self.__handle_start,
-                    style=ft.ButtonStyle(color=act_color[1]),
                 ),
             ],
         )
@@ -391,7 +432,7 @@ class tadbx:
             content=ft.Column(
                 tight=True,
                 spacing=5,
-                controls=[title, maxmin, self.info_display, acts],
+                controls=[title, maxmin, schedule, self.info_display, acts],
             ),
         )
         return conter

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-11 03:59:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-11 22:39:23
+# @Last Modified time: 2026-03-12 13:01:38
 
 
 import json
@@ -72,7 +72,7 @@ class RedisAPI:
             }
 
     async def save_token(
-        self, user_token: str, user_data: str, expire_seconds: int = 1800
+        self, user_token: str, user_data: str, expire_seconds: int = 3600
     ) -> bool:
         """
         (辅助方法) 保存一个 Token 到数据库，并设置过期时间
@@ -89,7 +89,9 @@ class RedisAPI:
             print(f"[RedisAPI Error] Token saving failed: {e}")
             return False
 
-    async def save_sync_data(self, key_suffix: str, data: dict) -> bool:
+    async def save_sync_data(
+        self, key_suffix: str, data: dict, expire_seconds: int = 3600
+    ) -> bool:
         """
         保存字典数据，并自动注入/更新最新时间戳
         :param key_suffix: 数据的唯一标识 (比如 "settings", "user_123_config")
@@ -115,8 +117,8 @@ class RedisAPI:
 
             # 4. 双写策略：同时更新数据和时间戳
             # 这里使用了 Redis 的 pipeline(如果有) 或两次 set，Upstash 异步里直接 await 两次即可
-            await self._client.set(data_key, json_str)
-            await self._client.set(time_key, current_timestamp)
+            await self._client.set(data_key, json_str, ex=expire_seconds)
+            await self._client.set(time_key, current_timestamp, ex=expire_seconds)
 
             return True, current_timestamp
         except Exception as e:
