@@ -163,7 +163,7 @@ class itemC2plus(ft.Container):
             expand=True,
             spacing=2,
         )
-        colors = ["#747fdf","#eab425"]
+        colors = ["#aab1ee","#eab425"]
         uc = colors[0]
         for key in result:
             if key == "+":
