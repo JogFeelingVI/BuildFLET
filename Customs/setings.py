@@ -344,55 +344,17 @@ class showRulev2(ft.Container):
             1, ft.Colors.with_opacity(0.4, DraculaColors.ORANGE)
         )
         self.border_radius = 10
-        self.runloadpage = False
+        self.running = False
         self.clip_behavior = ft.ClipBehavior.HARD_EDGE
         self.content = self.__build_content()
 
     def did_mount(self):
         self.running = True
-        if not self.runloadpage:
-            # self.page.run_task(self.loadpage)
-            self.page.run_task(self.__update_card)
+        self.page.run_task(self.__update_card)
 
     def will_unmount(self):
         self.running = False
 
-    async def loadpage(self):
-        if self.runloadpage:
-            await asyncio.sleep(0.2)
-            for _b in self._stack.controls:
-                if _b.data == "_black":
-                    _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
-                    _b.update()
-            return
-
-        def offset():
-            refcan = {"x": [1, 200], "y": [1, 10]}
-            _offset = {name: random.randint(x, y) for name, (x, y) in refcan.items()}
-            return _offset
-
-        def black():
-            color = RandColor()
-            size = random.randint(5, 30)
-            return ft.Container(
-                data="_black",
-                width=size,
-                height=size,
-                bgcolor=ft.Colors.with_opacity(0.2, color),
-                border_radius=size / 2,
-                offset=ft.Offset(**offset()),
-                opacity=random.uniform(0.3, 1),
-                animate=300,
-            )
-
-        [self._stack.controls.insert(0, black()) for _ in range(70)]
-        await asyncio.sleep(0.2)
-        self.runloadpage = True
-        self._stack.update()
-        for _b in self._stack.controls:
-            if _b.data == "_black":
-                _b.bgcolor = ft.Colors.with_opacity(0.2, RandColor())
-                _b.update()
 
     def __build_content(self):
         """pass"""
@@ -470,7 +432,6 @@ class showRulev2(ft.Container):
             self.display_rules(randomDatax),
         ]
         self._content_column.update()
-        self.runloadpage = True
 
     def display_rules(self, pn: dict):
         rules = []
