@@ -12,6 +12,7 @@ dependencies = [
   "binaryornot==0.4.4",
   "requests",
   "upstash_redis",
+  "Pillow",
 ]
 
 [tool.flet]

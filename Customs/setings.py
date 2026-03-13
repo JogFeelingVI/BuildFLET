@@ -556,11 +556,11 @@ class showRulev2(ft.Container):
             expand=True,
             spacing=2,
         )
-        colors = ["#aab1ee","#eab425"]
+        colors = ["#aab1ee", "#eab425"]
         uc = colors[0]
         for key in result:
             if key == "+":
-                uc= colors[1]
+                uc = colors[1]
                 continue
             item = ft.Image(
                 src=svgimage(key),

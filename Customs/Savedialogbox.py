@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 07:19:33
+# @Last Modified time: 2026-03-13 15:55:10
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -11,10 +11,12 @@ from .adbox import adbx
 from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
 from dataclasses import dataclass, field
+from PIL import Image, ImageChops
 import asyncio
 import flet as ft
 import datetime
 import json
+import io
 
 
 # region _savedialog
@@ -51,7 +53,10 @@ class savedialog:
             color=title_color,
             italic=True,
         )
+
         self.exps = ft.Column(
+            tight=True,
+            width=364,
             spacing=5,
         )
         acts = ft.Row(
@@ -77,7 +82,7 @@ class savedialog:
         )
 
         conter = ft.Container(
-            # width=400,
+            width=374,
             padding=5,
             border_radius=6,
             bgcolor=DraculaColors.BACKGROUND,
@@ -92,12 +97,20 @@ class savedialog:
                 ],
             ),
         )
-        self.Screenshot = ft.Screenshot(content=conter)
+        self.Screenshot = ft.Screenshot(
+            content=conter,
+        )
         content = ft.Column(
             controls=[self.Screenshot],
             tight=True,
+            on_size_change=self.handle_resize,
         )
         return content
+    
+    async def handle_resize(self, e):
+        if e.height>=772.0:
+            await asyncio.sleep(1)
+            self.adb.page.run_task(self.__handle_save)
 
     async def load_exp(self):
         self.exps_is_build = False
@@ -139,21 +152,14 @@ class savedialog:
                             weight=ft.FontWeight.BOLD,
                             color=userColor,
                         ),
-                        # ft.Text(
-                        #     f"{chr(65 + i)}",
-                        #     size=asize * 1.43,
-                        #     text_align=ft.TextAlign.CENTER,
-                        #     color=DraculaColors.FOREGROUND,
-                        #     right=-3,
-                        # ),
                         ft.Image(
-                            src=svgimage(i+1),
+                            src=svgimage(i + 1),
                             width=asize * 1.68,
                             height=asize * 1.68,
                             color=ft.Colors.with_opacity(0.7, RandColor()),
                             right=-7,
                             bottom=-7,
-                        )
+                        ),
                     ],
                 ),
             )
@@ -161,7 +167,6 @@ class savedialog:
             else ft.Container(padding=5, height=10)
         )
         return item
-
 
     async def __handle_save(self):
         if self.exps_is_build:
@@ -171,8 +176,8 @@ class savedialog:
             ]
             try:
                 image = await self.Screenshot.capture()
+                image = self.crop_solid_bg(image)
                 png_name = f"{self.genid}.png"
-                # print(f"{image.__sizeof__()=} {png_name=}")
 
                 save_png = await ft.FilePicker().save_file(
                     file_type=ft.FilePickerFileType.CUSTOM,
@@ -189,11 +194,30 @@ class savedialog:
                         )
                 # print(f"Storage task completed.")
             except Exception as er:
-                # print(f"Image saving error.")
-                pass
+                print(f"Image saving error. {er}")
             finally:
                 await asyncio.sleep(1)
                 self.adb.page.pop_dialog()
+
+    def crop_solid_bg(self, image_bytes):
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        # 2. 获取图片左上角 (0,0) 的像素颜色，假设这就是背景色
+        # 如果你确定背景是白色，也可以直接写 bg_color = (255, 255, 255)
+        bg_color = img.getpixel((img.width - 1, img.height - 1))
+        # 3. 创建一张全背景色的假图片
+        bg_img = Image.new("RGB", img.size, bg_color)
+        # 4. 求差集，找到所有不是背景颜色的像素
+        diff = ImageChops.difference(img, bg_img)
+        # 5. 稍微模糊一下，处理边缘的抗锯齿毛边，并增强对比度
+        diff = diff.convert("L").point(lambda x: 255 if x > 30 else 0)
+        # 6. 获取所有非背景区域的边界
+        bbox = diff.getbbox()
+        if bbox:
+            byte_stream = io.BytesIO()
+            img.crop(bbox).save(byte_stream, format="PNG")
+            # print(f"crop png -> {bbox}")
+            return byte_stream.getvalue()
+        return image_bytes
 
 
 # endregion

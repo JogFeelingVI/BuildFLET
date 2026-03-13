@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 08:25:11
+# @Last Modified time: 2026-03-13 16:08:39
 
 
 from .Savedialogbox import savedialog, tadbx
@@ -56,7 +56,7 @@ class itemC2plus(ft.Container):
         if self.calc_task_running:
             return  # 如果已经在后台计算了，就不重复启动
 
-        logr.info(f"Start Data Generation {name}")
+        # logr.info(f"Start Data Generation {name}")
         self.calc_task_running = True
         self.state_exp = "calculating"
         self.start_time = time.time()
@@ -154,7 +154,7 @@ class itemC2plus(ft.Container):
             controls=[text],
         )
         return row
-    
+
     def displayNumbersv2(self, text: str, size: int = 35):
         result = re.findall(r"\d+|\+", text)
         row = ft.Row(
@@ -163,11 +163,11 @@ class itemC2plus(ft.Container):
             expand=True,
             spacing=2,
         )
-        colors = ["#aab1ee","#eab425"]
+        colors = ["#aab1ee", "#eab425"]
         uc = colors[0]
         for key in result:
             if key == "+":
-                uc= colors[1]
+                uc = colors[1]
                 continue
             item = ft.Image(
                 src=svgimage(key),
@@ -279,7 +279,7 @@ class itemC2plus(ft.Container):
 
             if self.adjust_position and self.selected:
                 self.adjust_position(self)
-                logr.info("adjust_position is self.")
+                # logr.info("adjust_position is self.")
             self.update()
             # end
 
@@ -418,7 +418,7 @@ class itemsList(ft.Container):
         control.controls.remove(item)
         control.controls.insert(0, item)
         control.update()
-        logr.info("adjust_position is Done.")
+        # logr.info("adjust_position is Done.")
 
     def add_itemc2(self, itemc2remove=None):
         control = self.content

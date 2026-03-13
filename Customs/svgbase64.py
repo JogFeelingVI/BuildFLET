@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-13 07:14:33
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 08:14:04
+# @Last Modified time: 2026-03-13 11:10:35
 
 import flet as ft
 import base64
+
 
 def svgimage(number, stroke_color="#FFFFFF"):
     # SVG 模板：关键在于 text 标签的定位属性
@@ -17,8 +18,8 @@ def svgimage(number, stroke_color="#FFFFFF"):
         <circle cx="100" cy="100" r="90" fill="none" stroke="{stroke_color}" stroke-width="8" />
         
         <!-- 居中数字 -->
-        <text x="46" y="132"
-              font-family="monospace" 
+        <text x="42" y="136"
+              font-family="JetBrainsMono-Bold" 
               font-size="100" 
               font-weight="bold"
               fill="{stroke_color}">
