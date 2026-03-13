@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 13:50:24
+# @Last Modified time: 2026-03-13 01:38:02
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -928,27 +928,12 @@ class CommandList(ft.Container):
                 self.page.session.store.set("filters", [])
             self.page.pop_dialog()
 
-        title = ft.Row(
-            tight=True,
-            width=float("inf"),
-            spacing=0,
-            alignment=ft.MainAxisAlignment.CENTER,
-            controls=[
-                ft.Text(
-                    "Confirm".upper(),
-                    size=18,
-                    weight=ft.FontWeight.BOLD,
-                    color=DraculaColors.FOREGROUND,
-                ),
-            ],
-        )
         content = ft.Column(
             tight=True,
             width=float("inf"),
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
-                title,
                 ft.Text(
                     value="Are you sure you want to clear all filters?",
                     size=15,
@@ -956,13 +941,14 @@ class CommandList(ft.Container):
                     color=DraculaColors.RED,
                 ),
                 ft.Button(
-                    icon=ft.Icons.CLEAR_ALL,
+                    icon=ft.Icons.CLEAR,
                     bgcolor=DraculaColors.RED,
                     color=DraculaColors.FOREGROUND,
                     content="Yes, Confirm all cleanup!",
                     on_click=confirm_clear,
                 ),
                 ft.Button(
+                    icon=ft.Icons.CANCEL,
                     bgcolor=ft.Colors.TRANSPARENT,
                     color=DraculaColors.FOREGROUND,
                     content="Do not clean",

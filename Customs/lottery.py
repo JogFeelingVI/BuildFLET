@@ -2,13 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-10 07:42:36
+# @Last Modified time: 2026-03-13 08:25:11
 
 
 from .Savedialogbox import savedialog, tadbx
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
+from .svgbase64 import svgimage
 import flet as ft
 import os
 import asyncio
@@ -120,7 +121,7 @@ class itemC2plus(ft.Container):
             self.showNumber.controls = self.displayshow("Please wait...").controls
 
         elif self.state_exp == "done":
-            self.showNumber.controls = self.displayNumbers(self.tempd).controls
+            self.showNumber.controls = self.displayNumbersv2(self.tempd).controls
 
         elif self.state_exp == "timeout":
             self.showNumber.controls = self.displayshow(
@@ -152,6 +153,29 @@ class itemC2plus(ft.Container):
             spacing=5,
             controls=[text],
         )
+        return row
+    
+    def displayNumbersv2(self, text: str, size: int = 35):
+        result = re.findall(r"\d+|\+", text)
+        row = ft.Row(
+            wrap=False,
+            scroll=ft.ScrollMode.HIDDEN,
+            expand=True,
+            spacing=2,
+        )
+        colors = ["#747fdf","#eab425"]
+        uc = colors[0]
+        for key in result:
+            if key == "+":
+                uc= colors[1]
+                continue
+            item = ft.Image(
+                src=svgimage(key),
+                width=size,
+                height=size,
+                color=uc,
+            )
+            row.controls.append(item)
         return row
 
     def displayNumbers(self, text: str, size: int = 35):

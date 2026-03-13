@@ -2,13 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 14:57:40
+# @Last Modified time: 2026-03-13 07:19:33
 
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .adbox import adbx
 from .asyncredis import RedisAPI
+from .svgbase64 import svgimage
 from dataclasses import dataclass, field
 import asyncio
 import flet as ft
@@ -30,16 +31,16 @@ class savedialog:
 
     def __builde_conter(self):
         title_color = DraculaColors.ORANGE
-        text_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="analogous", mode="neon"
-        )
-        act_color = HarmonyColors(
-            base_hex_color=title_color, harmony_type="split", mode="neon"
-        )
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.genid = randomData.generate_secure_string(8)
         footer = ft.Row(
-            controls=[ft.Text(f"{now} {self.genid}", size=14, color=text_color[0])],
+            controls=[
+                ft.Text(
+                    f"{now} {self.genid}",
+                    size=14,
+                    color=ft.Colors.with_opacity(0.7, DraculaColors.ORANGE),
+                )
+            ],
             alignment=ft.MainAxisAlignment.END,
         )
         title = ft.Text(
@@ -56,16 +57,21 @@ class savedialog:
         acts = ft.Row(
             alignment=ft.MainAxisAlignment.END,
             controls=[
-                ft.TextButton(
-                    "Cancel",
+                ft.Button(
+                    expand=2,
+                    icon=ft.Icons.CANCEL,
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    color=DraculaColors.FOREGROUND,
+                    content="Cancel",
                     on_click=self.__handle_cancel,
-                    style=ft.ButtonStyle(color=act_color[0]),
                 ),
-                # 确定按钮用红色突出显示危险操作
-                ft.TextButton(
-                    "Save to png",
+                ft.Button(
+                    expand=3,
+                    icon=ft.Icons.IMAGE,
+                    bgcolor=DraculaColors.RED,
+                    color=DraculaColors.FOREGROUND,
+                    content="Save to png",
                     on_click=self.__handle_save,
-                    style=ft.ButtonStyle(color=act_color[1]),
                 ),
             ],
         )
@@ -121,36 +127,33 @@ class savedialog:
         item = (
             ft.Container(
                 padding=5,
-                # border=ft.Border.all(1, ft.Colors.with_opacity(0.4, userColor)),
+                width=float("inf"),
                 bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
-                content=ft.Row(
-                    wrap=True,
-                    width=float("inf"),
-                    spacing=5,
+                content=ft.Stack(
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
                     controls=[
-                        ft.Container(
-                            content=ft.Text(
-                                f"{chr(65 + i)}",
-                                size=asize * 0.6,
-                                text_align=ft.TextAlign.CENTER,
-                                color=DraculaColors.FOREGROUND,
-                            ),
-                            alignment=ft.Alignment.CENTER,
-                            border_radius=asize / 2,
-                            border=ft.Border.all(
-                                1, ft.Colors.with_opacity(0.8, userColor)
-                            ),
-                            bgcolor=ft.Colors.with_opacity(0.2, userColor),
-                            width=asize,
-                            height=asize,
-                        ),
                         ft.Text(
                             f"{text}",
                             size=asize,
                             weight=ft.FontWeight.BOLD,
                             color=userColor,
                         ),
+                        # ft.Text(
+                        #     f"{chr(65 + i)}",
+                        #     size=asize * 1.43,
+                        #     text_align=ft.TextAlign.CENTER,
+                        #     color=DraculaColors.FOREGROUND,
+                        #     right=-3,
+                        # ),
+                        ft.Image(
+                            src=svgimage(i+1),
+                            width=asize * 1.68,
+                            height=asize * 1.68,
+                            color=ft.Colors.with_opacity(0.7, RandColor()),
+                            right=-7,
+                            bottom=-7,
+                        )
                     ],
                 ),
             )
@@ -158,6 +161,7 @@ class savedialog:
             else ft.Container(padding=5, height=10)
         )
         return item
+
 
     async def __handle_save(self):
         if self.exps_is_build:
@@ -279,14 +283,15 @@ class tadbx:
             await self.detectstatus.addinfo(
                 f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
             )
-            if pass_rate == 0:
+            print(f"pass rate {pass_rate}")
+            if pass_rate < 1.0:
                 self.detectstatus.task = "pass_rate_zero"
                 return
 
         self.detectstatus.task = "none"
 
     async def showresult(self):
-        while self.detectstatus.task in ["Detection", "pass_rate_zero","skip"]:
+        while self.detectstatus.task in ["Detection", "pass_rate_zero", "skip"]:
             await asyncio.sleep(0.3)
             text = self.detectstatus.getinfo()
             if text:
@@ -298,7 +303,7 @@ class tadbx:
                 f"Testing in progress... {self.pbar.value * 100:.0f}% complete"
             )
             self.adb.content.update()
-            if self.detectstatus.task in ["pass_rate_zero","skip"]:
+            if self.detectstatus.task in ["pass_rate_zero", "skip"]:
                 self.detectstatus.task = "none"
                 return
 

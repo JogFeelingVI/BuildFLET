@@ -7,6 +7,7 @@
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .jackpot_core import randomData
 from .Savedialogbox import upstashtoken
+from .svgbase64 import svgimage
 from .loger import logr
 import flet as ft
 import json
@@ -550,32 +551,22 @@ class showRulev2(ft.Container):
         """用环形标示 标识出数字"""
         result = re.findall(r"\d+|\+", text)
         row = ft.Row(
-            wrap=True,
-            # expand=True,
-            spacing=5,
-            run_spacing=5,
+            wrap=False,
+            scroll=ft.ScrollMode.HIDDEN,
+            expand=True,
+            spacing=2,
         )
-        colors = [["#d9dbdf", "#747fdf"], ["#eab425", "#fbbf24"]]
-        quan, shuzi = colors[0]
+        colors = ["#747fdf","#eab425"]
+        uc = colors[0]
         for key in result:
             if key == "+":
-                quan, shuzi = colors[1]
+                uc= colors[1]
                 continue
-            item = ft.Container(
-                content=ft.Text(
-                    value=f"{key}",
-                    size=size * 0.5,  # 字体大小约为容器的一半
-                    weight=ft.FontWeight.BOLD,
-                    color=shuzi,  # 文字建议也用金色系或对比色
-                    text_align=ft.TextAlign.CENTER,
-                ),
-                bgcolor=ft.Colors.TRANSPARENT,  # 背景透明
-                border=ft.Border.all(1, quan),
+            item = ft.Image(
+                src=svgimage(key),
                 width=size,
                 height=size,
-                border_radius=size / 2,
-                # padding=ft.Padding.all(5),
-                alignment=ft.Alignment.CENTER,
+                color=uc,
             )
             row.controls.append(item)
         return row
