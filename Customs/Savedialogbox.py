@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-14 14:50:59
+# @Last Modified time: 2026-03-14 23:50:59
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -137,7 +137,16 @@ class savedialog:
 
     def CreateItem(self, text: str = "", i: int = 0, fontsize: int = 18):
         userColor = RandColor(mode="neon")
-        sizes = caclfsize(text=text, defsize=fontsize)
+        twidth = 388
+        if self.adb.page.web:
+            twidth = 388-10-35
+        elif self.adb.page.platform.is_mobile():
+            twidth = 388-10-35
+        elif self.adb.page.platform.is_desktop():
+            twidth = 388-10-35
+        sizes = caclfsize(text=text, defsize=fontsize, targetwidth=twidth)
+        def onresize(e):
+            self.adb.page.show_dialog(ft.SnackBar(f"{e}"))
         # print(f'new font size {sizes}')
         item = (
             ft.Container(
@@ -145,13 +154,14 @@ class savedialog:
                 width=float("inf"),# 388
                 bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
+                on_size_change=onresize,
                 content=ft.Stack(
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                     controls=[
                         ft.Text(
                             f"{text}",
                             size=sizes,
-                            text_align=ft.TextAlign.CENTER,
+                            text_align=ft.TextAlign.START,
                             weight=ft.FontWeight.BOLD,
                             color=userColor,
                             font_family="Inter_18pt-SemiBold",
