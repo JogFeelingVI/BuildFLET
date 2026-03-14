@@ -2,8 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 15:55:10
-
+# @Last Modified time: 2026-03-14 14:50:59
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -11,19 +10,20 @@ from .adbox import adbx
 from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
 from dataclasses import dataclass, field
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageFont
 import asyncio
 import flet as ft
 import datetime
 import json
 import io
+import os
 
 
 # region _savedialog
 class savedialog:
     def __init__(self):
         self.conten = self.__builde_conter()
-        self.adb = adbx(None, self.conten)
+        self.adb = adbx(None, self.conten, Child_padding=0)
         self.adb.setting_did_mount_callback(self.load_exp)
         self.exps_is_build = True
         self.getallexp = None
@@ -40,6 +40,7 @@ class savedialog:
                 ft.Text(
                     f"{now} {self.genid}",
                     size=14,
+                    font_family="Inter_18pt-SemiBold",
                     color=ft.Colors.with_opacity(0.7, DraculaColors.ORANGE),
                 )
             ],
@@ -56,7 +57,7 @@ class savedialog:
 
         self.exps = ft.Column(
             tight=True,
-            width=364,
+            width=float("inf"),
             spacing=5,
         )
         acts = ft.Row(
@@ -82,9 +83,9 @@ class savedialog:
         )
 
         conter = ft.Container(
-            width=374,
+            width=float("inf"),
             padding=5,
-            border_radius=6,
+            border_radius=10,
             bgcolor=DraculaColors.BACKGROUND,
             content=ft.Column(
                 tight=True,
@@ -106,9 +107,9 @@ class savedialog:
             on_size_change=self.handle_resize,
         )
         return content
-    
+
     async def handle_resize(self, e):
-        if e.height>=772.0:
+        if e.height >= 772.0:
             await asyncio.sleep(1)
             self.adb.page.run_task(self.__handle_save)
 
@@ -123,7 +124,7 @@ class savedialog:
             return
         items = []
         for i, _exp in enumerate(all_exp):
-            items.append(self.CreateItem(_exp, i))
+            items.append(self.CreateItem(_exp, i, 18))
             if (i + 1) % 5 == 0 and (i + 1) < len(_exp):
                 items.append(self.CreateItem("", -1))
         self.exps.controls = items
@@ -134,13 +135,14 @@ class savedialog:
         if self.adb.running:
             self.adb.page.pop_dialog()
 
-    def CreateItem(self, text: str = "", i=0):
+    def CreateItem(self, text: str = "", i: int = 0, fontsize: int = 18):
         userColor = RandColor(mode="neon")
-        asize = 18
+        sizes = caclfsize(text=text, defsize=fontsize)
+        # print(f'new font size {sizes}')
         item = (
             ft.Container(
                 padding=5,
-                width=float("inf"),
+                width=float("inf"),# 388
                 bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
                 content=ft.Stack(
@@ -148,14 +150,16 @@ class savedialog:
                     controls=[
                         ft.Text(
                             f"{text}",
-                            size=asize,
+                            size=sizes,
+                            text_align=ft.TextAlign.CENTER,
                             weight=ft.FontWeight.BOLD,
                             color=userColor,
+                            font_family="Inter_18pt-SemiBold",
                         ),
                         ft.Image(
                             src=svgimage(i + 1),
-                            width=asize * 1.68,
-                            height=asize * 1.68,
+                            width=fontsize * 1.68,
+                            height=fontsize * 1.68,
                             color=ft.Colors.with_opacity(0.7, RandColor()),
                             right=-7,
                             bottom=-7,
@@ -372,7 +376,7 @@ class tadbx:
                         "78",
                         size=40,
                         color=ft.Colors.with_opacity(
-                            0.4, RandColor(mode="neon", hue="green")
+                            0.8, RandColor(mode="neon", hue="green")
                         ),
                         # text_align="center" # 其实加了 alignment 后，这个可以不写了
                     ),
@@ -393,7 +397,7 @@ class tadbx:
                         "23",
                         size=40,
                         color=ft.Colors.with_opacity(
-                            0.4, RandColor(mode="neon", hue="red")
+                            0.8, RandColor(mode="neon", hue="red")
                         ),
                     ),
                 ),
@@ -466,42 +470,42 @@ class tadbx:
         )
         return conter
 
-    def info(self, *msg):
-        bold = False
-        size = 14
-        spans = []
-        for i, m in enumerate(msg):
-            if i == len(msg) - 1:
-                bold = True
-            if isinstance(m, int):
-                bold = True
-                m = f"{m}%" if m != "0" else f"{m}% ✖"
-            spans.append(
-                ft.TextSpan(
-                    f"{m} ",
-                    style=ft.TextStyle(
-                        size=size + 1 if bold else size - 1,
-                        color=RandColor(mode="neon")
-                        if bold
-                        else ft.Colors.with_opacity(0.5, RandColor(mode="neon")),
-                        weight="bold" if bold else None,
-                        italic=bold,
-                    ),
-                )
-            )
-            bold = False
-        conter = ft.Container(
-            padding=0,
-            content=ft.Row(
-                spacing=5,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                controls=[
-                    # ft.Icon(ft.Icons.INFO, size=size),
-                    ft.Text(spans=spans),
-                ],
-            ),
-        )
-        return conter
+    # def info(self, *msg):
+    #     bold = False
+    #     size = 14
+    #     spans = []
+    #     for i, m in enumerate(msg):
+    #         if i == len(msg) - 1:
+    #             bold = True
+    #         if isinstance(m, int):
+    #             bold = True
+    #             m = f"{m}%" if m != "0" else f"{m}% ✖"
+    #         spans.append(
+    #             ft.TextSpan(
+    #                 f"{m} ",
+    #                 style=ft.TextStyle(
+    #                     size=size + 1 if bold else size - 1,
+    #                     color=RandColor(mode="neon")
+    #                     if bold
+    #                     else ft.Colors.with_opacity(0.5, RandColor(mode="neon")),
+    #                     weight="bold" if bold else None,
+    #                     italic=bold,
+    #                 ),
+    #             )
+    #         )
+    #         bold = False
+    #     conter = ft.Container(
+    #         padding=0,
+    #         content=ft.Row(
+    #             spacing=5,
+    #             vertical_alignment=ft.CrossAxisAlignment.CENTER,
+    #             controls=[
+    #                 # ft.Icon(ft.Icons.INFO, size=size),
+    #                 ft.Text(spans=spans),
+    #             ],
+    #         ),
+    #     )
+    #     return conter
 
 
 # endregion
@@ -832,3 +836,54 @@ class CustomSwitch(ft.Container):
 
 
 # endregion
+
+
+# region CasfontW
+def caclfsize(
+    text: str,
+    fontname: str=None,
+    targetwidth: int = 355,
+    defsize: int = 18,
+    maxsize: int = 26,
+) -> int:
+    """
+    根据目标像素宽度计算最佳字体大小
+    :param fontpath: .ttf 字体文件的物理路径
+    :param text: 要显示的文本内容
+    :param targetwidth: 目标的像素宽度 (默认 360)
+    :param defsize: 默认大小、起始大小
+    :param maxsize: 最大值
+    :return: 建议的 font_size (int)
+    """
+    low = 1
+    high = maxsize  # 设置一个合理的上限
+    best_size = defsize
+
+    if not fontname:
+        fontname = "Inter_18pt-SemiBold"
+    
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__)) 
+    # 向上跳一级到 /src/，再进入 assets/fonts/
+    FONT_PHYSICAL_PATH = os.path.abspath(os.path.join(CURRENT_DIR, "..", "assets", "fonts", f"{fontname}.ttf"))
+
+    # 使用二分法快速逼近目标宽度
+    while low <= high:
+        mid = (low + high) // 2
+        try:
+            font = ImageFont.truetype(FONT_PHYSICAL_PATH, mid)
+            # 获取文本渲染后的边界框 [left, top, right, bottom]
+            bbox = font.getbbox(text)
+            current_width = bbox[2] - bbox[0]
+
+            if current_width <= targetwidth:
+                best_size = mid
+                low = mid + 1
+            else:
+                high = mid - 1
+        except Exception as ex:
+            # print(f'caclfsize error, use defsize {defsize}: {ex}')
+            return defsize
+    return max(defsize, best_size)
+
+
+# ednregion

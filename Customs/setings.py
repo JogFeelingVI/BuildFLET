@@ -355,7 +355,6 @@ class showRulev2(ft.Container):
     def will_unmount(self):
         self.running = False
 
-
     def __build_content(self):
         """pass"""
         self.tips = ft.Text(

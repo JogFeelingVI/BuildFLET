@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-08 22:34:35
+# @Last Modified time: 2026-03-14 14:17:07
 
 from Customs.DraculaTheme import DraculaColors, RandColor
 from Customs.setings import SetingsPage
@@ -35,7 +35,7 @@ async def main(page: ft.Page):
     # fsp_fonts = fsp.get_fastest_json()
     fsp_fonts = FontManager()
     page.fonts = fsp_fonts.get_fonts()
-    logr.info(f"Registered fonts: {page.fonts.keys()}")
+    logr.info(f"Registered fonts: {page.fonts}")
 
     # --- 4. 预定义底部图标引用 (方便后续动态修改 Badge) ---
     lottery_icon = ft.Icon(
