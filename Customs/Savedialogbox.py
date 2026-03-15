@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-14 23:50:59
+# @Last Modified time: 2026-03-15 00:21:32
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -137,13 +137,7 @@ class savedialog:
 
     def CreateItem(self, text: str = "", i: int = 0, fontsize: int = 18):
         userColor = RandColor(mode="neon")
-        twidth = 388
-        if self.adb.page.web:
-            twidth = 388-10-35
-        elif self.adb.page.platform.is_mobile():
-            twidth = 388-10-35
-        elif self.adb.page.platform.is_desktop():
-            twidth = 388-10-35
+        twidth = 388-45
         sizes = caclfsize(text=text, defsize=fontsize, targetwidth=twidth)
         def onresize(e):
             self.adb.page.show_dialog(ft.SnackBar(f"{e}"))
