@@ -2,7 +2,8 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-15 03:27:41
+# @Last Modified time: 2026-03-15 16:14:35
+
 
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
@@ -137,20 +138,21 @@ class savedialog:
 
     def CreateItem(self, text: str = "", i: int = 0, fontsize: int = 18):
         userColor = RandColor(mode="neon")
-        twidth = 388-45
+        twidth = 388 - 47
         if self.adb.page.platform.is_mobile():
-            twidth = 292-45
+            twidth = 292 - 47
         sizes = caclfsize(text=text, defsize=fontsize, targetwidth=twidth)
-        def onresize(e):
-            self.adb.page.show_dialog(ft.SnackBar(f"{e}"))
+        # def onresize(e):
+        #     print(f'onresize {e}')
+        #     self.adb.page.show_dialog(ft.SnackBar(f"{e}"))
         # print(f'new font size {sizes}')
         item = (
             ft.Container(
                 padding=5,
-                width=float("inf"),# 388
+                width=float("inf"),  # 388
                 bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
-                on_size_change=onresize,
+                # on_size_change=onresize,
                 content=ft.Stack(
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
                     controls=[
@@ -317,7 +319,6 @@ class tadbx:
             await self.detectstatus.addinfo(
                 f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
             )
-            print(f"pass rate {pass_rate}")
             if pass_rate < 1.0:
                 self.detectstatus.task = "pass_rate_zero"
                 return
@@ -445,6 +446,16 @@ class tadbx:
                 ),
             ],
         )
+        # def handle_more_on_siee(e):
+        #     print(f"more e: {e}")
+        self.more_display = ft.Column(
+            data="hide",  # hide or show
+            tight=True,
+            spacing=0,
+            scroll=ft.ScrollMode.HIDDEN,
+            controls=[self.Details(type="more")],
+            # on_size_change=handle_more_on_siee
+        )
         acts = ft.Row(
             alignment=ft.MainAxisAlignment.END,
             controls=[
@@ -471,49 +482,78 @@ class tadbx:
             content=ft.Column(
                 tight=True,
                 spacing=5,
-                controls=[title, maxmin, schedule, self.info_display, acts],
+                controls=[
+                    title,
+                    maxmin,
+                    schedule,
+                    self.more_display,
+                    self.info_display,
+                    acts,
+                ],
             ),
         )
         return conter
 
-    # def info(self, *msg):
-    #     bold = False
-    #     size = 14
-    #     spans = []
-    #     for i, m in enumerate(msg):
-    #         if i == len(msg) - 1:
-    #             bold = True
-    #         if isinstance(m, int):
-    #             bold = True
-    #             m = f"{m}%" if m != "0" else f"{m}% ✖"
-    #         spans.append(
-    #             ft.TextSpan(
-    #                 f"{m} ",
-    #                 style=ft.TextStyle(
-    #                     size=size + 1 if bold else size - 1,
-    #                     color=RandColor(mode="neon")
-    #                     if bold
-    #                     else ft.Colors.with_opacity(0.5, RandColor(mode="neon")),
-    #                     weight="bold" if bold else None,
-    #                     italic=bold,
-    #                 ),
-    #             )
-    #         )
-    #         bold = False
-    #     conter = ft.Container(
-    #         padding=0,
-    #         content=ft.Row(
-    #             spacing=5,
-    #             vertical_alignment=ft.CrossAxisAlignment.CENTER,
-    #             controls=[
-    #                 # ft.Icon(ft.Icons.INFO, size=size),
-    #                 ft.Text(spans=spans),
-    #             ],
-    #         ),
-    #     )
-    #     return conter
+    async def handle_more(self, e):
+        items = self.detectstatus.getitems(sord=True)
+        if not items:
+            return
+        if self.more_display.data == "hide":
+            self.more_display.data = "show"
+            self.more_display.height = 160
+        elif self.more_display.data == "show":
+            self.more_display.data = "hide"
+            self.more_display.height = 20
+        if self.more_display.controls.__len__() == 1:
+            for item in items:
+                self.more_display.controls.append(self.Details(*item, type="info"))
+        self.more_display.update()
 
-
+    def Details(self, *args, **kwargs):
+        bold = kwargs.get("bold", False)
+        size = kwargs.get("size", 14)
+        typed = kwargs.get("type", "more")  # more info
+        usercolor = kwargs.get("usercolor", RandColor(mode="neon"))
+        match typed:
+            case "more":
+                temp = ft.Container(
+                    padding=0,
+                    content=ft.Row(
+                        spacing=5,
+                        controls=[
+                            ft.Container(
+                                padding=0,
+                                expand=True,
+                                height=1,
+                                bgcolor=DraculaColors.FOREGROUND,
+                            ),
+                            ft.Container(
+                                padding=0,
+                                content=ft.Text("* MORE *"),
+                                on_click=self.handle_more,
+                            ),
+                        ],
+                    ),
+                )
+            case "info":
+                f, t, c, pr = args
+                # print(f'{args}')
+                temp = ft.Container(
+                    padding=2,
+                    content=ft.Row(
+                        spacing=3,
+                        controls=[
+                            ft.Text(f"{pr:<4}", weight="bold", color="#E61C1C"),
+                            ft.Text(f"{f}", color="#1C99E6"),
+                            ft.Text(f"{t:<2}", weight="bold", color="#F9E10A"),
+                            ft.Text(f"{c}", color="#A0F1AA"),
+                        ],
+                    ),
+                )
+            case _:
+                pass
+        return temp
+    
 # endregion
 
 
@@ -847,7 +887,7 @@ class CustomSwitch(ft.Container):
 # region CasfontW
 def caclfsize(
     text: str,
-    fontname: str=None,
+    fontname: str = None,
     targetwidth: int = 355,
     defsize: int = 18,
     maxsize: int = 26,
@@ -867,10 +907,12 @@ def caclfsize(
 
     if not fontname:
         fontname = "Inter_18pt-SemiBold"
-    
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__)) 
+
+    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
     # 向上跳一级到 /src/，再进入 assets/fonts/
-    FONT_PHYSICAL_PATH = os.path.abspath(os.path.join(CURRENT_DIR, "..", "assets", "fonts", f"{fontname}.ttf"))
+    FONT_PHYSICAL_PATH = os.path.abspath(
+        os.path.join(CURRENT_DIR, "..", "assets", "fonts", f"{fontname}.ttf")
+    )
 
     # 使用二分法快速逼近目标宽度
     while low <= high:
