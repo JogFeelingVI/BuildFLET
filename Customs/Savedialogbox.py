@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-16 08:50:10
+# @Last Modified time: 2026-03-16 16:03:54
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -956,6 +956,8 @@ class joblibdlg:
         self.valid_results = []
 
     def handle_cancel(self):
+        if self.is_computing:
+            return
         self.adb.page.pop_dialog()
         
     def setting_add_remove(self, add=None, remove=None):
@@ -1068,7 +1070,7 @@ class joblibdlg:
                             color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
                         ),
                         in_timeout := ft.TextField(
-                            hint_text="Input in seconds (60)",
+                            hint_text="60 seconds",
                             border=ft.InputBorder.NONE,
                             cursor_height=15,
                             text_size=15,
@@ -1085,7 +1087,7 @@ class joblibdlg:
                             color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
                         ),
                         in_target_quantity := ft.TextField(
-                            hint_text="Input target quantity (0)",
+                            hint_text="0 quantity",
                             border=ft.InputBorder.NONE,
                             cursor_height=15,
                             text_size=15,
@@ -1102,7 +1104,7 @@ class joblibdlg:
                             color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
                         ),
                         in_max_time := ft.TextField(
-                            hint_text="5 minutes (Default)",
+                            hint_text="5 minutes",
                             border=ft.InputBorder.NONE,
                             cursor_height=15,
                             text_size=15,
@@ -1188,7 +1190,7 @@ class joblibdlg:
         :return: list, 满足条件的计算结果列表
         """
         if not settings or not filters:
-            raise ValueError("参数 settings 和 filters 是必填项！")
+            return self.valid_results
 
         start_time = time.time()
 
