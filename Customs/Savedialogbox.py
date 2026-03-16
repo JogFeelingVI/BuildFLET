@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-15 16:14:35
+# @Last Modified time: 2026-03-16 08:50:10
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -12,12 +12,15 @@ from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
 from dataclasses import dataclass, field
 from PIL import Image, ImageChops, ImageFont
+from joblib import Parallel, delayed
 import asyncio
 import flet as ft
 import datetime
 import json
 import io
 import os
+import time
+import multiprocessing
 
 
 # region _savedialog
@@ -537,23 +540,29 @@ class tadbx:
                 )
             case "info":
                 f, t, c, pr = args
+                pr = f"{pr}%"
                 # print(f'{args}')
                 temp = ft.Container(
                     padding=2,
                     content=ft.Row(
                         spacing=3,
                         controls=[
-                            ft.Text(f"{pr:<4}", weight="bold", color="#E61C1C"),
-                            ft.Text(f"{f}", color="#1C99E6"),
-                            ft.Text(f"{t:<2}", weight="bold", color="#F9E10A"),
-                            ft.Text(f"{c}", color="#A0F1AA"),
+                            ft.Text(
+                                f"{pr:<5}", weight="bold", color=RandColor(hue="red")
+                            ),
+                            ft.Text(f"{f}", color=RandColor(hue="blue")),
+                            ft.Text(
+                                f"{t:<2}", weight="bold", color=RandColor(hue="yellow")
+                            ),
+                            ft.Text(f"{c}", color=RandColor(hue="green")),
                         ],
                     ),
                 )
             case _:
                 pass
         return temp
-    
+
+
 # endregion
 
 
@@ -935,3 +944,324 @@ def caclfsize(
 
 
 # ednregion
+
+
+# region joblibdlg
+class joblibdlg:
+    def __init__(self):
+        self.conten = self.__builde_conter()
+        self.adb = adbx(None, self.conten)
+        self.taskbar_value = 0
+        self.is_computing = False
+        self.valid_results = []
+
+    def handle_cancel(self):
+        self.adb.page.pop_dialog()
+        
+    def setting_add_remove(self, add=None, remove=None):
+        self.additem = add
+        self.removeitem = remove
+
+    async def handle_start(self):
+        if self.is_computing:
+            return
+        settings = self.adb.page.session.store.get("settings")
+        filters = self.adb.page.session.store.get("filters")
+        timeout_limit = 60
+        target_quantity = 0  # 设为 0 则在 60秒内尽可能多地计算
+        max_time = 5
+        self.valid_results = []
+        try:
+            if self.intimeout.value != "":
+                timeout_limit = int(self.intimeout.value)
+            if self.intargetquantity.value != "":
+                target_quantity = int(self.intargetquantity.value)
+            if timeout_limit == 0 and target_quantity == 0:
+                timeout_limit = 60
+            if self.inmaxtime.value != "":
+                max_time = int(self.inmaxtime.value)
+                max_time = max_time if max_time < 60 else 60
+            if timeout_limit == 0 and target_quantity >=1:
+                timeout_limit = 60*max_time
+        except Exception as ex:
+            print(f"seting erro, use default value. {ex}")
+
+        self.adb.page.run_task(self.InspectProgress)
+        temp = await asyncio.to_thread(
+            self.run_parallel, settings, filters, timeout_limit, target_quantity
+        )
+        print(f"{temp=}")
+
+    async def InspectProgress(self):
+        await asyncio.sleep(0.5)
+        _last_value = -1
+        _last_count = 0
+        while self.is_computing:
+            await asyncio.sleep(1)
+            if _last_value == self.taskbar_value:
+                continue
+            self.showbar.value = f"Task {self.taskbar_value*100:.0f}% Complete"
+            self.taskbar.value = self.taskbar_value
+            self.taskbar.update()
+            self.showbar.update()
+            _last_value = self.taskbar_value
+            current_count = len(self.valid_results)
+            if current_count > _last_count:
+                # 利用切片获取自上次检查以来新增的所有数据
+                new_items = self.valid_results[_last_count:current_count]
+                # 遍历打印出新发现的数据
+                for item in new_items:
+                    print(f"🎉 发现新数据: {item}")
+                    if self.additem and self.removeitem:
+                        self.additem(self.removeitem, item)
+                
+                # 更新计数器
+                _last_count = current_count
+        await asyncio.sleep(1)
+        self.showbar.value = f"Core-Link Parallelizer found {self.valid_results.__len__()} items."
+        print(f'Core-Link Parallelizer found {self.valid_results.__len__()} items.')
+        self.showbar.update()
+
+    def run_parallel(self, settings, filters, timeout_limit, target_quantity):
+        self.is_computing = True
+        self.taskbar_value = 0
+        final_results = self.run_parallel_calculations(
+            settings=settings,
+            filters=filters,
+            timeout=timeout_limit,
+            Quantity=target_quantity,
+        )
+        self.taskbar_value = 1
+        self.is_computing = False
+        return final_results
+
+    def __builde_conter(self):
+        title = ft.Column(
+            tight=True,
+            width=float("inf"),
+            spacing=0,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            controls=[
+                ft.Text(
+                    "Core-Link Parallelizer", size=18, color=DraculaColors.FOREGROUND
+                ),
+                ft.Text(
+                    "Scaling heavy computations through seamless Joblib-driven parallelization.",
+                    size=14,
+                    color=ft.Colors.with_opacity(0.4, DraculaColors.FOREGROUND),
+                ),
+            ],
+        )
+        jobsetting = ft.Column(
+            tight=True,
+            width=float("inf"),
+            spacing=0,
+            alignment=ft.MainAxisAlignment.START,
+            horizontal_alignment=ft.CrossAxisAlignment.START,
+            controls=[
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            "timeout limit:",
+                            size=15,
+                            color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
+                        ),
+                        in_timeout := ft.TextField(
+                            hint_text="Input in seconds (60)",
+                            border=ft.InputBorder.NONE,
+                            cursor_height=15,
+                            text_size=15,
+                            dense=True,
+                            content_padding=ft.Padding.all(0),
+                        ),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            "target quantity:",
+                            size=15,
+                            color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
+                        ),
+                        in_target_quantity := ft.TextField(
+                            hint_text="Input target quantity (0)",
+                            border=ft.InputBorder.NONE,
+                            cursor_height=15,
+                            text_size=15,
+                            dense=True,
+                            content_padding=ft.Padding.all(0),
+                        ),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            "Maximum Calculation Time:",
+                            size=15,
+                            color=ft.Colors.with_opacity(1, DraculaColors.FOREGROUND),
+                        ),
+                        in_max_time := ft.TextField(
+                            hint_text="5 minutes (Default)",
+                            border=ft.InputBorder.NONE,
+                            cursor_height=15,
+                            text_size=15,
+                            dense=True,
+                            content_padding=ft.Padding.all(0),
+                        ),
+                    ]
+                ),
+                ft.Row(height=5),
+                ft.Row(
+                    controls=[
+                        showbar := ft.Text(
+                            "The task has not yet started.",
+                            size=15,
+                            italic=True,
+                            color=RandColor(mode="neon"),
+                        ),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        tbar := ft.ProgressBar(
+                            value=0.5,
+                            expand=1,
+                            height=10,
+                            color=RandColor(mode="neon"),
+                            border_radius=5,
+                        ),
+                    ],
+                ),
+            ],
+        )
+        self.intimeout = in_timeout
+        self.intargetquantity = in_target_quantity
+        self.inmaxtime = in_max_time
+        self.taskbar = tbar
+        self.showbar = showbar
+        acts = ft.Row(
+            alignment=ft.MainAxisAlignment.END,
+            controls=[
+                ft.TextButton(
+                    "Cancel",
+                    on_click=self.handle_cancel,
+                    style=ft.ButtonStyle(
+                        color=ft.Colors.with_opacity(0.8, DraculaColors.FOREGROUND)
+                    ),
+                ),
+                # 确定按钮用红色突出显示危险操作
+                ft.TextButton(
+                    "Start",
+                    on_click=self.handle_start,
+                    style=ft.ButtonStyle(color=RandColor(hue="blue")),
+                ),
+            ],
+        )
+        conter = ft.Container(
+            # width=400,
+            padding=5,
+            border_radius=0,
+            content=ft.Column(
+                tight=True,
+                spacing=8,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    title,
+                    jobsetting,
+                    ft.Divider(color=DraculaColors.FOREGROUND),
+                    acts,
+                ],
+            ),
+        )
+        return conter
+
+    def run_parallel_calculations(self, settings, filters, timeout=60, Quantity=0):
+        """
+        使用 joblib 执行多进程计算
+
+        :param settings: dict, 必填，计算设置
+        :param filters: dict, 必填，过滤校验规则
+        :param timeout: int, 运行时长(秒)，默认 60 为0 则不限制执行时间
+        :param Quantity: int, 需要的正确结果数量，默认 10。如果为 0 则不限制数量。
+        :return: list, 满足条件的计算结果列表
+        """
+        if not settings or not filters:
+            raise ValueError("参数 settings 和 filters 是必填项！")
+
+        start_time = time.time()
+
+        # 获取 CPU 核心数，决定进程数
+        n_cores = multiprocessing.cpu_count()
+
+        # 动态调整批处理大小(Batch Size)
+        # 如果限制了 Quantity，批次小一点，防止过度计算浪费算力
+        # 如果 Quantity == 0，批次大一点，减少 joblib 分发任务的通信开销
+        batch_size = n_cores * 2 if Quantity > 0 else n_cores * 10
+
+        # 启动进程池 (n_jobs=-1 表示使用所有可用 CPU 核心)
+        # backend="loky" 是 joblib 默认且最适合 CPU 密集型任务的后端
+        with Parallel(n_jobs=-1, backend="loky") as parallel:
+            while True:
+                # 1. 超时检查：如果超过预设时间，立即停止并返回
+                if time.time() - start_time >= timeout:
+                    break
+
+                # 2. 提交一批任务给多进程执行
+                # 这里使用了生成器表达式，延迟计算
+                batch_tasks = (
+                    delayed(calculate_lottery)(settings, filters)
+                    for _ in range(batch_size)
+                )
+
+                # 收集当前批次的结果
+                batch_results = parallel(batch_tasks)
+
+                # 3. 解析当前批次的结果
+                for exp_result, is_valid in batch_results:
+                    if is_valid:
+                        self.valid_results.append(exp_result)
+
+                    # 4. 数量检查：如果在批次解析中途达到了 Quantity 限制，立即返回
+                    if Quantity > 0 and len(self.valid_results) >= Quantity:
+                        # 返回精确数量的结果（截取掉可能多算出来的部分）
+                        return self.valid_results[:Quantity]
+
+                    # 即使在解析结果时，也顺便检查一下是否超时
+                    if time.time() - start_time >= timeout:
+                        return self.valid_results
+                if Quantity == 0:
+                    self.taskbar_value = (time.time() - start_time) / timeout
+                else:
+                    self.taskbar_value = self.valid_results.__len__() / Quantity
+
+        # 循环结束（通常是因为触发了 timeout）
+        return self.valid_results
+
+
+def calculate_lottery(settings, filters):
+    """
+    纯函数，用于单次彩票计算。
+    移除了对 self.page 的依赖，直接通过参数获取 settings 和 filters
+    """
+    if not settings:
+        return ("No settings", False)
+
+    # 实例化并获取数据
+    rd = randomData(seting=settings["randomData"])
+    result = rd.get_pabc()
+
+    # 如果没有过滤器，直接返回 True
+    if not filters:
+        return (rd.get_exp(result), True)
+
+    # 过滤校验
+    filter_jp = filter_for_pabc(filters=filters)
+    if filter_jp.handle(result) == False:
+        return (rd.get_exp(result), False)
+
+    return (rd.get_exp(result), True)
+
+
+# endregion

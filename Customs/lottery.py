@@ -2,10 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 16:08:39
+# @Last Modified time: 2026-03-16 08:54:37
 
 
-from .Savedialogbox import savedialog, tadbx
+from .Savedialogbox import savedialog, tadbx, joblibdlg
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
@@ -25,18 +25,19 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 # region itemC2plus
 class itemC2plus(ft.Container):
-    def __init__(self):
+    def __init__(self, Calculation_Results:str=None):
         super().__init__()
         self.timeout = 60
-        self.is_refreshing = False
         self.running = False
         self.Itemc2_remove = None
         self.fontSize = 25
         self.selected = False
         self.calc_task_running = False  # 控制后台计算任务是否在运行
-        self.state_exp = "init"  # 状态: init, calculating, done, timeout, error
+        self.state_exp = "done" if Calculation_Results else "init"  # 状态: init, calculating, done, timeout, error
+        # print(f'{self.state_exp=}')
         self.elapsed_time = 0.0  # 记录已消耗时间
-        self.tempd = None  # 记录计算结果
+        self.tempd = Calculation_Results  # 记录计算结果
+        # print(f'{self.tempd=}')
         self.start_time = 0.0
         # 参数
         self.userColor = RandColor(mode="neon")
@@ -178,39 +179,6 @@ class itemC2plus(ft.Container):
             row.controls.append(item)
         return row
 
-    def displayNumbers(self, text: str, size: int = 35):
-        """用环形标示 标识出数字"""
-        result = re.findall(r"\d+|\+", text)
-        row = ft.Row(
-            wrap=False,
-            scroll=ft.ScrollMode.HIDDEN,
-            expand=True,
-            spacing=5,
-        )
-        colors = [["#d9dbdf", "#747fdf"], ["#eab425", "#fbbf24"]]
-        quan, shuzi = colors[0]
-        for key in result:
-            if key == "+":
-                quan, shuzi = colors[1]
-                continue
-            item = ft.Container(
-                content=ft.Text(
-                    value=f"{key}",
-                    size=size * 0.5,  # 字体大小约为容器的一半
-                    weight=ft.FontWeight.BOLD,
-                    color=shuzi,  # 文字建议也用金色系或对比色
-                    text_align=ft.TextAlign.CENTER,
-                ),
-                bgcolor=ft.Colors.TRANSPARENT,  # 背景透明
-                border=ft.Border.all(1, quan),
-                width=size,
-                height=size,
-                border_radius=size / 2,
-                alignment=ft.Alignment.CENTER,
-            )
-            row.controls.append(item)
-        return row
-
     def setting_adjust_position(self, adjustposition: None):
         self.adjust_position = adjustposition
         # logr.info(f"setting adjustposition.")
@@ -226,7 +194,7 @@ class itemC2plus(ft.Container):
             "done",
             "timeout",
             "error",
-        ]:
+        ] and not self.tempd:
             self.state_exp = "calculating"
             self.page.run_task(self.generate_data_background, name="background_task")
 
@@ -377,7 +345,7 @@ class itemC2plus(ft.Container):
         self.page.show_dialog(ft.SnackBar(f"handle refresh data."))
 
     def handle_delete(self, e):
-        if self.is_refreshing or self.selected:
+        if self.calc_task_running or self.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
@@ -420,7 +388,7 @@ class itemsList(ft.Container):
         control.update()
         # logr.info("adjust_position is Done.")
 
-    def add_itemc2(self, itemc2remove=None):
+    def add_itemc2(self, itemc2remove=None, Calculation_Results:str=None):
         control = self.content
         if not isinstance(control, ft.Column):
             logr.info(f"add_item type {type(control)}")
@@ -431,7 +399,7 @@ class itemsList(ft.Container):
             if isinstance(x, itemC2plus) and x.selected == False
         ].__len__()
         if itemc2_len < self.max_item:
-            temp = itemC2plus()
+            temp = itemC2plus(Calculation_Results)
             temp.setting_adjust_position(self.adjust_position)
             temp.setting_Itemc2_Remove(itemc2remove)
             control.controls.append(temp)
@@ -521,7 +489,9 @@ class commandList(ft.Container):
     def setting_all_refresh(self, all_refresh=None):
         self.all_refresh = all_refresh
 
-    def __build_butter(self, size=70, icon=ft.Icons.ABC, name="ABC", oncilck=None):
+    def __build_butter(
+        self, size=70, icon=ft.Icons.ABC, name="ABC", oncilck=None, onlong=None
+    ):
         def handle_hover(e):
             if e.data:
                 conter.bgcolor = ft.Colors.with_opacity(0.2, DraculaColors.PURPLE)
@@ -538,8 +508,11 @@ class commandList(ft.Container):
         def handle_onclick(e):
             if oncilck:
                 oncilck(e)
-            # Event(name='hover', data=True)
             handle_hover(ft.Event(name="hover", control=conter, data=False))
+
+        def handle_long_press(e):
+            if onlong:
+                self.page.run_task(onlong, e)
 
         # end
         uColor = RandColor(mode="Morandi")
@@ -565,6 +538,7 @@ class commandList(ft.Container):
             ),
             on_hover=handle_hover,
             on_click=handle_onclick,
+            on_long_press=handle_long_press,
         )
         return conter
 
@@ -573,7 +547,10 @@ class commandList(ft.Container):
         return ft.Row(
             controls=[
                 self.__build_butter(
-                    icon=ft.Icons.INSERT_EMOTICON, name="ADD", oncilck=self.handle_add
+                    icon=ft.Icons.INSERT_EMOTICON,
+                    name="ADD",
+                    oncilck=self.handle_add,
+                    onlong=self.handle_long_paress,
                 ),
                 self.__build_butter(
                     icon=ft.Icons.SCIENCE, name="TEST", oncilck=self.handle_test
@@ -606,6 +583,11 @@ class commandList(ft.Container):
         """执行add"""
         if self.item_list_add and self.itemc2remove:
             self.item_list_add(self.itemc2remove)
+
+    async def handle_long_paress(self, e):
+        jobadb = joblibdlg()
+        jobadb.setting_add_remove(self.item_list_add, self.itemc2remove)
+        self.page.show_dialog(jobadb.adb)
 
     def handle_refresh(self, e):
         if self.all_refresh:
