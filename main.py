@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-14 14:17:07
+# @Last Modified time: 2026-03-17 02:07:29
 
 from Customs.DraculaTheme import DraculaColors, RandColor
 from Customs.setings import SetingsPage
@@ -13,6 +13,7 @@ from Customs.loger import logr
 from Customs.loadfonts import FontManager
 import flet as ft
 import os
+import multiprocessing
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
@@ -104,5 +105,6 @@ async def main(page: ft.Page):
     # page.update()
 
 
+multiprocessing.freeze_support() 
 # 运行应用
 ft.run(main, upload_dir=app_temp_path, assets_dir=app_assets_dir)
