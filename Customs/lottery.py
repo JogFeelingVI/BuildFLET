@@ -2,10 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-16 08:54:37
+# @Last Modified time: 2026-03-17 02:43:52
 
 
-from .Savedialogbox import savedialog, tadbx, joblibdlg
+from .Savedialogbox import savedialog, tadbx, joblibdlg, calculate_lottery
 from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
@@ -25,7 +25,7 @@ jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 # region itemC2plus
 class itemC2plus(ft.Container):
-    def __init__(self, Calculation_Results:str=None):
+    def __init__(self, Calculation_Results: str = None):
         super().__init__()
         self.timeout = 60
         self.running = False
@@ -33,7 +33,9 @@ class itemC2plus(ft.Container):
         self.fontSize = 25
         self.selected = False
         self.calc_task_running = False  # 控制后台计算任务是否在运行
-        self.state_exp = "done" if Calculation_Results else "init"  # 状态: init, calculating, done, timeout, error
+        self.state_exp = (
+            "done" if Calculation_Results else "init"
+        )  # 状态: init, calculating, done, timeout, error
         # print(f'{self.state_exp=}')
         self.elapsed_time = 0.0  # 记录已消耗时间
         self.tempd = Calculation_Results  # 记录计算结果
@@ -65,7 +67,11 @@ class itemC2plus(ft.Container):
         try:
             while self.state_exp == "calculating":
                 # 后台计算数据
-                tempd, state = await asyncio.to_thread(self.calculate_lottery)
+                settings = self.page.session.store.get("settings")
+                filters = self.page.session.store.get("filters")
+                tempd, state = await asyncio.to_thread(
+                    calculate_lottery, settings, filters
+                )
                 current_time = time.time()
                 self.elapsed_time = current_time - self.start_time
 
@@ -190,11 +196,16 @@ class itemC2plus(ft.Container):
         #     self.page.run_task(self.SearchForData, name="did_mount")
         self.running = True
         # 1. 启动后台计算任务（如果还没启动，且当前还没计算完成）
-        if not self.calc_task_running and self.state_exp not in [
-            "done",
-            "timeout",
-            "error",
-        ] and not self.tempd:
+        if (
+            not self.calc_task_running
+            and self.state_exp
+            not in [
+                "done",
+                "timeout",
+                "error",
+            ]
+            and not self.tempd
+        ):
             self.state_exp = "calculating"
             self.page.run_task(self.generate_data_background, name="background_task")
 
@@ -323,21 +334,6 @@ class itemC2plus(ft.Container):
         if self.state_exp == "calculating":
             self.page.run_task(self.ui_update_loop)
 
-    def calculate_lottery(self):
-        settings = self.page.session.store.get("settings")
-        filters = self.page.session.store.get("filters")
-        if settings:
-            rd = randomData(seting=settings["randomData"])
-        else:
-            return ("No settings", False)
-        result = rd.get_pabc()
-        if not filters:
-            return (rd.get_exp(result), True)
-        filter_jp = filter_for_pabc(filters=filters)
-        if filter_jp.handle(result) == False:
-            return (rd.get_exp(result), False)
-        return (rd.get_exp(result), True)
-
     def handle_refresh_data(self, e):
         """右滑逻辑：刷新数据"""
         # logr.info("向右滑动：正在刷新数据...")
@@ -388,7 +384,7 @@ class itemsList(ft.Container):
         control.update()
         # logr.info("adjust_position is Done.")
 
-    def add_itemc2(self, itemc2remove=None, Calculation_Results:str=None):
+    def add_itemc2(self, itemc2remove=None, Calculation_Results: str = None):
         control = self.content
         if not isinstance(control, ft.Column):
             logr.info(f"add_item type {type(control)}")

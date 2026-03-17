@@ -19,6 +19,7 @@ import datetime
 import json
 import io
 import os
+import sys
 import time
 import multiprocessing
 
@@ -959,7 +960,7 @@ class joblibdlg:
         if self.is_computing:
             return
         self.adb.page.pop_dialog()
-        
+
     def setting_add_remove(self, add=None, remove=None):
         self.additem = add
         self.removeitem = remove
@@ -983,8 +984,8 @@ class joblibdlg:
             if self.inmaxtime.value != "":
                 max_time = int(self.inmaxtime.value)
                 max_time = max_time if max_time < 60 else 60
-            if timeout_limit == 0 and target_quantity >=1:
-                timeout_limit = 60*max_time
+            if timeout_limit == 0 and target_quantity >= 1:
+                timeout_limit = 60 * max_time
         except Exception as ex:
             print(f"seting erro, use default value. {ex}")
 
@@ -1002,7 +1003,7 @@ class joblibdlg:
             await asyncio.sleep(1)
             if _last_value == self.taskbar_value:
                 continue
-            self.showbar.value = f"Task {self.taskbar_value*100:.0f}% Complete"
+            self.showbar.value = f"Task {self.taskbar_value * 100:.0f}% Complete"
             self.taskbar.value = self.taskbar_value
             self.taskbar.update()
             self.showbar.update()
@@ -1016,12 +1017,14 @@ class joblibdlg:
                     print(f"🎉 发现新数据: {item}")
                     if self.additem and self.removeitem:
                         self.additem(self.removeitem, item)
-                
+
                 # 更新计数器
                 _last_count = current_count
         await asyncio.sleep(1)
-        self.showbar.value = f"Core-Link Parallelizer found {self.valid_results.__len__()} items."
-        print(f'Core-Link Parallelizer found {self.valid_results.__len__()} items.')
+        self.showbar.value = (
+            f"Core-Link Parallelizer found {self.valid_results.__len__()} items."
+        )
+        print(f"Core-Link Parallelizer found {self.valid_results.__len__()} items.")
         self.showbar.update()
 
     def run_parallel(self, settings, filters, timeout_limit, target_quantity):
@@ -1191,7 +1194,7 @@ class joblibdlg:
         """
         if not settings or not filters:
             return self.valid_results
-
+        os.environ["PYTHONPATH"] = os.pathsep.join(sys.path)
         start_time = time.time()
 
         # 获取 CPU 核心数，决定进程数
