@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 12:27:58
+# @Last Modified time: 2026-03-17 13:59:02
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -12,7 +12,7 @@ from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
 from dataclasses import dataclass, field
 from PIL import Image, ImageChops, ImageFont
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import asyncio
 import flet as ft
 import datetime
@@ -1214,7 +1214,8 @@ class joblibdlg:
         # 如果你之前被 Flet 打包报错折磨，这里直接换成 ThreadPoolExecutor(max_workers=n_cores)
         # 否则使用 ProcessPoolExecutor 压榨极限多核性能
         executor_class = ProcessPoolExecutor
-
+        if self.adb.page.platform in [ft.PagePlatform.ANDROID,ft.PagePlatform.ANDROID_TV]:
+            executor_class = ThreadPoolExecutor
         # 创建后台打工池
         with executor_class(max_workers=n_cores) as executor:
             while True:

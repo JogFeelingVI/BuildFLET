@@ -15,7 +15,6 @@ import os
 import re
 import asyncio
 import pathlib
-import random
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")

@@ -6,7 +6,6 @@
 
 
 from .Savedialogbox import savedialog, tadbx, joblibdlg, calculate_lottery
-from .jackpot_core import randomData, filter_for_pabc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
 from .svgbase64 import svgimage
