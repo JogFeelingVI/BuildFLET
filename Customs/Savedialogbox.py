@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 07:28:09
+# @Last Modified time: 2026-03-17 12:27:58
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -12,14 +12,13 @@ from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
 from dataclasses import dataclass, field
 from PIL import Image, ImageChops, ImageFont
-from joblib import Parallel, delayed
+from concurrent.futures import ProcessPoolExecutor
 import asyncio
 import flet as ft
 import datetime
 import json
 import io
 import os
-import sys
 import time
 import multiprocessing
 
@@ -955,9 +954,13 @@ class joblibdlg:
         self.taskbar_value = 0
         self.is_computing = False
         self.valid_results = []
+        self.Launch_Cancelled = "none"  # none launch
 
-    def handle_cancel(self):
+    async def handle_cancel(self):
         if self.is_computing:
+            self.Launch_Cancelled = "launch"
+            while self.Launch_Cancelled == "launch":
+                await asyncio.sleep(1)
             return
         self.adb.page.pop_dialog()
 
@@ -971,39 +974,44 @@ class joblibdlg:
         self.is_computing = True
         settings = self.adb.page.session.store.get("settings")
         filters = self.adb.page.session.store.get("filters")
+
         def safe_get_int(control, default):
             val = control.value
-            if val and str(val).strip(): # 确保有值且不是纯空格
+            if val and str(val).strip():  # 确保有值且不是纯空格
                 try:
                     return int(val)
                 except ValueError:
                     print(f"警告：输入 '{val}' 不是有效数字，使用默认值 {default}")
             return default
+
         timeout_limit = safe_get_int(self.intimeout, 60)
-        target_quantity = safe_get_int(self.intargetquantity,0)
-        max_time = safe_get_int(self.inmaxtime,5)
+        target_quantity = safe_get_int(self.intargetquantity, 0)
+        max_time = safe_get_int(self.inmaxtime, 5)
         self.valid_results = []
         try:
-        # 逻辑微调
+            # 逻辑微调
             if timeout_limit == 0 and target_quantity == 0:
                 timeout_limit = 60
-                
+
             max_time = max_time if max_time < 60 else 60
-            
+
             if timeout_limit == 0 and target_quantity >= 1:
                 timeout_limit = 60 * max_time
-        
 
             self.adb.page.run_task(self.InspectProgress)
-            temp = await asyncio.to_thread(
-                self.run_parallel, settings, filters, timeout_limit, target_quantity
+            # temp = await asyncio.to_thread(
+            #     self.run_parallel, settings, filters, timeout_limit, target_quantity
+            # )
+            temp = await self.run_parallel_async(
+                settings, filters, timeout_limit, target_quantity
             )
         except Exception as ex:
             print(f"seting erro, use default value. {ex}")
         finally:
             self.is_computing = False
-            print(f"{temp=}")
+            # print(f"{temp=}")
 
+    # region InspectProgress
     async def InspectProgress(self):
         await asyncio.sleep(0.5)
         _last_value = -1
@@ -1036,17 +1044,9 @@ class joblibdlg:
         print(f"Core-Link Parallelizer found {self.valid_results.__len__()} items.")
         self.showbar.update()
 
-    def run_parallel(self, settings, filters, timeout_limit, target_quantity):
-        self.taskbar_value = 0
-        final_results = self.run_parallel_calculations(
-            settings=settings,
-            filters=filters,
-            timeout=timeout_limit,
-            Quantity=target_quantity,
-        )
-        self.taskbar_value = 1
-        return final_results
+    # endregion
 
+    # region __builde_conter
     def __builde_conter(self):
         title = ft.Column(
             tight=True,
@@ -1189,7 +1189,10 @@ class joblibdlg:
         )
         return conter
 
-    def run_parallel_calculations(self, settings, filters, timeout=60, Quantity=0):
+    # endregion
+
+    # region run_parallel_async
+    async def run_parallel_async(self, settings, filters, timeout=60, Quantity=0):
         """
         使用 joblib 执行多进程计算
 
@@ -1201,56 +1204,64 @@ class joblibdlg:
         """
         if not settings or not filters:
             return self.valid_results
+        self.taskbar_value = 0
+        loop = asyncio.get_running_loop()
         start_time = time.time()
-        # 获取 CPU 核心数，决定进程数
         n_cores = multiprocessing.cpu_count()
-        # 动态调整批处理大小(Batch Size)
-        # 如果限制了 Quantity，批次小一点，防止过度计算浪费算力
-        # 如果 Quantity == 0，批次大一点，减少 joblib 分发任务的通信开销
+        # 每次派发给后台的任务批次数量
         batch_size = n_cores * 2 if Quantity > 0 else n_cores * 10
-        safe_backend = "loky"
-        # 启动进程池 (n_jobs=-1 表示使用所有可用 CPU 核心)
-        # backend="loky" 是 joblib 默认且最适合 CPU 密集型任务的后端
-        if self.adb.page.platform == ft.PagePlatform.LINUX:
-            safe_backend = "multiprocessing"
-        with Parallel(n_jobs=-1, backend=safe_backend) as parallel:
+        # 【重点】选择执行器 (Executor)
+        # 如果你之前被 Flet 打包报错折磨，这里直接换成 ThreadPoolExecutor(max_workers=n_cores)
+        # 否则使用 ProcessPoolExecutor 压榨极限多核性能
+        executor_class = ProcessPoolExecutor
+
+        # 创建后台打工池
+        with executor_class(max_workers=n_cores) as executor:
             while True:
-                # 1. 超时检查：如果超过预设时间，立即停止并返回
-                if time.time() - start_time >= timeout:
-                    break
+                # 1. 大循环超时检查
+                if (
+                    time.time() - start_time >= timeout
+                    or self.Launch_Cancelled == "launch"
+                ):
+                    self.Launch_Cancelled = "none"
+                    return self.valid_results
 
-                # 2. 提交一批任务给多进程执行
-                # 这里使用了生成器表达式，延迟计算
-                batch_tasks = (
-                    delayed(calculate_lottery)(settings, filters)
+                # 2. 将计算任务委托给后台 Executor，拿到一批 Future 对象
+                tasks = [
+                    loop.run_in_executor(executor, calculate_lottery, settings, filters)
                     for _ in range(batch_size)
-                )
-
-                # 收集当前批次的结果
-                batch_results = parallel(batch_tasks)
-
-                # 3. 解析当前批次的结果
-                for exp_result, is_valid in batch_results:
+                ]
+                # 3. 神级 API：as_completed
+                # 谁先算完，谁就先 yield 出来，绝对不浪费 1 毫秒！
+                for completed_task in asyncio.as_completed(tasks):
+                    # 每次拿到结果时，都检查一下时间
+                    if time.time() - start_time >= timeout:
+                        # print("⏰ 达到超时限制，立即停止接收新结果。")
+                        return self.valid_results
+                    exp_result, is_valid = await completed_task
                     if is_valid:
                         self.valid_results.append(exp_result)
 
-                    # 4. 数量检查：如果在批次解析中途达到了 Quantity 限制，立即返回
+                        # 🌟 妙处：你甚至可以直接在这里触发 Flet UI 刷新！
+                        # print(f"🎉 发现新数据: {exp_result}")
+                        # self.showbar.value = f"已找到 {len(self.valid_results)} 个"
+                        # self.page.update()
+
+                    # 4. 数量检查
                     if Quantity > 0 and len(self.valid_results) >= Quantity:
-                        # 返回精确数量的结果（截取掉可能多算出来的部分）
+                        print(f"🎯 达到目标数量 {Quantity}.")
                         return self.valid_results[:Quantity]
-
-                    # 即使在解析结果时，也顺便检查一下是否超时
-                    if time.time() - start_time >= timeout:
-                        return self.valid_results
-                if Quantity == 0:
-                    self.taskbar_value = (time.time() - start_time) / timeout
-                else:
-                    self.taskbar_value = self.valid_results.__len__() / Quantity
-
-        # 循环结束（通常是因为触发了 timeout）
+                    if Quantity == 0:
+                        self.taskbar_value = (time.time() - start_time) / timeout
+                    else:
+                        self.taskbar_value = self.valid_results.__len__() / Quantity
+        self.taskbar_value = 1
         return self.valid_results
 
+    # endregion
 
+
+# region calculate_lottery
 def calculate_lottery(settings, filters):
     """
     纯函数，用于单次彩票计算。
