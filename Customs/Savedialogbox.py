@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 06:31:59
+# @Last Modified time: 2026-03-17 07:28:09
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -1188,21 +1188,6 @@ class joblibdlg:
             ),
         )
         return conter
-    
-    def fixlinux(self):
-        exe_dir = os.path.dirname(sys.executable)
-        python_lib_path = os.path.join(exe_dir, "python3.12")
-        site_packages_path = os.path.join(exe_dir, "site-packages")
-        # 2. 将这些路径合并到 sys.path
-        flet_paths = [python_lib_path, site_packages_path]
-        for p in flet_paths:
-            if p not in sys.path:
-                sys.path.insert(0, p)
-        # 3. 关键：将当前完整的 sys.path 强制同步给子进程的环境变量
-        # 这样 joblib 启动子进程时，PYTHONPATH 就会包含这些路径
-        os.environ["PYTHONPATH"] = os.pathsep.join(sys.path)
-        # 4. 针对二进制 C 扩展（如 _datetime, math），尝试补全库加载路径
-        os.environ["LD_LIBRARY_PATH"] = f"{exe_dir}:{os.environ.get('LD_LIBRARY_PATH', '')}"
 
     def run_parallel_calculations(self, settings, filters, timeout=60, Quantity=0):
         """
@@ -1223,12 +1208,12 @@ class joblibdlg:
         # 如果限制了 Quantity，批次小一点，防止过度计算浪费算力
         # 如果 Quantity == 0，批次大一点，减少 joblib 分发任务的通信开销
         batch_size = n_cores * 2 if Quantity > 0 else n_cores * 10
-
+        safe_backend = "loky"
         # 启动进程池 (n_jobs=-1 表示使用所有可用 CPU 核心)
         # backend="loky" 是 joblib 默认且最适合 CPU 密集型任务的后端
         if self.adb.page.platform == ft.PagePlatform.LINUX:
-            self.fixlinux()
-        with Parallel(n_jobs=-1, backend="loky") as parallel:
+            safe_backend = "multiprocessing"
+        with Parallel(n_jobs=-1, backend=safe_backend) as parallel:
             while True:
                 # 1. 超时检查：如果超过预设时间，立即停止并返回
                 if time.time() - start_time >= timeout:
