@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-16 16:03:54
+# @Last Modified time: 2026-03-17 03:09:25
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -1194,12 +1194,9 @@ class joblibdlg:
         """
         if not settings or not filters:
             return self.valid_results
-        os.environ["PYTHONPATH"] = os.pathsep.join(sys.path)
         start_time = time.time()
-
         # 获取 CPU 核心数，决定进程数
         n_cores = multiprocessing.cpu_count()
-
         # 动态调整批处理大小(Batch Size)
         # 如果限制了 Quantity，批次小一点，防止过度计算浪费算力
         # 如果 Quantity == 0，批次大一点，减少 joblib 分发任务的通信开销
@@ -1207,7 +1204,11 @@ class joblibdlg:
 
         # 启动进程池 (n_jobs=-1 表示使用所有可用 CPU 核心)
         # backend="loky" 是 joblib 默认且最适合 CPU 密集型任务的后端
-        with Parallel(n_jobs=-1, backend="loky") as parallel:
+        # linux 使用 multiprocessing
+        backend="loky"
+        if self.adb.page.platform == ft.PagePlatform.LINUX:
+            backend="multiprocessing"
+        with Parallel(n_jobs=-1, backend=backend) as parallel:
             while True:
                 # 1. 超时检查：如果超过预设时间，立即停止并返回
                 if time.time() - start_time >= timeout:
