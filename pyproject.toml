@@ -13,7 +13,6 @@ dependencies = [
   "requests",
   "upstash_redis",
   "Pillow",
-  "joblib>=1.5.3",
 ]
 
 [tool.flet]
