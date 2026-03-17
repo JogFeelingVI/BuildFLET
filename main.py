@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 07:28:57
+# @Last Modified time: 2026-03-17 07:46:52
 
 from Customs.DraculaTheme import DraculaColors, RandColor
 from Customs.setings import SetingsPage
@@ -13,6 +13,9 @@ from Customs.loger import logr
 from Customs.loadfonts import FontManager
 import flet as ft
 import os
+import sys
+import datetime  # 必须预加载
+import math      # 必须预加载
 import multiprocessing
 
 # 获取系统标示
@@ -106,6 +109,8 @@ async def main(page: ft.Page):
 
 
 if __name__ == "__main__":
+    if sys.platform.startswith("linux"):
+        multiprocessing.set_start_method('fork', force=True)
     multiprocessing.freeze_support()
     # 运行应用
     ft.run(main, upload_dir=app_temp_path, assets_dir=app_assets_dir)
