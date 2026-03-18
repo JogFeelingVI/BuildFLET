@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-18 09:02:13
+# @Last Modified time: 2026-03-18 12:02:11
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -1040,7 +1040,7 @@ class joblibdlg:
                 new_items = self.valid_results[_last_count:current_count]
                 # 遍历打印出新发现的数据
                 for item in new_items:
-                    print(f"🎉 发现新数据: {item}")
+                    # print(f"🎉 发现新数据: {item}")
                     if self.additem and self.removeitem:
                         self.additem(self.removeitem, item)
 
@@ -1219,12 +1219,13 @@ class joblibdlg:
         start_time = time.time()
         loop = asyncio.get_running_loop()
 
+        # print(f'{self.adb.page.platform=}')
         # 1. 环境适配
-        is_mobile = self.adb.page.platform in ["android", "ios"]
+        is_mobile = self.adb.page.platform in [ft.PagePlatform.ANDROID,ft.PagePlatform.ANDROID_TV]
         if is_mobile:
             executor_class = ThreadPoolExecutor
             n_cores = 2
-            chunk_size = 10 # 增加单次任务量
+            chunk_size = 20 # 增加单次任务量
             batch_count = 4 # 减少并发批次
         else:
             executor_class = ProcessPoolExecutor
