@@ -1220,7 +1220,7 @@ class joblibdlg:
         loop = asyncio.get_running_loop()
 
         # 1. 环境适配
-        is_mobile = self.adb.page.platform in ["android", "ios"]
+        is_mobile = self.adb.page.platform in [ft.PagePlatform.ANDROID]
         if is_mobile:
             executor_class = ThreadPoolExecutor
             n_cores = 2
