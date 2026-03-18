@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 23:54:39
+# @Last Modified time: 2026-03-18 09:02:13
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -21,7 +21,9 @@ import io
 import os
 import time
 import multiprocessing
+import tracemalloc
 
+# tracemalloc.start()
 
 # region _savedialog
 class savedialog:
@@ -1009,7 +1011,7 @@ class joblibdlg:
             # temp = await asyncio.to_thread(
             #     self.run_parallel, settings, filters, timeout_limit, target_quantity
             # )
-            temp = await self.run_parallel_async(
+            await self.run_parallel_async(
                 settings, filters, timeout_limit, target_quantity
             )
         except Exception as ex:
@@ -1211,65 +1213,85 @@ class joblibdlg:
         """
         if not settings or not filters:
             return self.valid_results
+
+        self.valid_results = []
         self.taskbar_value = 0
-        loop = asyncio.get_running_loop()
         start_time = time.time()
-        n_cores = multiprocessing.cpu_count()
-        # 每次派发给后台的任务批次数量
-        batch_size = n_cores * 2 if Quantity > 0 else n_cores * 10
-        # 【重点】选择执行器 (Executor)
-        # 如果你之前被 Flet 打包报错折磨，这里直接换成 ThreadPoolExecutor(max_workers=n_cores)
-        # 否则使用 ProcessPoolExecutor 压榨极限多核性能
-        executor_class = ProcessPoolExecutor
-        if self.adb.page.platform in [ft.PagePlatform.ANDROID,ft.PagePlatform.ANDROID_TV]:
+        loop = asyncio.get_running_loop()
+
+        # 1. 环境适配
+        is_mobile = self.adb.page.platform in ["android", "ios"]
+        if is_mobile:
             executor_class = ThreadPoolExecutor
-            n_cores = 2  
-            # 2. 缩小安卓上的每批次任务量，防止队列撑爆
-            batch_size = 4 if Quantity > 0 else 10
-        # 创建后台打工池
+            n_cores = 2
+            chunk_size = 10 # 增加单次任务量
+            batch_count = 4 # 减少并发批次
+        else:
+            executor_class = ProcessPoolExecutor
+            n_cores = multiprocessing.cpu_count()
+            chunk_size = 1
+            batch_count = n_cores * 2
+
+        # 使用 executor
         with executor_class(max_workers=n_cores) as executor:
             while True:
-                # 1. 大循环超时检查
-                if (
-                    time.time() - start_time >= timeout
-                    or self.Launch_Cancelled == "launch"
-                ):
-                    self.Launch_Cancelled = "none"
-                    return self.valid_results
+                elapsed = time.time() - start_time
+                if elapsed >= timeout or self.Launch_Cancelled == "launch":
+                    break
+                
+                if Quantity > 0 and len(self.valid_results) >= Quantity:
+                    break
 
-                # 2. 将计算任务委托给后台 Executor，拿到一批 Future 对象
-                tasks = [
-                    loop.run_in_executor(executor, calculate_lottery, settings, filters)
-                    for _ in range(batch_size)
-                ]
-                # 3. 神级 API：as_completed
-                # 谁先算完，谁就先 yield 出来，绝对不浪费 1 毫秒！
-                for completed_task in asyncio.as_completed(tasks):
-                    # 每次拿到结果时，都检查一下时间
-                    if time.time() - start_time >= timeout:
-                        # print("⏰ 达到超时限制，立即停止接收新结果。")
-                        return self.valid_results
-                    exp_result, is_valid = await completed_task
-                    if is_valid:
-                        self.valid_results.append(exp_result)
+                # 2. 创建一批任务
+                # 注意：我们将任务存入一个集合 (set) 中进行管理
+                tasks = {
+                    loop.run_in_executor(executor, calculate_batch_wrapper, settings, filters, chunk_size)
+                    for _ in range(batch_count)
+                }
 
-                        # 🌟 妙处：你甚至可以直接在这里触发 Flet UI 刷新！
-                        # print(f"🎉 发现新数据: {exp_result}")
-                        # self.showbar.value = f"已找到 {len(self.valid_results)} 个"
-                        # self.page.update()
+                # 3. 【核心修复】：使用 asyncio.wait 代替 as_completed
+                # 这样我们可以完全控制每一个 Future 的生命周期
+                while tasks:
+                    if (time.time() - start_time) >= timeout or (Quantity > 0 and len(self.valid_results) >= Quantity):
+                        break
 
-                    # 4. 数量检查
-                    if Quantity > 0 and len(self.valid_results) >= Quantity:
-                        print(f"🎯 达到目标数量 {Quantity}.")
-                        return self.valid_results[:Quantity]
+                    # 等待最先完成的一个或多个任务
+                    done, pending = await asyncio.wait(
+                        tasks, 
+                        timeout=1.0, # 给个小超时，防止死锁并方便检查外部打断
+                        return_when=asyncio.FIRST_COMPLETED
+                    )
+                    
+                    # 更新 tasks 集合，只保留还在运行的任务
+                    tasks = pending
+
+                    for completed_task in done:
+                        try:
+                            batch_res_list = await completed_task
+                            if batch_res_list:
+                                for res in batch_res_list:
+                                    self.valid_results.append(res)
+                                    if Quantity > 0 and len(self.valid_results) >= Quantity:
+                                        break
+                        except Exception as e:
+                            print(f"计算出错: {e}")
                     if Quantity == 0:
                         self.taskbar_value = (time.time() - start_time) / timeout
                     else:
                         self.taskbar_value = self.valid_results.__len__() / Quantity
-        self.taskbar_value = 1
-        return self.valid_results
 
+                # 4. 【关键清理】：如果本批次循环结束仍有正在跑的任务，强制取消
+                if tasks:
+                    for t in tasks:
+                        t.cancel()
+                    # 显式吞掉取消可能引发的异常，确保不报警告
+                    await asyncio.gather(*tasks, return_exceptions=True)
+
+        self.taskbar_value = 1
+        self.Launch_Cancelled = "none"
+        return self.valid_results[:Quantity] if Quantity > 0 else self.valid_results
     # endregion
+
 
 
 # region calculate_lottery
@@ -1296,5 +1318,16 @@ def calculate_lottery(settings, filters):
 
     return (rd.get_exp(result), True)
 
+def calculate_batch_wrapper(settings, filters, chunk_size=1):
+    """
+    【安卓优化核心】：任务打包封装
+    在一次线程调度中执行多次计算，减少线程切换开销
+    """
+    batch_results = []
+    for _ in range(chunk_size):
+        res, is_valid = calculate_lottery(settings, filters)
+        if is_valid:
+            batch_results.append(res)
+    return batch_results
 
 # endregion
