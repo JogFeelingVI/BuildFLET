@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 13:59:02
+# @Last Modified time: 2026-03-17 23:54:39
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -347,6 +347,7 @@ class tadbx:
 
         self.info_display.controls[0].value = "Test complete ✔"
         self.info_display.controls[0].update()
+        await self.update_more_list()
 
     def __builde_conter(self):
         title = ft.Row(
@@ -498,20 +499,24 @@ class tadbx:
         return conter
 
     async def handle_more(self, e):
-        items = self.detectstatus.getitems(sord=True)
-        if not items:
-            return
         if self.more_display.data == "hide":
             self.more_display.data = "show"
             self.more_display.height = 160
         elif self.more_display.data == "show":
             self.more_display.data = "hide"
             self.more_display.height = 20
-        if self.more_display.controls.__len__() == 1:
-            for item in items:
-                self.more_display.controls.append(self.Details(*item, type="info"))
+        
         self.more_display.update()
-
+        
+    async def update_more_list(self):
+        items = self.detectstatus.getitems(sord=True)
+        if not items:
+            return
+        newitems = [x for  x in self.more_display.controls if x.data=="more"]
+        for item in items:
+            newitems.append(self.Details(*item, type="info"))
+        self.more_display.controls=newitems
+        
     def Details(self, *args, **kwargs):
         bold = kwargs.get("bold", False)
         size = kwargs.get("size", 14)
@@ -520,6 +525,7 @@ class tadbx:
         match typed:
             case "more":
                 temp = ft.Container(
+                    data="more",
                     padding=0,
                     content=ft.Row(
                         spacing=5,
@@ -543,6 +549,7 @@ class tadbx:
                 pr = f"{pr}%"
                 # print(f'{args}')
                 temp = ft.Container(
+                    data="info",
                     padding=2,
                     content=ft.Row(
                         spacing=3,
@@ -1216,6 +1223,9 @@ class joblibdlg:
         executor_class = ProcessPoolExecutor
         if self.adb.page.platform in [ft.PagePlatform.ANDROID,ft.PagePlatform.ANDROID_TV]:
             executor_class = ThreadPoolExecutor
+            n_cores = 2  
+            # 2. 缩小安卓上的每批次任务量，防止队列撑爆
+            batch_size = 4 if Quantity > 0 else 10
         # 创建后台打工池
         with executor_class(max_workers=n_cores) as executor:
             while True:

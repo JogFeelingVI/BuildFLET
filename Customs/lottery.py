@@ -517,7 +517,7 @@ class commandList(ft.Container):
             alignment=ft.Alignment.CENTER,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.2, uColor)),
             border_radius=8,
-            animate=ft.Animation(300, ft.AnimationCurve.EASE),
+            # animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,

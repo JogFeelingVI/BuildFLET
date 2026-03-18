@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-13 01:38:02
+# @Last Modified time: 2026-03-18 00:08:48
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -41,10 +41,10 @@ class FilterChipV2(ft.Container):
         self.border_radius = 8
         # 2. 设置边框：宽度和颜色
         self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.3)))
-        self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
+        # self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
         self.ondelete = ondelete
         self.onclick = onclick
-        self.on_hover = self.handle_hover
+        # self.on_hover = self.handle_hover
 
     def handle_right_hover(self, e):
         if e.data:
@@ -53,14 +53,16 @@ class FilterChipV2(ft.Container):
             )
         else:
             self.Cright.content = ft.Icon(ft.Icons.DELETE, color=self.ColorOpx(0.3))
+        # self.Cright.update()
 
-    def handle_hover(self, e):
+    def handle_left_hover(self, e):
         if e.data:
             self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.9)))
             # self.bgcolor = self.ColorOpx(0.4)
         else:
             self.border = ft.Border(left=ft.BorderSide(5, self.ColorOpx(0.3)))
             # self.bgcolor = self.ColorOpx(0.1)
+        # self.Cleft.update()
 
     def handle_left_click(self, e):
         e.control = self
@@ -106,7 +108,7 @@ class FilterChipV2(ft.Container):
                         ],
                     ),
                     on_click=self.handle_left_click,
-                    # on_hover=self.handle_left_hover,
+                    on_hover=self.handle_left_hover,
                 ),
                 right := ft.Container(
                     padding=0,
@@ -796,7 +798,7 @@ class CommandList(ft.Container):
             alignment=ft.Alignment.CENTER,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.2, uColor)),
             border_radius=8,
-            animate=ft.Animation(300, ft.AnimationCurve.EASE),
+            # animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,
