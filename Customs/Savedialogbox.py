@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-18 12:02:11
+# @Last Modified time: 2026-03-18 22:56:56
 
 
 from .jackpot_core import randomData, filter_for_pabc
@@ -21,9 +21,9 @@ import io
 import os
 import time
 import multiprocessing
-import tracemalloc
 
 # tracemalloc.start()
+
 
 # region _savedialog
 class savedialog:
@@ -110,14 +110,14 @@ class savedialog:
         content = ft.Column(
             controls=[self.Screenshot],
             tight=True,
-            on_size_change=self.handle_resize,
+            # on_size_change=self.handle_resize,
         )
         return content
 
-    async def handle_resize(self, e):
-        if e.height >= 772.0:
-            await asyncio.sleep(1)
-            self.adb.page.run_task(self.__handle_save)
+    # async def handle_resize(self, e):
+    #     if e.height >= 772.0:
+    #         await asyncio.sleep(1)
+    #         self.adb.page.run_task(self.__handle_save)
 
     async def load_exp(self):
         self.exps_is_build = False
@@ -507,18 +507,18 @@ class tadbx:
         elif self.more_display.data == "show":
             self.more_display.data = "hide"
             self.more_display.height = 20
-        
+
         self.more_display.update()
-        
+
     async def update_more_list(self):
         items = self.detectstatus.getitems(sord=True)
         if not items:
             return
-        newitems = [x for  x in self.more_display.controls if x.data=="more"]
+        newitems = [x for x in self.more_display.controls if x.data == "more"]
         for item in items:
             newitems.append(self.Details(*item, type="info"))
-        self.more_display.controls=newitems
-        
+        self.more_display.controls = newitems
+
     def Details(self, *args, **kwargs):
         bold = kwargs.get("bold", False)
         size = kwargs.get("size", 14)
@@ -1221,12 +1221,15 @@ class joblibdlg:
 
         # print(f'{self.adb.page.platform=}')
         # 1. 环境适配
-        is_mobile = self.adb.page.platform in [ft.PagePlatform.ANDROID,ft.PagePlatform.ANDROID_TV]
+        is_mobile = self.adb.page.platform in [
+            ft.PagePlatform.ANDROID,
+            ft.PagePlatform.ANDROID_TV,
+        ]
         if is_mobile:
             executor_class = ThreadPoolExecutor
             n_cores = 2
-            chunk_size = 20 # 增加单次任务量
-            batch_count = 4 # 减少并发批次
+            chunk_size = 20  # 增加单次任务量
+            batch_count = 4  # 减少并发批次
         else:
             executor_class = ProcessPoolExecutor
             n_cores = multiprocessing.cpu_count()
@@ -1239,30 +1242,34 @@ class joblibdlg:
                 elapsed = time.time() - start_time
                 if elapsed >= timeout or self.Launch_Cancelled == "launch":
                     break
-                
+
                 if Quantity > 0 and len(self.valid_results) >= Quantity:
                     break
 
                 # 2. 创建一批任务
                 # 注意：我们将任务存入一个集合 (set) 中进行管理
                 tasks = {
-                    loop.run_in_executor(executor, calculate_batch_wrapper, settings, filters, chunk_size)
+                    loop.run_in_executor(
+                        executor, calculate_batch_wrapper, settings, filters, chunk_size
+                    )
                     for _ in range(batch_count)
                 }
 
                 # 3. 【核心修复】：使用 asyncio.wait 代替 as_completed
                 # 这样我们可以完全控制每一个 Future 的生命周期
                 while tasks:
-                    if (time.time() - start_time) >= timeout or (Quantity > 0 and len(self.valid_results) >= Quantity):
+                    if (time.time() - start_time) >= timeout or (
+                        Quantity > 0 and len(self.valid_results) >= Quantity
+                    ):
                         break
 
                     # 等待最先完成的一个或多个任务
                     done, pending = await asyncio.wait(
-                        tasks, 
-                        timeout=1.0, # 给个小超时，防止死锁并方便检查外部打断
-                        return_when=asyncio.FIRST_COMPLETED
+                        tasks,
+                        timeout=1.0,  # 给个小超时，防止死锁并方便检查外部打断
+                        return_when=asyncio.FIRST_COMPLETED,
                     )
-                    
+
                     # 更新 tasks 集合，只保留还在运行的任务
                     tasks = pending
 
@@ -1272,7 +1279,10 @@ class joblibdlg:
                             if batch_res_list:
                                 for res in batch_res_list:
                                     self.valid_results.append(res)
-                                    if Quantity > 0 and len(self.valid_results) >= Quantity:
+                                    if (
+                                        Quantity > 0
+                                        and len(self.valid_results) >= Quantity
+                                    ):
                                         break
                         except Exception as e:
                             print(f"计算出错: {e}")
@@ -1291,8 +1301,8 @@ class joblibdlg:
         self.taskbar_value = 1
         self.Launch_Cancelled = "none"
         return self.valid_results[:Quantity] if Quantity > 0 else self.valid_results
-    # endregion
 
+    # endregion
 
 
 # region calculate_lottery
@@ -1319,6 +1329,7 @@ def calculate_lottery(settings, filters):
 
     return (rd.get_exp(result), True)
 
+
 def calculate_batch_wrapper(settings, filters, chunk_size=1):
     """
     【安卓优化核心】：任务打包封装
@@ -1330,5 +1341,6 @@ def calculate_batch_wrapper(settings, filters, chunk_size=1):
         if is_valid:
             batch_results.append(res)
     return batch_results
+
 
 # endregion

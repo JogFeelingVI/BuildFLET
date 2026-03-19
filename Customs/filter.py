@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-18 00:08:48
+# @Last Modified time: 2026-03-19 02:45:37
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -936,11 +936,29 @@ class CommandList(ft.Container):
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
+                ft.Row(
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[
+                        ft.Text(
+                            "Clear all filters",
+                            size=18,
+                            weight="bold",
+                            color=DraculaColors.FOREGROUND,
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icon(
+                                ft.Icons.CANCEL, color=DraculaColors.FOREGROUND
+                            ),
+                            icon_size=20,
+                            tooltip=ft.Tooltip(message="Cancel Clear"),
+                            on_click=cancel_clear,
+                        ),
+                    ],
+                ),
                 ft.Text(
                     value="Are you sure you want to clear all filters?",
                     size=15,
-                    weight=ft.FontWeight.BOLD,
-                    color=DraculaColors.RED,
+                    color=DraculaColors.FOREGROUND,
                 ),
                 ft.Button(
                     icon=ft.Icons.CLEAR,
@@ -948,13 +966,6 @@ class CommandList(ft.Container):
                     color=DraculaColors.FOREGROUND,
                     content="Yes, Confirm all cleanup!",
                     on_click=confirm_clear,
-                ),
-                ft.Button(
-                    icon=ft.Icons.CANCEL,
-                    bgcolor=ft.Colors.TRANSPARENT,
-                    color=DraculaColors.FOREGROUND,
-                    content="Do not clean",
-                    on_click=cancel_clear,
                 ),
             ],
         )

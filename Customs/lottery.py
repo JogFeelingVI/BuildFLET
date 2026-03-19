@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 02:43:52
+# @Last Modified time: 2026-03-19 02:17:44
 
 
 from .Savedialogbox import savedialog, tadbx, joblibdlg, calculate_lottery
@@ -32,12 +32,10 @@ class itemC2plus(ft.Container):
         self.fontSize = 25
         self.selected = False
         self.calc_task_running = False  # 控制后台计算任务是否在运行
-        self.state_exp = (
-            "done" if Calculation_Results else "init"
-        )  # 状态: init, calculating, done, timeout, error
+        self.state_exp = "init"  # 状态: init, calculating, done, timeout, error
         # print(f'{self.state_exp=}')
         self.elapsed_time = 0.0  # 记录已消耗时间
-        self.tempd = Calculation_Results  # 记录计算结果
+        self.tempd = None  # 记录计算结果
         # print(f'{self.tempd=}')
         self.start_time = 0.0
         # 参数
@@ -45,6 +43,8 @@ class itemC2plus(ft.Container):
         self.bgc = HarmonyColors(
             base_hex_color=self.userColor, harmony_type="split", mode="neon"
         )
+        self.adjust_position = None
+        self.CALCR = ""
         self.padding = 8
         self.border_radius = 10
         self.gradient = ft.LinearGradient(
@@ -52,6 +52,11 @@ class itemC2plus(ft.Container):
         )
         self.content = self.__build_content()
         self.animate = ft.Animation(300, ft.AnimationCurve.EASE)
+
+        if Calculation_Results:
+            self.state_exp = "done"
+            self.tempd = Calculation_Results
+            self.CALCR = "SELECT"
 
     # region generate_data_background
     async def generate_data_background(self, name: str):
@@ -141,7 +146,11 @@ class itemC2plus(ft.Container):
 
         self._last_state_exp = self.state_exp
 
-        self.showNumber.update()
+        if self.CALCR == "SELECT":
+            e_temp = ft.Event(name="click", control=self.check, data="sync_ui_to_state")
+            self.handle_Selected(e_temp)
+
+        self.update()
 
     # endregion
 
@@ -194,6 +203,7 @@ class itemC2plus(ft.Container):
         #     # self.refresh(name="did_mount")
         #     self.page.run_task(self.SearchForData, name="did_mount")
         self.running = True
+
         # 1. 启动后台计算任务（如果还没启动，且当前还没计算完成）
         if (
             not self.calc_task_running
@@ -232,35 +242,29 @@ class itemC2plus(ft.Container):
         )
         return self.buildBadge
 
-    def __build_check(self, size: int = 30):
-        def toggle_icon(e):
-            # 切换选中状态
-            if self.state_exp != "done":
-                return
-            # e.control.selected = not e.control.selected
-            # e.control.update()
-            self.selected = not self.selected
-            self.check.bgcolor = (
-                ft.Colors.with_opacity(0.6, RandColor(mode="neon", hue="Green"))
-                if self.selected
-                else None
+    def handle_Selected(self, e):
+        logr.info(f"handle_Selected: {e}")
+        if self.state_exp != "done":
+            return
+        self.selected = not self.selected
+        self.check.bgcolor = (
+            ft.Colors.with_opacity(0.6, RandColor(mode="neon", hue="Green"))
+            if self.selected
+            else None
+        )
+        rows: ft.Column = self.content
+        rows.controls[1].visible = not self.selected
+        if self.selected:
+            self.border = ft.Border(
+                left=ft.BorderSide(5, ft.Colors.with_opacity(1, self.userColor)),
             )
-            rows: ft.Column = self.content
-            rows.controls[1].visible = not self.selected
-            if self.selected:
-                self.border = ft.Border(
-                    left=ft.BorderSide(5, ft.Colors.with_opacity(1, self.userColor)),
-                )
-            else:
-                # self.border_radius = 10
-                self.border = None
+        else:
+            self.border = None
+        if self.adjust_position and self.selected:
+            self.adjust_position(self)
+        self.update()
 
-            if self.adjust_position and self.selected:
-                self.adjust_position(self)
-                # logr.info("adjust_position is self.")
-            self.update()
-            # end
-
+    def __build_check(self, size: int = 30):
         self.check = ft.Container(
             padding=5,
             content=ft.Icon(
@@ -270,7 +274,7 @@ class itemC2plus(ft.Container):
             height=size,
             border_radius=size / 2,
             alignment=ft.Alignment.CENTER,
-            on_click=toggle_icon,
+            on_click=self.handle_Selected,
         )
         return self.check
 
@@ -278,16 +282,12 @@ class itemC2plus(ft.Container):
         butter = ft.Container(
             # padding=5,
             content=ft.Icon(icon, color=self.userColor, size=size),
-            # width=size,
-            # height=size,
-            # border_radius=size / 2,
-            # alignment=ft.Alignment.CENTER,
             on_click=onclick,
         )
         return butter
 
     def __build_content(self):
-        content = ft.Column(
+        conter = ft.Column(
             spacing=0,
             controls=[
                 ft.Row(
@@ -316,7 +316,7 @@ class itemC2plus(ft.Container):
             ],
         )
         self.showNumber = shownumber
-        return content
+        return conter
 
     def setting_Itemc2_Remove(self, itemc2remove=None):
         self.Itemc2_remove = itemc2remove
@@ -355,7 +355,7 @@ class itemsList(ft.Container):
     def __init__(self):
         super().__init__()
         self.content = self.__build_card()
-        self.max_item = 10
+        self.max_item = 20
         self.padding = 10
         self.width = float("inf")
         self.bgcolor = ft.Colors.TRANSPARENT
@@ -372,7 +372,7 @@ class itemsList(ft.Container):
             ft.PagePlatform.ANDROID,
             ft.PagePlatform.IOS,
         ]
-        self.max_item = 10 if is_mobile_or_web else 1000
+        self.max_item = 20 if is_mobile_or_web else 1000
 
     def adjust_position(self, item: itemC2plus):
         if not item:
@@ -416,13 +416,29 @@ class itemsList(ft.Container):
         """"""
         control = self.content
         if not isinstance(control, ft.Column):
-            logr.info(f"all_refresh {type(control)}")
             return
-        exp_all = [
-            x.tempd
-            for x in control.controls
-            if isinstance(x, itemC2plus) and x.selected
-        ]
+
+        exp_all = []
+        reserve = []
+
+        # 设定最大提取数量
+        max_count = 10
+
+        for x in control.controls:
+            # 如果是目标类型 且 已选中 且 提取篮子还没满
+            if isinstance(x, itemC2plus) and x.selected and len(exp_all) < max_count:
+                exp_all.append(x.tempd)
+                # 注意：这里不把 x 放入 reserve，意味着它会被从 UI 中删除
+            else:
+                # 1. 不是目标类型
+                # 2. 或者没被选中
+                # 3. 或者已经选满了10个
+                # 这些情况统统保留在 UI 中
+                reserve.append(x)
+
+        control.controls = reserve
+        control.update()
+
         return exp_all
 
     def remove_item(self, item: itemC2plus):
