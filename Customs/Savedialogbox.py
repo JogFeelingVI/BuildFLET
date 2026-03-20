@@ -2,10 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-18 22:56:56
+# @Last Modified time: 2026-03-19 23:43:33
 
 
-from .jackpot_core import randomData, filter_for_pabc
+from .jackpot_core import randomData, filter_for_pabc, calculate_batch_wrapper
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -33,9 +33,14 @@ class savedialog:
         self.adb.setting_did_mount_callback(self.load_exp)
         self.exps_is_build = True
         self.getallexp = None
+        self.all_exp = None
+        self.cancel_callback = None
 
     def seting_get_all_exp(self, getallexp=None):
         self.getallexp = getallexp
+
+    def setting_cancel(self, cancel_callback=None):
+        self.cancel_callback = cancel_callback
 
     def __builde_conter(self):
         title_color = DraculaColors.ORANGE
@@ -114,22 +119,17 @@ class savedialog:
         )
         return content
 
-    # async def handle_resize(self, e):
-    #     if e.height >= 772.0:
-    #         await asyncio.sleep(1)
-    #         self.adb.page.run_task(self.__handle_save)
-
     async def load_exp(self):
         self.exps_is_build = False
         if not self.getallexp:
             # print("not is getallexp func.")
             return
-        all_exp = self.getallexp()
-        if len(all_exp) == 0:
+        self.all_exp = self.getallexp()
+        if len(self.all_exp) == 0:
             # print("len all_exp is zero.")
             return
         items = []
-        for i, _exp in enumerate(all_exp):
+        for i, _exp in enumerate(self.all_exp):
             items.append(self.CreateItem(_exp, i, 18))
             if (i + 1) % 5 == 0 and (i + 1) < len(_exp):
                 items.append(self.CreateItem("", -1))
@@ -139,6 +139,8 @@ class savedialog:
 
     def __handle_cancel(self):
         if self.adb.running:
+            if self.cancel_callback:
+                self.cancel_callback(self.all_exp)
             self.adb.page.pop_dialog()
 
     def CreateItem(self, text: str = "", i: int = 0, fontsize: int = 18):
@@ -147,10 +149,6 @@ class savedialog:
         if self.adb.page.platform.is_mobile():
             twidth = 292 - 47
         sizes = caclfsize(text=text, defsize=fontsize, targetwidth=twidth)
-        # def onresize(e):
-        #     print(f'onresize {e}')
-        #     self.adb.page.show_dialog(ft.SnackBar(f"{e}"))
-        # print(f'new font size {sizes}')
         item = (
             ft.Container(
                 padding=5,
@@ -1305,42 +1303,111 @@ class joblibdlg:
     # endregion
 
 
-# region calculate_lottery
-def calculate_lottery(settings, filters):
-    """
-    纯函数，用于单次彩票计算。
-    移除了对 self.page 的依赖，直接通过参数获取 settings 和 filters
-    """
-    if not settings:
-        return ("No settings", False)
-
-    # 实例化并获取数据
-    rd = randomData(seting=settings["randomData"])
-    result = rd.get_pabc()
-
-    # 如果没有过滤器，直接返回 True
-    if not filters:
-        return (rd.get_exp(result), True)
-
-    # 过滤校验
-    filter_jp = filter_for_pabc(filters=filters)
-    if filter_jp.handle(result) == False:
-        return (rd.get_exp(result), False)
-
-    return (rd.get_exp(result), True)
+# endregion
 
 
-def calculate_batch_wrapper(settings, filters, chunk_size=1):
-    """
-    【安卓优化核心】：任务打包封装
-    在一次线程调度中执行多次计算，减少线程切换开销
-    """
-    batch_results = []
-    for _ in range(chunk_size):
-        res, is_valid = calculate_lottery(settings, filters)
-        if is_valid:
-            batch_results.append(res)
-    return batch_results
+# region operates
+class operates:
+    def __init__(self):
+        self.conten = self.__builde_conter()
+        self.adb = adbx(None, self.conten)
+        self.callback = None
+        
+    def setting_callback(self, callback=None):
+        self.callback = callback
+
+    def handle_cancel(self):
+        self.adb.page.pop_dialog()
+        
+    def handle_cilck(self,e, data:str="none"):
+        if self.callback:
+            self.adb.page.run_task(self.callback, data)
+
+    def __builde_conter(self):
+        def hover(e, item):
+            if e.data==True:
+                item.size=17
+            else:
+                item.size=15
+                
+        title = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            controls=[
+                ft.Text(
+                    "Operates", size=18, weight="bold", color=DraculaColors.FOREGROUND
+                ),
+                ft.IconButton(
+                    icon=ft.Icon(ft.Icons.CANCEL, color=DraculaColors.FOREGROUND),
+                    icon_size=20,
+                    tooltip=ft.Tooltip(message="Cancel Clear"),
+                    on_click=self.handle_cancel,
+                ),
+            ],
+        )
+        clear_all = ft.Container(
+            padding=5,
+            content=ft.Row(
+                controls=[
+                    flg := ft.Icon(ft.Icons.CLEAR_ALL, size=15),
+                    ft.Text(
+                        "Clear All Results",
+                        size=15,
+                        color=RandColor(hue="red"),
+                    ),
+                ]
+            ),
+            on_hover=lambda e,x=flg: hover(e,x),
+            on_click=lambda e,data="all": self.handle_cilck(e, data)
+        )
+        clear_select = ft.Container(
+            padding=5,
+            content=ft.Row(
+                controls=[
+                    flg := ft.Icon(ft.Icons.SELECT_ALL, size=15),
+                    ft.Text(
+                        "Clear All Selected items",
+                        size=15,
+                        color=RandColor(hue="green"),
+                    ),
+                ]
+            ),
+            on_hover=lambda e,x=flg: hover(e,x),
+            on_click=lambda e,data="select": self.handle_cilck(e, data)
+        )
+        clear_unselected = ft.Container(
+            padding=5,
+            content=ft.Row(
+                controls=[
+                    flg := ft.Icon(ft.Icons.UNPUBLISHED, size=15),
+                    ft.Text(
+                        "Clear all unselected items",
+                        size=15,
+                        color=RandColor(hue="blue"),
+                    ),
+                ]
+            ),
+            on_hover=lambda e,x=flg: hover(e,x),
+            on_click=lambda e,data="unselected": self.handle_cilck(e, data)
+        )
+        
+        conter = ft.Container(
+            padding=5,
+            border_radius=0,
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                controls=[
+                    title,
+                    ft.Divider(height=1, color=DraculaColors.FOREGROUND),
+                    clear_all,
+                    clear_select,
+                    clear_unselected,
+                ],
+            ),
+        )
+        return conter
 
 
 # endregion

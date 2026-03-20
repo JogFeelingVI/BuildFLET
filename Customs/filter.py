@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-19 02:45:37
+# @Last Modified time: 2026-03-19 06:18:53
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -376,7 +376,7 @@ class FiltersList(ft.Container):
                 self.clear_all()
                 for _f in cloud_data["filters"]:
                     self.addFilter(_f, redis_async=True)
-                    await asyncio.sleep(0.2)
+                    await asyncio.sleep(0.1)
                 # 3. 更新本地的时间戳，留作下次对比
                 self.local_last_update = cloud_data.get("_updated_at", 0)
                 logr.info(

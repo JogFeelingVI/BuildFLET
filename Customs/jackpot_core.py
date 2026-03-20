@@ -701,3 +701,44 @@ class filter_for_pabc:
 
 
 # endregion
+
+
+# region calculate_lottery
+def calculate_lottery(settings: dict, filters: dict):
+    """
+    纯函数，用于单次彩票计算。
+    移除了对 self.page 的依赖，直接通过参数获取 settings 和 filters
+    """
+    if not settings:
+        return ("No settings", False)
+
+    # 实例化并获取数据
+    rd = randomData(seting=settings["randomData"])
+    result = rd.get_pabc()
+
+    # 如果没有过滤器，直接返回 True
+    if not filters:
+        return (rd.get_exp(result), True)
+
+    # 过滤校验
+    filter_jp = filter_for_pabc(filters=filters)
+    if filter_jp.handle(result) == False:
+        return (rd.get_exp(result), False)
+
+    return (rd.get_exp(result), True)
+
+
+def calculate_batch_wrapper(settings: dict, filters: dict, chunk_size=1):
+    """
+    【安卓优化核心】：任务打包封装
+    在一次线程调度中执行多次计算，减少线程切换开销
+    """
+    batch_results = []
+    for _ in range(chunk_size):
+        res, is_valid = calculate_lottery(settings, filters)
+        if is_valid:
+            batch_results.append(res)
+    return batch_results
+
+
+# endregion

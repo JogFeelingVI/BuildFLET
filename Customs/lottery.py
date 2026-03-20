@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-19 02:17:44
+# @Last Modified time: 2026-03-19 23:53:02
 
 
-from .Savedialogbox import savedialog, tadbx, joblibdlg, calculate_lottery
+from .Savedialogbox import savedialog, tadbx, joblibdlg, operates
+from .jackpot_core import calculate_lottery
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
 from .svgbase64 import svgimage
@@ -243,7 +244,6 @@ class itemC2plus(ft.Container):
         return self.buildBadge
 
     def handle_Selected(self, e):
-        logr.info(f"handle_Selected: {e}")
         if self.state_exp != "done":
             return
         self.selected = not self.selected
@@ -377,56 +377,54 @@ class itemsList(ft.Container):
     def adjust_position(self, item: itemC2plus):
         if not item:
             return
-        control: ft.Column = self.content
-        control.controls.remove(item)
-        control.controls.insert(0, item)
-        control.update()
-        # logr.info("adjust_position is Done.")
+        self.mainitems.controls.remove(item)
+        self.mainitems.controls.insert(0, item)
+        self.mainitems.update()
 
     def add_itemc2(self, itemc2remove=None, Calculation_Results: str = None):
-        control = self.content
-        if not isinstance(control, ft.Column):
-            logr.info(f"add_item type {type(control)}")
-            return
         itemc2_len = [
             x
-            for x in control.controls
+            for x in self.mainitems.controls
             if isinstance(x, itemC2plus) and x.selected == False
         ].__len__()
         if itemc2_len < self.max_item:
             temp = itemC2plus(Calculation_Results)
             temp.setting_adjust_position(self.adjust_position)
             temp.setting_Itemc2_Remove(itemc2remove)
-            control.controls.append(temp)
+            self.mainitems.controls.append(temp)
             self.update()
 
     async def all_refresh(self):
         """全部刷新"""
-        control = self.content
-        if not isinstance(control, ft.Column):
-            logr.info(f"all_refresh {type(control)}")
-            return
-        itemc2_all = [x for x in control.controls if isinstance(x, itemC2plus)]
+        itemc2_all = [x for x in self.mainitems.controls if isinstance(x, itemC2plus)]
         for item in itemc2_all:
             if item.selected == False:
                 item.refresh(name="all_refresh")
-                await asyncio.sleep(0.2)
+                await asyncio.sleep(0.1)
 
-    def get_item_exp(self):
-        """"""
-        control = self.content
-        if not isinstance(control, ft.Column):
-            return
-
+    def get_item_exp(self,max_count:int=10,data:str="select"):
+        """
+        data:
+            all
+            select [default]
+            unselected
+        """
         exp_all = []
         reserve = []
+        select_flg = []
+        match data:
+            case "all":
+                select_flg = [True,False]
+            case "select":
+                select_flg = [True]
+            case "unselected":
+                select_flg = [False]
+            case _:
+                select_flg = [True]
 
-        # 设定最大提取数量
-        max_count = 10
-
-        for x in control.controls:
+        for x in self.mainitems.controls:
             # 如果是目标类型 且 已选中 且 提取篮子还没满
-            if isinstance(x, itemC2plus) and x.selected and len(exp_all) < max_count:
+            if isinstance(x, itemC2plus) and x.selected in select_flg and len(exp_all) < max_count:
                 exp_all.append(x.tempd)
                 # 注意：这里不把 x 放入 reserve，意味着它会被从 UI 中删除
             else:
@@ -436,27 +434,29 @@ class itemsList(ft.Container):
                 # 这些情况统统保留在 UI 中
                 reserve.append(x)
 
-        control.controls = reserve
-        control.update()
+        self.mainitems.controls = reserve
+        self.mainitems.update()
 
         return exp_all
 
     def remove_item(self, item: itemC2plus):
-        control = self.content
-        if not isinstance(control, ft.Column):
-            return
         if item:
-            control.controls.remove(item)
-            self.update()
+            self.mainitems.controls.remove(item)
+            self.mainitems.update()
 
     def __build_card(self):
         """Add, Apply, Cancel"""
-        return ft.Column(
+        self.mainitems = ft.Column(
             # wrap=True,
             controls=[],
             # 给这一行打个标签，方便以后提取数据
             alignment=ft.MainAxisAlignment.START,
         )
+        conter = ft.Container(
+            padding=0,
+            content=self.mainitems,
+        )
+        return conter
 
 
 # endregion
@@ -533,7 +533,6 @@ class commandList(ft.Container):
             alignment=ft.Alignment.CENTER,
             border=ft.Border.all(1, ft.Colors.with_opacity(0.2, uColor)),
             border_radius=8,
-            # animate=ft.Animation(300, ft.AnimationCurve.EASE),
             content=ft.Column(
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,
@@ -567,7 +566,10 @@ class commandList(ft.Container):
                     icon=ft.Icons.SCIENCE, name="TEST", oncilck=self.handle_test
                 ),
                 self.__build_butter(
-                    icon=ft.Icons.REFRESH, name="REFRESH", oncilck=self.handle_refresh
+                    icon=ft.Icons.REFRESH,
+                    name="REFRESH",
+                    oncilck=self.handle_refresh,
+                    onlong=self.handle_refresh_long_press,
                 ),
                 self.__build_butter(
                     icon=ft.Icons.SAVE_AS, name="Export", oncilck=self.handle_export
@@ -588,7 +590,15 @@ class commandList(ft.Container):
         #     self.page.run_task(self.shot_capture)
         sdb = savedialog()
         sdb.seting_get_all_exp(self.get_exp_all)
+        sdb.setting_cancel(self.export_callback)
         self.page.show_dialog(sdb.adb)
+
+    def export_callback(self, exp: list = None):
+        if not exp:
+            return
+        if self.item_list_add and self.itemc2remove:
+            for _e in exp:
+                self.item_list_add(self.itemc2remove, _e)
 
     def handle_add(self, e):
         """执行add"""
@@ -603,6 +613,16 @@ class commandList(ft.Container):
     def handle_refresh(self, e):
         if self.all_refresh:
             self.page.run_task(self.all_refresh)
+
+    async def handle_refresh_long_press(self, e):
+        ops = operates()
+        ops.setting_callback(self.refresh_callback)
+        self.page.show_dialog(ops.adb)
+        
+    async def refresh_callback(self,data:str="none"):
+        logr.info(f"callback data: {data}")
+        if self.get_exp_all:
+            self.get_exp_all(data=data)
 
 
 # endregion
