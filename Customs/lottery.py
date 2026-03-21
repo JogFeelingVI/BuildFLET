@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-19 23:53:02
+# @Last Modified time: 2026-03-21 17:27:18
 
 
 from .Savedialogbox import savedialog, tadbx, joblibdlg, operates
@@ -10,6 +10,7 @@ from .jackpot_core import calculate_lottery
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .loger import logr
 from .svgbase64 import svgimage
+from .byterfiles import BinaryConverter as bc, ResultCode as rc
 import flet as ft
 import os
 import asyncio
@@ -68,15 +69,23 @@ class itemC2plus(ft.Container):
         self.calc_task_running = True
         self.state_exp = "calculating"
         self.start_time = time.time()
+        settings = self.page.session.store.get("settings")
+        filters = self.page.session.store.get("filters")
+
+        code, sdata = bc.from_base64_str(settings)
+        if code == rc.ERROR:
+            return
+
+        code, fdata = bc.from_base64_str(filters)
+        if code == rc.ERROR:
+            fdata = []
 
         try:
+            logr.info(f"{type(sdata)=}")
             while self.state_exp == "calculating":
                 # 后台计算数据
-                settings = self.page.session.store.get("settings")
-                filters = self.page.session.store.get("filters")
-                tempd, state = await asyncio.to_thread(
-                    calculate_lottery, settings, filters
-                )
+
+                tempd, state = await asyncio.to_thread(calculate_lottery, sdata, fdata)
                 current_time = time.time()
                 self.elapsed_time = current_time - self.start_time
 
@@ -387,7 +396,8 @@ class itemsList(ft.Container):
             for x in self.mainitems.controls
             if isinstance(x, itemC2plus) and x.selected == False
         ].__len__()
-        if itemc2_len < self.max_item:
+        selectlen = self.mainitems.controls.__len__() - itemc2_len
+        if itemc2_len < self.max_item and selectlen < self.max_item * 10:
             temp = itemC2plus(Calculation_Results)
             temp.setting_adjust_position(self.adjust_position)
             temp.setting_Itemc2_Remove(itemc2remove)
@@ -402,7 +412,7 @@ class itemsList(ft.Container):
                 item.refresh(name="all_refresh")
                 await asyncio.sleep(0.1)
 
-    def get_item_exp(self,max_count:int=10,data:str="select"):
+    def get_item_exp(self, max_count: int = 10, data: str = "select"):
         """
         data:
             all
@@ -414,7 +424,7 @@ class itemsList(ft.Container):
         select_flg = []
         match data:
             case "all":
-                select_flg = [True,False]
+                select_flg = [True, False]
             case "select":
                 select_flg = [True]
             case "unselected":
@@ -422,9 +432,16 @@ class itemsList(ft.Container):
             case _:
                 select_flg = [True]
 
+        # self.state_exp = "calculating"
+
         for x in self.mainitems.controls:
             # 如果是目标类型 且 已选中 且 提取篮子还没满
-            if isinstance(x, itemC2plus) and x.selected in select_flg and len(exp_all) < max_count:
+            if (
+                isinstance(x, itemC2plus)
+                and x.selected in select_flg
+                and len(exp_all) < max_count
+                and x.state_exp != "calculating"
+            ):
                 exp_all.append(x.tempd)
                 # 注意：这里不把 x 放入 reserve，意味着它会被从 UI 中删除
             else:
@@ -618,11 +635,11 @@ class commandList(ft.Container):
         ops = operates()
         ops.setting_callback(self.refresh_callback)
         self.page.show_dialog(ops.adb)
-        
-    async def refresh_callback(self,data:str="none"):
-        logr.info(f"callback data: {data}")
+
+    async def refresh_callback(self, **kwargs):
+        logr.info(f"callback data: {kwargs}")
         if self.get_exp_all:
-            self.get_exp_all(data=data)
+            self.get_exp_all(**kwargs)
 
 
 # endregion

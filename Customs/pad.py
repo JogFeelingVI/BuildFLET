@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-22 16:21:36
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 01:10:14
+# @Last Modified time: 2026-03-21 02:40:50
 
 from .DraculaTheme import DraculaColors, RandColor
 import re
@@ -18,7 +18,6 @@ class paditem(ft.Container):
         super().__init__()
         self.userColor = RandColor(mode="Morandi")
         self.padding = ft.Padding(10, 5, 10, 5)
-        # self.border = ft.Border.all(1, ft.Colors.with_opacity(0.5, self.userColor))
         self.border_radius = 5
         self.bgcolor = ft.Colors.with_opacity(0.1, self.userColor)
         self.content = self.__build_content_row()
@@ -106,6 +105,7 @@ class paditem(ft.Container):
             border_radius=3,
             bgcolor=ft.Colors.with_opacity(0.1, self.userColor),
             content=ft.Stack(alignment=ft.Alignment.CENTER, controls=[show, edit]),
+            # content=edit,
             on_click=lambda _: self.handle_click(show, edit, black),
         )
         return black, show, edit

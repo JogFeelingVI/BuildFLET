@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-19 06:18:53
+# @Last Modified time: 2026-03-21 17:57:44
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
@@ -10,10 +10,10 @@ from .Savedialogbox import CustomSwitch
 from .pad import paditem, quickpad
 from .jackpot_core import filterFunc
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
+from .byterfiles import BinaryConverter as bc, ResultCode as rc
 from .loger import logr
 import flet as ft
 import os
-import json
 import asyncio
 import hashlib
 
@@ -239,8 +239,9 @@ class FiltersList(ft.Container):
             self.filter_data_task()
 
     def filter_data_task(self):
-        # self.page.session.store.set("filters", fiter_data)
-        self.page.session.store.set("filters", self.filtersAll)
+        code, data = bc.to_base64_str(self.filtersAll)
+        if code == rc.DONE:
+            self.page.session.store.set("filters", self.filtersAll)
 
     def __command_button(self):
         """Add, Apply, Cancel"""
@@ -313,32 +314,34 @@ class FiltersList(ft.Container):
     async def saveTodict(self):
         if self.filtersAll_change == "none":
             return
-        self.page.session.store.set("filters", self.filtersAll)
+        code, fdata = bc.to_base64_str(self.filtersAll)
+        if code == rc.DONE:
+            self.page.session.store.set("filters", fdata)
+        # 设置 过滤器
         storedid = await ft.SharedPreferences().get("storedid")
-        if not storedid:
-            logr.error("ID not found.")
+        code, sdata = bc.from_base64_str(storedid)
+        logr.info(f"{code} -> {sdata} {storedid}")
+        if code == rc.ERROR:
             self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
         try:
-            storedid = json.loads(storedid)
             await self.update_redis()
-            with open(storedid["path"], "w", encoding="utf-8") as f:
-                for item in self.filtersAll:
-                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
-            logr.info(f"saveTodict is run.")
-            self.filtersAll_change = "none"
+            code, _ = bc.save_binary(sdata["path"], self.filtersAll)
+            if code == rc.DONE:
+                logr.info(f"saveTodict is run.")
+                self.filtersAll_change = "none"
         except Exception as er:
             logr.info(f"Auto Save error. {er}", exc_info=True)
 
     async def load_upstash_confing(self):
+        """界面判断是否已经设置 upstash"""
         jsondata = await ft.SharedPreferences().get("upstash")
-        if not jsondata:
+        code, data = bc.from_base64_str(jsondata)
+        if code == rc.ERROR:
             logr.info("Failed to obtain upstash token.")
             self.upstash = None
             return
-        while isinstance(jsondata, str):
-            jsondata = json.loads(jsondata)
-        self.upstash = jsondata
+        self.upstash = data
         logr.info("load_upstash_confing done.")
 
     async def update_redis(self):
@@ -347,11 +350,16 @@ class FiltersList(ft.Container):
         if not self.upstash or not self.upstash.get("sync"):
             return
         settings = self.page.session.store.get("settings")
-        my_settings = {"setting": settings, "filters": self.filtersAll}
+        code, sdata = bc.from_base64_str(settings)
+        if code == rc.ERROR:
+            return
+        my_settings = {"setting": sdata, "filters": self.filtersAll}
         api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
-        success, timestamp = await api.save_sync_data(self.config_id, my_settings)
-        logr.info(f"Upstash successfully stored data. {success} {timestamp}")
-        self.local_last_update = timestamp
+        code, data = bc.to_base64_str(my_settings)
+        if code == rc.DONE:
+            success, timestamp = await api.save_sync_data(self.config_id, data)
+            logr.info(f"Upstash successfully stored data. {success} {timestamp}")
+            self.local_last_update = timestamp
 
     async def needs_update(self):
         if self.needs_update_run:
@@ -368,20 +376,25 @@ class FiltersList(ft.Container):
 
             # 2. 拉取完整字典
             cloud_data = await api.get_sync_data(self.config_id)
-
-            if cloud_data:
-                logr.info("✅ Retrieval successful.")
-                self.page.session.store.set("settings", cloud_data["setting"])
-                self.page.session.store.set("filters", cloud_data["filters"])
-                self.clear_all()
-                for _f in cloud_data["filters"]:
-                    self.addFilter(_f, redis_async=True)
-                    await asyncio.sleep(0.1)
-                # 3. 更新本地的时间戳，留作下次对比
-                self.local_last_update = cloud_data.get("_updated_at", 0)
-                logr.info(
-                    f"⚡The local timestamp has been updated!: {self.local_last_update}"
-                )
+            code, cdata = bc.from_base64_str(cloud_data["data"])
+            if code == rc.ERROR:
+                return
+            logr.info("✅ Retrieval successful.")
+            code, sdata = bc.to_base64_str(cdata["setting"])
+            if code == rc.DONE:
+                self.page.session.store.set("settings", sdata)
+            code, fdata = bc.to_base64_str(cdata["filters"])
+            if code == rc.DONE:
+                self.page.session.store.set("filters", fdata)
+            self.clear_all()
+            for _f in cdata["filters"]:
+                self.addFilter(_f, redis_async=True)
+                await asyncio.sleep(0.1)
+            # 3. 更新本地的时间戳，留作下次对比
+            self.local_last_update = cloud_data.get("_updated_at", 0)
+            logr.info(
+                f"⚡The local timestamp has been updated!: {self.local_last_update}"
+            )
         else:
             logr.info(
                 "⚡ My local system is already configured with the latest settings!"
@@ -715,9 +728,9 @@ class InputPad(ft.Container):
             global jackpot_seting
             if not os.path.exists(jackpot_seting):
                 return
-            with open(jackpot_seting, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                random_data = data.get("randomData", {})
+            code, load = bc.load_binary(jackpot_seting)
+            if code == rc.DONE:
+                random_data = load.get("randomData", {})
                 self.target_pn = ["all"]
                 for key, content in random_data.items():
                     if isinstance(content, dict) and content.get("enabled") is True:
@@ -881,23 +894,16 @@ class CommandList(ft.Container):
             self.addclose.update()
 
     async def handle_Save(self, e):
-        filtersAll = self.page.session.store.get("filters")
-        if not filtersAll:
-            logr.info(f"read filters is error.")
+        filters = self.page.session.store.get("filters")
+        if not filters:
             self.page.show_dialog(ft.SnackBar(f"read filters is error."))
+            return
         try:
-            content_bytes = ""
-            for _fitem in filtersAll:
-                content_bytes += json.dumps(_fitem) + "\n"
-            content_bytes = (
-                content_bytes
-                if isinstance(content_bytes, bytes)
-                else content_bytes.encode("utf-8")
-            )
             is_mobile_or_web = self.page.web or self.page.platform in [
                 ft.PagePlatform.ANDROID,
                 ft.PagePlatform.IOS,
             ]
+            content_bytes = filters.encode("utf-8")
             save_path = await ft.FilePicker().save_file(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["dict"],
@@ -927,7 +933,9 @@ class CommandList(ft.Container):
         def confirm_clear(e):
             if self.filter_clear_all:
                 self.filter_clear_all()
-                self.page.session.store.set("filters", [])
+                code, data = bc.to_base64_str(None)
+                if code == rc.DONE:
+                    self.page.session.store.set("filters", data)
             self.page.pop_dialog()
 
         content = ft.Column(
@@ -975,31 +983,25 @@ class CommandList(ft.Container):
 
     async def handle_Open(self, e):
         storedid = await ft.SharedPreferences().get("storedid")
-        if not storedid:
+        code, data = bc.from_base64_str(storedid)
+        if code == rc.ERROR:
             self.page.show_dialog(ft.SnackBar(f"ID not found."))
             return
 
-        fiter_data = []
         if self.filter_clear_all:
             self.filter_clear_all()
         try:
-            storedid = json.loads(storedid)
-            with open(storedid["path"], "r", encoding="utf-8") as f:
-                for line in f:
-                    # 去掉行尾换行符并确保行不为空
-                    line = line.strip()
-                    if line:
-                        # 将每一行的 JSON 字符串转回字典对象
-                        item = json.loads(line)
-                        fiter_data.append(item)
-                        if self.filterAddItem:
-                            self.filterAddItem(item)
+            code, filedata = bc.load_binary(data["path"])
+            for line in filedata:
+                if self.filterAddItem:
+                    self.filterAddItem(line)
         except Exception as er:
             self.page.show_dialog(ft.SnackBar(f"File reading error. {er}"))
             return
-        self.page.session.store.set("filters", fiter_data)
-        self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(fiter_data)}"))
-        logr.info(f"Reading complete. {len(fiter_data)}")
+        code, data = bc.to_base64_str(filedata)
+        if code == rc.DONE:
+            self.page.session.store.set("filters", data)
+            self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(filedata)}"))
 
     async def handle_upload(self, e):
         await asyncio.sleep(0.5)
@@ -1007,21 +1009,19 @@ class CommandList(ft.Container):
         if e.progress == 1.0 and e.error == None:
             filepath = os.path.join(app_temp_path, f"filter/{e.file_name}")
             logr.info(f"upload Fullpath {filepath}")
-            fiter_data = []
             if self.filter_clear_all:
                 self.filter_clear_all()
             with open(filepath, "r", encoding="utf-8") as f:
-                for line in f:
-                    # 去掉行尾换行符并确保行不为空
-                    line = line.strip()
-                    if line:
-                        # 将每一行的 JSON 字符串转回字典对象
-                        item = json.loads(line)
-                        fiter_data.append(item)
-                        if self.filterAddItem:
-                            self.filterAddItem(item)
-            self.page.session.store.set("filters", fiter_data)
-            self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(fiter_data)}"))
+                temp = f.read()
+            code, readtata = bc.from_base64_str(temp)
+            if not readtata or code == rc.ERROR:
+                logr.info(f"{readtata} is None.")
+                return
+            for item in readtata:
+                if self.filterAddItem:
+                    self.filterAddItem(item)
+            self.page.session.store.set("filters", temp)
+            self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(readtata)}"))
             os.remove(filepath)
 
     async def handle_Load(self, e):
@@ -1057,24 +1057,19 @@ class CommandList(ft.Container):
                 await pick.upload(uplpads)
             else:
                 logr.info(f"{pick_result[0]}")
-                fiter_data = []
                 if self.filter_clear_all:
                     self.filter_clear_all()
-                with open(pick_result[0].path, "r", encoding="utf-8") as r:
-                    for line in r:
-                        # 去掉行尾换行符并确保行不为空
-                        line = line.strip()
-                        if line:
-                            # 将每一行的 JSON 字符串转回字典对象
-                            item = json.loads(line)
-                            fiter_data.append(item)
-                            if self.filterAddItem:
-                                self.filterAddItem(item)
-                self.page.session.store.set("filters", fiter_data)
-                logr.info(f"Reading complete. {len(fiter_data)}")
-                self.page.show_dialog(
-                    ft.SnackBar(f"Reading complete. {len(fiter_data)}")
-                )
+                with open(pick_result[0].path, "r", encoding="utf-8") as f:
+                    temp = f.read()
+                code, readtata = bc.from_base64_str(temp)
+                if not readtata or code == rc.ERROR:
+                    return
+                for item in readtata:
+                    if self.filterAddItem:
+                        self.filterAddItem(item)
+                self.page.session.store.set("filters", temp)
+                logr.info(f"Reading complete. {len(readtata)}")
+                self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(readtata)}"))
         except Exception as er:
             logr.error(f"handle_Load error. {er}", exc_info=True)
 

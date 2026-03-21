@@ -2,21 +2,23 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-19 23:43:33
+# @Last Modified time: 2026-03-21 18:02:20
 
+
+from turtle import fd
 
 from .jackpot_core import randomData, filter_for_pabc, calculate_batch_wrapper
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .adbox import adbx
 from .asyncredis import RedisAPI
 from .svgbase64 import svgimage
+from .byterfiles import BinaryConverter as bc, ResultCode as rc
 from dataclasses import dataclass, field
 from PIL import Image, ImageChops, ImageFont
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import asyncio
 import flet as ft
 import datetime
-import json
 import io
 import os
 import time
@@ -292,6 +294,14 @@ class tadbx:
         # await asyncio.sleep(0.3)
         settings = self.adb.page.session.store.get("settings")
         filtersAll = self.adb.page.session.store.get("filters")
+        
+        code, sdata = bc.from_base64_str(settings)
+        if code==rc.ERROR:
+            return
+        code,fdata = bc.from_base64_str(filtersAll)
+        if code==rc.ERROR or not fdata:
+            fdata=None
+        
         if not filtersAll:
             await self.detectstatus.addinfo("If filters is empty, skip the detection.")
             # await asyncio.sleep(0.3)
@@ -299,13 +309,13 @@ class tadbx:
             return
 
         await self.detectstatus.addinfo("Create a data pool.")
-        if settings and filtersAll:
-            _rdpn = randomData(seting=settings["randomData"])
+        if sdata and fdata:
+            _rdpn = randomData(seting=sdata["randomData"])
             results = []
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
         await asyncio.sleep(0.3)
-        for i, _fitem in enumerate(filtersAll):
+        for i, _fitem in enumerate(fdata):
             # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
             pass_rate = (
@@ -317,7 +327,7 @@ class tadbx:
                 f"{_fitem['condition']}",
                 int(pass_rate),
             ]
-            self.detectstatus.jdu = (i + 1) / len(filtersAll)
+            self.detectstatus.jdu = (i + 1) / len(fdata)
             self.detectstatus.additem(prinfo)
             await self.detectstatus.addinfo(
                 f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
@@ -513,7 +523,7 @@ class tadbx:
         if not items:
             return
         newitems = [x for x in self.more_display.controls if x.data == "more"]
-        for item in items:
+        for item in items[:10]:
             newitems.append(self.Details(*item, type="info"))
         self.more_display.controls = newitems
 
@@ -707,14 +717,14 @@ class upstashtoken:
     def setting_apply_callback(self, callblack):
         self.applycallback = callblack
 
-    def setting_valid_info(self, jsondata):
-        while isinstance(jsondata, str):
-            jsondata = json.loads(jsondata)
-        self.intoken.value = jsondata["token"]
-        self.intoken_url.value = jsondata["url"]
-        self.syncsw.value = jsondata["sync"]
-        self.valid_data = jsondata
-        self.adb.update()
+    def setting_valid_info(self, jsondata: str):
+        code, data = bc.from_base64_str(jsondata)
+        if code == rc.DONE:
+            self.intoken.value = data["token"]
+            self.intoken_url.value = data["url"]
+            self.syncsw.value = data["sync"]
+            self.valid_data = data
+            self.adb.update()
 
     def handle_cancel(self):
         self.adb.page.pop_dialog()
@@ -748,17 +758,17 @@ class upstashtoken:
 
         # 3. 缓存检测（如果信息没变且之前验证过，直接生效并退出）
         # 使用 dict.get 更加安全，防止 KeyError
-        if (
-            self.valid_data
-            and self.valid_data.get("valid")
-            and self.valid_data.get("token") == token
-            and self.valid_data.get("url") == token_url
-        ):
-            self.valid_data["sync"] = self.syncsw.value
-            if self.applycallback:
-                self.adb.page.run_task(self.applycallback, self.valid_data)
-            self.adb.page.pop_dialog()
-            return
+        # if (
+        #     self.valid_data
+        #     and self.valid_data.get("valid")
+        #     and self.valid_data.get("token") == token
+        #     and self.valid_data.get("url") == token_url
+        # ):
+        #     self.valid_data["sync"] = self.syncsw.value
+        #     if self.applycallback:
+        #         self.adb.page.run_task(self.applycallback, self.valid_data)
+        #     self.adb.page.pop_dialog()
+        #     return
 
         # 4. 开始 API 测试流程
         await show_tip("Connecting to Upstash...", DraculaColors.YELLOW)
@@ -982,6 +992,14 @@ class joblibdlg:
         settings = self.adb.page.session.store.get("settings")
         filters = self.adb.page.session.store.get("filters")
 
+        code, sdata = bc.from_base64_str(settings)
+        if code == rc.ERROR:
+            return
+
+        code, fdata = bc.from_base64_str(filters)
+        if code == rc.ERROR:
+            fdata = []
+
         def safe_get_int(control, default):
             val = control.value
             if val and str(val).strip():  # 确保有值且不是纯空格
@@ -1009,9 +1027,7 @@ class joblibdlg:
             # temp = await asyncio.to_thread(
             #     self.run_parallel, settings, filters, timeout_limit, target_quantity
             # )
-            await self.run_parallel_async(
-                settings, filters, timeout_limit, target_quantity
-            )
+            await self.run_parallel_async(sdata, fdata, timeout_limit, target_quantity)
         except Exception as ex:
             print(f"seting erro, use default value. {ex}")
         finally:
@@ -1312,24 +1328,25 @@ class operates:
         self.conten = self.__builde_conter()
         self.adb = adbx(None, self.conten)
         self.callback = None
-        
+
     def setting_callback(self, callback=None):
         self.callback = callback
 
     def handle_cancel(self):
         self.adb.page.pop_dialog()
-        
-    def handle_cilck(self,e, data:str="none"):
+
+    def handle_cilck(self, e, data: str = "none"):
         if self.callback:
-            self.adb.page.run_task(self.callback, data)
+            kwargs = {"max_count": 1000, "data": data}
+            self.adb.page.run_task(self.callback, **kwargs)
 
     def __builde_conter(self):
         def hover(e, item):
-            if e.data==True:
-                item.size=17
+            if e.data == True:
+                item.size = 17
             else:
-                item.size=15
-                
+                item.size = 15
+
         title = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
@@ -1356,8 +1373,8 @@ class operates:
                     ),
                 ]
             ),
-            on_hover=lambda e,x=flg: hover(e,x),
-            on_click=lambda e,data="all": self.handle_cilck(e, data)
+            on_hover=lambda e, x=flg: hover(e, x),
+            on_click=lambda e, data="all": self.handle_cilck(e, data),
         )
         clear_select = ft.Container(
             padding=5,
@@ -1371,8 +1388,8 @@ class operates:
                     ),
                 ]
             ),
-            on_hover=lambda e,x=flg: hover(e,x),
-            on_click=lambda e,data="select": self.handle_cilck(e, data)
+            on_hover=lambda e, x=flg: hover(e, x),
+            on_click=lambda e, data="select": self.handle_cilck(e, data),
         )
         clear_unselected = ft.Container(
             padding=5,
@@ -1386,10 +1403,10 @@ class operates:
                     ),
                 ]
             ),
-            on_hover=lambda e,x=flg: hover(e,x),
-            on_click=lambda e,data="unselected": self.handle_cilck(e, data)
+            on_hover=lambda e, x=flg: hover(e, x),
+            on_click=lambda e, data="unselected": self.handle_cilck(e, data),
         )
-        
+
         conter = ft.Container(
             padding=5,
             border_radius=0,

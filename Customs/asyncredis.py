@@ -90,7 +90,7 @@ class RedisAPI:
             return False
 
     async def save_sync_data(
-        self, key_suffix: str, data: dict, expire_seconds: int = 3600
+        self, key_suffix: str, obj: str, expire_seconds: int = 3600
     ) -> bool:
         """
         保存字典数据，并自动注入/更新最新时间戳
@@ -98,10 +98,6 @@ class RedisAPI:
         :param data: 需要保存的 Python 字典
         :return: 是否保存成功
         """
-        if not isinstance(data, dict):
-            print("[RedisAPI Error] Data must be a dictionary.")
-            return False
-
         data_key = f"{self._data_prefix}{key_suffix}"
         time_key = f"{data_key}:timestamp"
 
@@ -109,7 +105,7 @@ class RedisAPI:
         current_timestamp = int(time.time())
 
         # 2. 将时间戳也注入到字典内部 (防备不时之需)
-        data["_updated_at"] = current_timestamp
+        data = {"_updated_at": current_timestamp, "data": obj}
 
         try:
             # 3. 将字典转为 JSON 字符串 (ensure_ascii=False 保证中文不乱码)

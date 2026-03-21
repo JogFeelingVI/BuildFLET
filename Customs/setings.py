@@ -2,15 +2,15 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-12 07:48:09
+# @Last Modified time: 2026-03-21 16:49:55
 
 from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
 from .jackpot_core import randomData
 from .Savedialogbox import upstashtoken
 from .svgbase64 import svgimage
+from .byterfiles import BinaryConverter as bc, ResultCode as rc
 from .loger import logr
 import flet as ft
-import json
 import os
 import re
 import asyncio
@@ -323,9 +323,12 @@ class input_user_rule(ft.Container):
                 continue
 
         global jackpot_seting
-        with open(jackpot_seting, "w", encoding="utf-8") as f:
-            json.dump(temp, f, indent=4, ensure_ascii=False)
-        self.page.session.store.set("settings", temp)
+        # with open(jackpot_seting, "w", encoding="utf-8") as f:
+        #     json.dump(temp, f, indent=4, ensure_ascii=False)
+        bc.save_binary(jackpot_seting, temp)
+        code, data = bc.to_base64_str(temp)
+        if code == rc.DONE:
+            self.page.session.store.set("settings", data)
         if self.render_filters:
             self.render_filters()
         self.handle_Cancel()
@@ -392,21 +395,21 @@ class showRulev2(ft.Container):
 
     async def __load_json_setting(self):
         apply_rule = self.page.session.store.get("settings")
-        if apply_rule:
-            return apply_rule
-        json_path = pathlib.Path(jackpot_seting)
-        if not json_path.exists():
-            return
+        code, obj = bc.from_base64_str(apply_rule)
+        if code == rc.DONE:
+            return obj
         try:
-            with json_path.open(mode="r", encoding="UTF-8") as r:
-                temp = json.load(r)
-                # logr.info(f'temp: {temp}')
-                self.page.session.store.set("settings", temp)
-                return temp
+            code, load = bc.load_binary(jackpot_seting)
+            if code == rc.ERROR:
+                return None
+            code, setd = bc.to_base64_str(load)
+            if code == rc.DONE:
+                self.page.session.store.set("settings", setd)
+            return load
         except Exception as er:
             self.update_tips("Load json setting run error.", "#ee0f0f")
             logr.error(f"__load_json_setting run error.", {er})
-            return
+            return None
 
     async def __update_card(self):
         self.update_tips(
@@ -577,14 +580,6 @@ class DefaultSettings(ft.Container):
             for k, item in Lotter_Data.items():
                 description = item.get("description", "")
                 button_list.append(
-                    # ft.TextButton(
-                    #     content=f"{k}",
-                    #     tooltip=ft.Tooltip(message=description),
-                    #     # 【重要】使用默认参数 data=item 来破解 Lambda 闭包陷阱
-                    #     on_click=lambda e, name=k, data=item, desc=description: (
-                    #         self.save_preset_to_file(name, data, desc)
-                    #     ),
-                    # )
                     ft.Container(
                         padding=3,
                         border_radius=3,
@@ -632,13 +627,10 @@ class DefaultSettings(ft.Container):
                     "range_end": preset_data[k][1],
                     "count": preset_data[count_key],
                 }
-
-        with open(jackpot_seting, "w", encoding="utf-8") as f:
-            json.dump(valid_json, f, indent=4, ensure_ascii=False)
-            # self.page.show_dialog(
-            #     get_snack_bar(f"Preset '{name}' has been applied and saved.")
-            # )
-        self.page.session.store.set("settings", valid_json)
+        bc.save_binary(jackpot_seting, valid_json)
+        code, data = bc.to_base64_str(valid_json)
+        if code == rc.DONE:
+            self.page.session.store.set("settings", data)
         if self.render_filters:
             self.render_filters()
 
@@ -655,8 +647,10 @@ class DefaultSettings(ft.Container):
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
         storedid = {"path": self.stored_path, "id": id}
-        await ft.SharedPreferences().set("storedid", json.dumps(storedid))
-        self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
+        code, data = bc.to_base64_str(storedid)
+        if code == rc.DONE:
+            await ft.SharedPreferences().set("storedid", data)
+            self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
 
     def __build_card(self):
         self.defrow = ft.Row(
@@ -752,6 +746,7 @@ class rsup(ft.Container):
         self.running = False
 
     async def verdict_shows(self):
+        """改变token按钮显示内容"""
         jsondata = await ft.SharedPreferences().get("upstash")
         if jsondata:
             self.tokenbt.content = f"Token Activation"
@@ -802,12 +797,12 @@ class rsup(ft.Container):
         if jsondata:
             token.setting_valid_info(jsondata=jsondata)
 
-    async def handle_callback(self, jsondata: str):
+    async def handle_callback(self, jsondata: dict):
+        """设置加密 upstash 数据"""
         if jsondata:
-            # logr.info(f"callback: {jsondata}")
-            if isinstance(jsondata, dict):
-                jsondata = json.dumps(jsondata)
-            await ft.SharedPreferences().set("upstash", json.dumps(jsondata))
+            code, data = bc.to_base64_str(jsondata)
+            if code == rc.DONE:
+                await ft.SharedPreferences().set("upstash", data)
             self.page.run_task(self.verdict_shows)
 
 
