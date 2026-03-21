@@ -7,7 +7,8 @@
 
 import json
 import time
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from upstash_redis.asyncio import Redis
 
 

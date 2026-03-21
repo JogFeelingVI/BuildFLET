@@ -2,17 +2,18 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-17 12:02:30
+# @Last Modified time: 2026-03-21 23:28:50
 
-from Customs.DraculaTheme import DraculaColors, RandColor
-from Customs.setings import SetingsPage
-from Customs.filter import FilterPage
-from Customs.lottery import LotteryPage
-from Customs.jackpot_core import randomData
-from Customs.loger import logr
-from Customs.loadfonts import FontManager
-import flet as ft
 import os
+
+import flet as ft
+from Customs.DraculaTheme import DraculaColors, RandColor
+from Customs.filter import FilterPage
+from Customs.jackpot_core import randomData
+from Customs.loadfonts import FontManager
+from Customs.loger import logr
+from Customs.lottery import LotteryPage
+from Customs.setings import SetingsPage
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")

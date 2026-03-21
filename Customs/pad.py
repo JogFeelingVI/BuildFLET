@@ -4,10 +4,12 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-21 02:40:50
 
-from .DraculaTheme import DraculaColors, RandColor
-import re
 import random
+import re
+
 import flet as ft
+
+from .DraculaTheme import RandColor
 
 __version__ = "0.1.0"
 

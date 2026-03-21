@@ -4,17 +4,20 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-21 16:49:55
 
-from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
+import asyncio
+import os
+import pathlib
+import re
+
+import flet as ft
+
+from .byterfiles import BinaryConverter as bc
+from .byterfiles import ResultCode as rc
+from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import randomData
+from .loger import logr
 from .Savedialogbox import upstashtoken
 from .svgbase64 import svgimage
-from .byterfiles import BinaryConverter as bc, ResultCode as rc
-from .loger import logr
-import flet as ft
-import os
-import re
-import asyncio
-import pathlib
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")

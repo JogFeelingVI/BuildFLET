@@ -4,9 +4,9 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-10 01:56:11
 
-from typing import Final
-import random
 import colorsys
+import random
+from typing import Final
 
 _last_h = random.random()
 

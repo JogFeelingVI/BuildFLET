@@ -5,24 +5,25 @@
 # @Last Modified time: 2026-03-21 18:02:20
 
 
-from turtle import fd
-
-from .jackpot_core import randomData, filter_for_pabc, calculate_batch_wrapper
-from .DraculaTheme import DraculaColors, RandColor, HarmonyColors
-from .adbox import adbx
-from .asyncredis import RedisAPI
-from .svgbase64 import svgimage
-from .byterfiles import BinaryConverter as bc, ResultCode as rc
-from dataclasses import dataclass, field
-from PIL import Image, ImageChops, ImageFont
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import asyncio
-import flet as ft
 import datetime
 import io
+import multiprocessing
 import os
 import time
-import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from dataclasses import dataclass, field
+
+import flet as ft
+from PIL import Image, ImageChops, ImageFont
+
+from .adbox import adbx
+from .asyncredis import RedisAPI
+from .byterfiles import BinaryConverter as bc
+from .byterfiles import ResultCode as rc
+from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
+from .jackpot_core import calculate_batch_wrapper, filter_for_pabc, randomData
+from .svgbase64 import svgimage
 
 # tracemalloc.start()
 
