@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 17:27:18
+# @Last Modified time: 2026-03-22 07:24:01
 
 
 import asyncio
@@ -17,10 +17,10 @@ import requests
 from .byterfiles import BinaryConverter as bc
 from .byterfiles import ResultCode as rc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
-from .jackpot_core import calculate_lottery
+from .jackpot_core import calculate_lottery, calculate_batch_wrapper
 from .loger import logr
 from .Savedialogbox import joblibdlg, operates, savedialog, tadbx
-from .svgbase64 import svgimage
+from .svgbase64 import svgimage, check_select
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -129,7 +129,7 @@ class itemC2plus(ft.Container):
     # ==========================================
     def sync_ui_to_state(self):
         # 安全检查：防止在 unmount 的瞬间调用更新
-        if self.running == False:
+        if not self.running:
             return
 
         self.buildBadge.content.value = f"{self.elapsed_time:.2f}"
@@ -154,7 +154,7 @@ class itemC2plus(ft.Container):
 
         elif self.state_exp == "error":
             self.showNumber.controls = self.displayshow(
-                f"TProgram execution error."
+                "TProgram execution error."
             ).controls
 
         self._last_state_exp = self.state_exp
@@ -259,10 +259,9 @@ class itemC2plus(ft.Container):
         if self.state_exp != "done":
             return
         self.selected = not self.selected
-        self.check.bgcolor = (
-            ft.Colors.with_opacity(0.6, RandColor(mode="neon", hue="Green"))
-            if self.selected
-            else None
+        imgcolor = "#d1d1d1" if not self.selected else "#3CFA40"
+        self.check.content = ft.Image(
+            src=check_select(color=imgcolor), height=30, width=30
         )
         rows: ft.Column = self.content
         rows.controls[1].visible = not self.selected
@@ -277,15 +276,23 @@ class itemC2plus(ft.Container):
         self.update()
 
     def __build_check(self, size: int = 30):
+        # self.check = ft.Container(
+        #     padding=5,
+        #     content=ft.Icon(
+        #         ft.Icons.CHECK, color=DraculaColors.FOREGROUND, size=size * 0.6
+        #     ),
+        #     width=size,
+        #     height=size,
+        #     border_radius=size / 2,
+        #     alignment=ft.Alignment.CENTER,
+        #     on_click=self.handle_Selected,
+        # )
         self.check = ft.Container(
-            padding=5,
-            content=ft.Icon(
-                ft.Icons.CHECK, color=DraculaColors.FOREGROUND, size=size * 0.6
+            padding=0,
+            bgcolor=ft.Colors.TRANSPARENT,
+            content=ft.Image(
+                src=check_select(color="#9E9E9E"), height=size, width=size
             ),
-            width=size,
-            height=size,
-            border_radius=size / 2,
-            alignment=ft.Alignment.CENTER,
             on_click=self.handle_Selected,
         )
         return self.check
@@ -349,14 +356,14 @@ class itemC2plus(ft.Container):
         """右滑逻辑：刷新数据"""
         # logr.info("向右滑动：正在刷新数据...")
         self.refresh(name="refresh_data")
-        self.page.show_dialog(ft.SnackBar(f"handle refresh data."))
+        self.page.show_dialog(ft.SnackBar("handle refresh data."))
 
     def handle_delete(self, e):
         if self.calc_task_running or self.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
-        self.page.show_dialog(ft.SnackBar(f"handle delete."))
+        self.page.show_dialog(ft.SnackBar("handle delete."))
 
 
 # endregion
@@ -397,7 +404,7 @@ class itemsList(ft.Container):
         itemc2_len = [
             x
             for x in self.mainitems.controls
-            if isinstance(x, itemC2plus) and x.selected == False
+            if isinstance(x, itemC2plus) and not x.selected
         ].__len__()
         selectlen = self.mainitems.controls.__len__() - itemc2_len
         if itemc2_len < self.max_item and selectlen < self.max_item * 10:
@@ -411,7 +418,7 @@ class itemsList(ft.Container):
         """全部刷新"""
         itemc2_all = [x for x in self.mainitems.controls if isinstance(x, itemC2plus)]
         for item in itemc2_all:
-            if item.selected == False:
+            if not item.selected:
                 item.refresh(name="all_refresh")
                 await asyncio.sleep(0.1)
 

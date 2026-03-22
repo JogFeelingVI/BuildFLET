@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 17:57:44
+# @Last Modified time: 2026-03-21 23:34:25
 
 import asyncio
 import hashlib
@@ -191,7 +191,7 @@ class FiltersList(ft.Container):
                 case _:
                     pass
 
-        if hashcode(_scd, "is") == False:
+        if not hashcode(_scd, "is"):
             return
 
         controls = self.content.controls
@@ -324,13 +324,13 @@ class FiltersList(ft.Container):
         code, sdata = bc.from_base64_str(storedid)
         logr.info(f"{code} -> {sdata} {storedid}")
         if code == rc.ERROR:
-            self.page.show_dialog(ft.SnackBar(f"ID not found."))
+            self.page.show_dialog(ft.SnackBar("ID not found."))
             return
         try:
             await self.update_redis()
             code, _ = bc.save_binary(sdata["path"], self.filtersAll)
             if code == rc.DONE:
-                logr.info(f"saveTodict is run.")
+                logr.info("saveTodict is run.")
                 self.filtersAll_change = "none"
         except Exception as er:
             logr.info(f"Auto Save error. {er}", exc_info=True)
@@ -743,7 +743,7 @@ class InputPad(ft.Container):
                 target_pn_items.append(self.Cratefunc(key, function_click, 1))
             self.__FT_show.controls = target_pn_items
             self.__FT_show.visible = True
-        except Exception as e:
+        except Exception:
             pass
 
 
@@ -898,7 +898,7 @@ class CommandList(ft.Container):
     async def handle_Save(self, e):
         filters = self.page.session.store.get("filters")
         if not filters:
-            self.page.show_dialog(ft.SnackBar(f"read filters is error."))
+            self.page.show_dialog(ft.SnackBar("read filters is error."))
             return
         try:
             is_mobile_or_web = self.page.web or self.page.platform in [
@@ -981,13 +981,13 @@ class CommandList(ft.Container):
         )
         confirm_dialog = adbx(None, content)
         self.page.show_dialog(confirm_dialog)
-        logr.info(f"long press run cls.")
+        logr.info("long press run cls.")
 
     async def handle_Open(self, e):
         storedid = await ft.SharedPreferences().get("storedid")
         code, data = bc.from_base64_str(storedid)
         if code == rc.ERROR:
-            self.page.show_dialog(ft.SnackBar(f"ID not found."))
+            self.page.show_dialog(ft.SnackBar("ID not found."))
             return
 
         if self.filter_clear_all:
@@ -1008,7 +1008,7 @@ class CommandList(ft.Container):
     async def handle_upload(self, e):
         await asyncio.sleep(0.5)
         # logr.info(f"handle upload {e}")
-        if e.progress == 1.0 and e.error == None:
+        if e.progress == 1.0 and e.error is None:
             filepath = os.path.join(app_temp_path, f"filter/{e.file_name}")
             logr.info(f"upload Fullpath {filepath}")
             if self.filter_clear_all:

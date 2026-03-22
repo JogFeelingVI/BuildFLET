@@ -46,7 +46,7 @@ async def main(page: ft.Page):
         # badge=str(initial_count) if initial_count > 0 else None,
     )
 
-    logr.info(f"Initialization complete.")
+    logr.info("Initialization complete.")
 
     view_map = {
         0: SetingsPage(),

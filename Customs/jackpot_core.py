@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-04 02:53:12
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-04 22:29:53
+# @Last Modified time: 2026-03-21 23:33:33
 
 
 import inspect
@@ -693,7 +693,7 @@ class filter_for_pabc:
                 # 3. 使用 ** 解包运行函数
                 return_code = _f(**args_to_pass)
                 flgs.append(return_code)
-            except Exception as e:
+            except Exception:
                 flgs.append(False)
         if False in flgs:
             return False
@@ -722,7 +722,7 @@ def calculate_lottery(settings: dict, filters: dict):
 
     # 过滤校验
     filter_jp = filter_for_pabc(filters=filters)
-    if filter_jp.handle(result) == False:
+    if not filter_jp.handle(result):
         return (rd.get_exp(result), False)
 
     return (rd.get_exp(result), True)

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 16:49:55
+# @Last Modified time: 2026-03-21 23:32:30
 
 import asyncio
 import os
@@ -411,7 +411,7 @@ class showRulev2(ft.Container):
             return load
         except Exception as er:
             self.update_tips("Load json setting run error.", "#ee0f0f")
-            logr.error(f"__load_json_setting run error.", {er})
+            logr.error("__load_json_setting run error.", {er})
             return None
 
     async def __update_card(self):
@@ -442,7 +442,7 @@ class showRulev2(ft.Container):
         for key, item in pn.items():
             if f"{key}".lower().startswith("p") and isinstance(item, dict):
                 # PA Number Selection Rules: Choose 5 out of 36.
-                if item["enabled"] == False:
+                if not item["enabled"]:
                     continue
                 rangea = item.get("range_start", 0)
                 rangeb = item.get("range_end", 0)
@@ -752,7 +752,7 @@ class rsup(ft.Container):
         """改变token按钮显示内容"""
         jsondata = await ft.SharedPreferences().get("upstash")
         if jsondata:
-            self.tokenbt.content = f"Token Activation"
+            self.tokenbt.content = "Token Activation"
             self.tokenbt.update()
 
     def __build_conter(self):

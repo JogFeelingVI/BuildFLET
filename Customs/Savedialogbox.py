@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 18:02:20
+# @Last Modified time: 2026-03-21 23:48:07
 
 
 import asyncio
@@ -267,7 +267,7 @@ class TaskState:
         self.min_value = min(temp)
 
     def getitems(self, sord: bool = False):
-        if sord == False:
+        if not sord:
             return self.result[-10:]
         else:
             temp = list(sorted(self.result, key=lambda x: x[-1]))
@@ -295,15 +295,16 @@ class tadbx:
         # await asyncio.sleep(0.3)
         settings = self.adb.page.session.store.get("settings")
         filtersAll = self.adb.page.session.store.get("filters")
-        
+
         code, sdata = bc.from_base64_str(settings)
-        if code==rc.ERROR:
+        if code == rc.ERROR:
             return
-        code,fdata = bc.from_base64_str(filtersAll)
-        if code==rc.ERROR or not fdata:
-            fdata=None
-        
-        if not filtersAll:
+        code, fdata = bc.from_base64_str(filtersAll)
+        # print(f'{code} -> {fdata}')
+        if code == rc.ERROR or not fdata:
+            fdata = None
+
+        if not fdata:
             await self.detectstatus.addinfo("If filters is empty, skip the detection.")
             # await asyncio.sleep(0.3)
             self.detectstatus.task = "skip"
@@ -529,10 +530,10 @@ class tadbx:
         self.more_display.controls = newitems
 
     def Details(self, *args, **kwargs):
-        bold = kwargs.get("bold", False)
-        size = kwargs.get("size", 14)
+        # bold = kwargs.get("bold", False)
+        # size = kwargs.get("size", 14)
         typed = kwargs.get("type", "more")  # more info
-        usercolor = kwargs.get("usercolor", RandColor(mode="neon"))
+        # usercolor = kwargs.get("usercolor", RandColor(mode="neon"))
         match typed:
             case "more":
                 temp = ft.Container(
@@ -860,7 +861,7 @@ class CustomSwitch(ft.Container):
             self.update()
 
     def setingbadge(self, value: int):
-        if value == None or value == -1:
+        if value is None or value == -1:
             self.badge = None
         else:
             self.badge = f"{value}"
@@ -955,7 +956,7 @@ def caclfsize(
                 low = mid + 1
             else:
                 high = mid - 1
-        except Exception as ex:
+        except Exception:
             # print(f'caclfsize error, use defsize {defsize}: {ex}')
             return defsize
     return max(defsize, best_size)
@@ -1343,7 +1344,7 @@ class operates:
 
     def __builde_conter(self):
         def hover(e, item):
-            if e.data == True:
+            if not e.data:
                 item.size = 17
             else:
                 item.size = 15
