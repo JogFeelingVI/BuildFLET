@@ -2,7 +2,7 @@
 name = "Lotter"
 version = "0.1.3"
 description = "Lotter application."
-requires-python = ">=3.13"
+requires-python = ">=3.12.12"
 authors = [
     { name = "JogFeelingVI", email = "glifelse@gmail.com" }
 ]
@@ -14,7 +14,7 @@ dependencies = [
   "upstash_redis",
   "Pillow",
   "mcp>=1.26.0",
-  "msgpack>=1.1.2",
+  "msgpack>=1.1.0",
 ]
 
 [tool.flet]
