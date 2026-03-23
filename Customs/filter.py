@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-23 05:45:18
+# @Last Modified time: 2026-03-23 07:59:38
 
 import asyncio
 import hashlib
@@ -147,6 +147,8 @@ class FiltersList(ft.Container):
         self.upstash = None
         self.config_id = "async_jackpot_settings"
         self.local_last_update = 0
+        self.upredis_api = None
+        self.sync_lock = asyncio.Lock()
         self.needs_update_run = False
 
     def setting_edit_Callback(self, edit_item_callback=None):
@@ -301,107 +303,119 @@ class FiltersList(ft.Container):
 
             # 时间到了触发保存
             if _time <= 0:
-                await self.needs_update()
-                if getattr(self, "filtersAll", False):
-                    # 注意：如果 saveTodict 耗时较长，UI上的数字会暂停变化直到保存结束
-                    await self.saveTodict()
+                await self.perform_full_sync()
                 _time = time  # 重置时间，开启下一轮
 
             # 统一在这里更新 UI
             if self.running:
                 sw.update()
+                
+    async def perform_full_sync(self):
+        """执行完整的同步流程：本地保存 + 云端检测/上传"""
+        logr.info(f"run is perform_full_sync. {self.filtersAll_change}")
+        if self.sync_lock.locked():
+            logr.warning("Sync is already in progress, skipping...")
+            return
 
-    # region saveTodict
-    async def saveTodict(self):
+        async with self.sync_lock:
+            try:
+                # 1. 首先确保本地数据落盘
+                await self._save_to_local()
+
+                # 2. 如果开启了同步，处理云端逻辑
+                if self.upstash and self.upstash.get("sync"):
+                    await self._sync_with_cloud()
+            except Exception as e:
+                logr.error(f"Error during sync process: {e}", exc_info=True)
+                
+    async def _save_to_local(self) -> bool:
+        """核心逻辑：本地保存"""
         if self.filtersAll_change == "none":
-            return
-        b64setting = bc.to_base64(self.filtersAll)
-        if b64setting:
-            self.page.session.store.set("filters", b64setting)
-        # 设置 过滤器
-        b64str = await ft.SharedPreferences().get("storedid")
-        storedid_unpack = bc.from_base64(b64str)
-        if not b64str or not storedid_unpack:
-            self.page.show_dialog(ft.SnackBar("ID not found."))
-            return
-        try:
-            asyncio.create_task(self.update_redis())
-            if bc.save(storedid_unpack["path"], self.filtersAll):
-                logr.info("saveTodict is run.")
-                self.filtersAll_change = "none"
-        except Exception as er:
-            logr.info(f"Auto Save error. {er}", exc_info=True)
+            return True # 没有变动不需要保存
 
+        # 获取存储路径
+        stored_id_b64 = await ft.SharedPreferences().get("storedid")
+        config_info = bc.from_base64(stored_id_b64)
+        
+        if not config_info or "path" not in config_info:
+            logr.error("Local save path not found.")
+            return False
+        
+        if self.filtersAll_change == "none":
+            logr.info("Data does not need to be saved.")
+            return
+
+        # 保存到磁盘 (MsgPack)
+        if bc.save(config_info["path"], self.filtersAll):
+            # 更新 Session 缓存
+            self.page.session.store.set("filters", bc.to_base64(self.filtersAll))
+            logr.info("Local configuration saved. [Local]")
+            return True
+        return False
+    
+    async def _sync_with_cloud(self):
+        """核心逻辑：云端同步 (Upstash)"""
+        if not self.upredis_api:
+            self.upredis_api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
+        
+        # 1. 检查是否有远端更新（避免覆盖别人的更新）
+        needs_pull = await self.upredis_api.check_needs_update(self.config_id, self.local_last_update)
+        
+        if needs_pull:
+            logr.info("Cloud update detected, pulling...")
+            cloud_data = await self.upredis_api.get_sync_data(self.config_id)
+            if cloud_data and "data" in cloud_data:
+                await self._apply_cloud_data(cloud_data)
+                return # 拉取后不再立即上传，防止冲突
+
+        if self.filtersAll_change in ["none", "cloud"]:
+            logr.info(f"Data does not need to be synchronized. [cloud]")
+            return
+        
+        # 2. 如果本地是较新的，上传到云端
+        settings_b64 = self.page.session.store.get("settings")
+        settings = bc.from_base64(settings_b64)
+        
+        payload = {
+            "setting": settings,
+            "filters": self.filtersAll
+        }
+        
+        # 转换并上传
+        payload_b64 = bc.to_base64(payload)
+        success, timestamp = await self.upredis_api.save_sync_data(self.config_id, payload_b64)
+        
+        if success:
+            self.local_last_update = timestamp
+            logr.info(f"Cloud sync completed at {timestamp}")
+            self.filtersAll_change="none"
+            
+    async def _apply_cloud_data(self, cloud_raw: dict):
+        """将从云端拉取的数据应用到本地 UI 和存储"""
+        data = bc.from_base64(cloud_raw.get("data"))
+        if not data:
+            return
+
+        # 更新本地 Session
+        self.page.session.store.set("settings", bc.to_base64(data.get("setting")))
+        self.page.session.store.set("filters", bc.to_base64(data.get("filters")))
+
+        # 更新 UI 组件 (注意这里可能会比较耗时)
+        self.clear_all()
+        for filter_item in data.get("filters", []):
+            self.addFilter(filter_item, redis_async=True)
+            # 这里的 sleep 可能是为了 UI 渲染，如果 addFilter 很快可以去掉
+            await asyncio.sleep(0.05) 
+        self.filtersAll_change="cloud"
+        self.local_last_update = cloud_raw.get("_updated_at", 0)
+        logr.info("Cloud data applied to UI.")
+        
     async def load_upstash_confing(self):
         """界面判断是否已经设置 upstash"""
-        b64str = await ft.SharedPreferences().get("upstash")
-        upstash_setting = bc.from_base64(b64str)
-        if upstash_setting:
-            self.upstash = upstash_setting
-            logr.info("load_upstash_confing done.")
-
-    async def update_redis(self):
-        """保存数据到 upsatash"""
-        if self.needs_update_run:
-            return
-        if not self.upstash or not self.upstash.get("sync"):
-            return
-        b64str = self.page.session.store.get("settings")
-        settings = bc.from_base64(b64str)
-        if settings:
-            my_settings = {"setting": settings, "filters": self.filtersAll}
-            api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
-            b64str = bc.to_base64(my_settings)
-            if b64str:
-                success, timestamp = await api.save_sync_data(self.config_id, b64str)
-                logr.info(f"Upstash successfully stored data. {success} {timestamp}")
-                self.local_last_update = timestamp
-
-    async def needs_update(self):
-        """下载数据 upsatash"""
-        if self.needs_update_run:
-            return
-        if not self.upstash or not self.upstash.get("sync"):
-            return
-        self.needs_update_run = True
-        api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
-        needs_update = await api.check_needs_update(
-            self.config_id, self.local_last_update
-        )
-        if needs_update:
-            logr.info("💡 New configuration detected in the cloud...")
-
-            # 2. 拉取完整字典
-            cloud_data = await api.get_sync_data(self.config_id)
-            b64str = bc.from_base64(cloud_data["data"])
-            if not b64str:
-                return
-            logr.info("✅ Retrieval successful.")
-            b64_setting = bc.to_base64(b64str["setting"])
-            if b64_setting:
-                self.page.session.store.set("settings", b64_setting)
-            b64_filters = bc.to_base64(b64str["filters"])
-            if b64_filters:
-                self.page.session.store.set("filters", b64_filters)
-            self.clear_all()
-            for _f in b64str["filters"]:
-                self.addFilter(_f, redis_async=True)
-                await asyncio.sleep(0.1)
-            # 3. 更新本地的时间戳，留作下次对比
-            self.local_last_update = cloud_data.get("_updated_at", 0)
-            logr.info(
-                f"⚡The local timestamp has been updated!: {self.local_last_update}"
-            )
-        else:
-            logr.info(
-                "⚡ My local system is already configured with the latest settings!"
-            )
-        self.needs_update_run = False
-
-    # endregion
-
-
-# endregion
+        b64 = await ft.SharedPreferences().get("upstash")
+        self.upstash = bc.from_base64(b64, default={})
+        if self.upstash:
+            logr.info("Cloud sync config loaded.")
 
 
 # region InputPad
