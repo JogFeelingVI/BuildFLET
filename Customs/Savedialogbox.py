@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 23:48:07
+# @Last Modified time: 2026-03-23 05:34:17
 
 
 import asyncio
@@ -20,7 +20,6 @@ from PIL import Image, ImageChops, ImageFont
 from .adbox import adbx
 from .asyncredis import RedisAPI
 from .byterfiles import BinaryConverter as bc
-from .byterfiles import ResultCode as rc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_batch_wrapper, filter_for_pabc, randomData
 from .svgbase64 import svgimage
@@ -154,10 +153,11 @@ class savedialog:
         sizes = caclfsize(text=text, defsize=fontsize, targetwidth=twidth)
         item = (
             ft.Container(
-                padding=5,
+                padding=ft.Padding.all(6),
                 width=float("inf"),  # 388
                 bgcolor=ft.Colors.with_opacity(0.1, userColor),
                 border_radius=5,
+                border=ft.Border.only(left=ft.BorderSide(3, color=RandColor())),
                 # on_size_change=onresize,
                 content=ft.Stack(
                     clip_behavior=ft.ClipBehavior.HARD_EDGE,
@@ -294,30 +294,25 @@ class tadbx:
         await self.detectstatus.addinfo("Load 'settings' and 'filters' data.")
         # await asyncio.sleep(0.3)
         settings = self.adb.page.session.store.get("settings")
-        filtersAll = self.adb.page.session.store.get("filters")
+        filters = self.adb.page.session.store.get("filters")
 
-        code, sdata = bc.from_base64_str(settings)
-        if code == rc.ERROR:
-            return
-        code, fdata = bc.from_base64_str(filtersAll)
-        # print(f'{code} -> {fdata}')
-        if code == rc.ERROR or not fdata:
-            fdata = None
+        settings = bc.from_base64(settings)
+        filters = bc.from_base64(filters)
 
-        if not fdata:
+        if not filters or filters == []:
             await self.detectstatus.addinfo("If filters is empty, skip the detection.")
             # await asyncio.sleep(0.3)
             self.detectstatus.task = "skip"
             return
 
         await self.detectstatus.addinfo("Create a data pool.")
-        if sdata and fdata:
-            _rdpn = randomData(seting=sdata["randomData"])
+        if settings:
+            _rdpn = randomData(seting=settings["randomData"])
             results = []
             for i in range(1000):
                 results.append(_rdpn.get_pabc())
         await asyncio.sleep(0.3)
-        for i, _fitem in enumerate(fdata):
+        for i, _fitem in enumerate(filters):
             # print(f"{_fitem}")
             _f2func = filter_for_pabc(filters=[_fitem])
             pass_rate = (
@@ -329,7 +324,7 @@ class tadbx:
                 f"{_fitem['condition']}",
                 int(pass_rate),
             ]
-            self.detectstatus.jdu = (i + 1) / len(fdata)
+            self.detectstatus.jdu = (i + 1) / len(filters)
             self.detectstatus.additem(prinfo)
             await self.detectstatus.addinfo(
                 f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
@@ -464,12 +459,30 @@ class tadbx:
         )
         # def handle_more_on_siee(e):
         #     print(f"more e: {e}")
+        self.more_butter = ft.Row(
+            spacing=5,
+            controls=[
+                ft.Container(
+                    padding=0,
+                    expand=True,
+                    height=1,
+                    bgcolor=DraculaColors.FOREGROUND,
+                ),
+                ft.Container(
+                    padding=0,
+                    content=ft.Text("MORE"),
+                    on_click=self.handle_more,
+                ),
+            ],
+        )
         self.more_display = ft.Column(
             data="hide",  # hide or show
             tight=True,
             spacing=0,
+            height=160,
+            visible=False,
             scroll=ft.ScrollMode.HIDDEN,
-            controls=[self.Details(type="more")],
+            controls=[],
             # on_size_change=handle_more_on_siee
         )
         acts = ft.Row(
@@ -502,6 +515,7 @@ class tadbx:
                     title,
                     maxmin,
                     schedule,
+                    self.more_butter,
                     self.more_display,
                     self.info_display,
                     acts,
@@ -511,20 +525,14 @@ class tadbx:
         return conter
 
     async def handle_more(self, e):
-        if self.more_display.data == "hide":
-            self.more_display.data = "show"
-            self.more_display.height = 160
-        elif self.more_display.data == "show":
-            self.more_display.data = "hide"
-            self.more_display.height = 20
-
+        self.more_display.visible = not self.more_display.visible
         self.more_display.update()
 
     async def update_more_list(self):
         items = self.detectstatus.getitems(sord=True)
         if not items:
             return
-        newitems = [x for x in self.more_display.controls if x.data == "more"]
+        newitems = []
         for item in items[:10]:
             newitems.append(self.Details(*item, type="info"))
         self.more_display.controls = newitems
@@ -720,8 +728,8 @@ class upstashtoken:
         self.applycallback = callblack
 
     def setting_valid_info(self, jsondata: str):
-        code, data = bc.from_base64_str(jsondata)
-        if code == rc.DONE:
+        data= bc.from_base64(jsondata)
+        if data:
             self.intoken.value = data["token"]
             self.intoken_url.value = data["url"]
             self.syncsw.value = data["sync"]
@@ -760,17 +768,17 @@ class upstashtoken:
 
         # 3. 缓存检测（如果信息没变且之前验证过，直接生效并退出）
         # 使用 dict.get 更加安全，防止 KeyError
-        # if (
-        #     self.valid_data
-        #     and self.valid_data.get("valid")
-        #     and self.valid_data.get("token") == token
-        #     and self.valid_data.get("url") == token_url
-        # ):
-        #     self.valid_data["sync"] = self.syncsw.value
-        #     if self.applycallback:
-        #         self.adb.page.run_task(self.applycallback, self.valid_data)
-        #     self.adb.page.pop_dialog()
-        #     return
+        if (
+            self.valid_data
+            and self.valid_data.get("valid")
+            and self.valid_data.get("token") == token
+            and self.valid_data.get("url") == token_url
+        ):
+            self.valid_data["sync"] = self.syncsw.value
+            if self.applycallback:
+                self.adb.page.run_task(self.applycallback, self.valid_data)
+            self.adb.page.pop_dialog()
+            return
 
         # 4. 开始 API 测试流程
         await show_tip("Connecting to Upstash...", DraculaColors.YELLOW)
@@ -994,14 +1002,13 @@ class joblibdlg:
         settings = self.adb.page.session.store.get("settings")
         filters = self.adb.page.session.store.get("filters")
 
-        code, sdata = bc.from_base64_str(settings)
-        if code == rc.ERROR:
+        settings = bc.from_base64(settings)
+        filters = bc.from_base64(filters)
+        if not settings:
             return
-
-        code, fdata = bc.from_base64_str(filters)
-        if code == rc.ERROR:
-            fdata = []
-
+        if not filters:
+            filters = []
+        
         def safe_get_int(control, default):
             val = control.value
             if val and str(val).strip():  # 确保有值且不是纯空格
@@ -1029,7 +1036,7 @@ class joblibdlg:
             # temp = await asyncio.to_thread(
             #     self.run_parallel, settings, filters, timeout_limit, target_quantity
             # )
-            await self.run_parallel_async(sdata, fdata, timeout_limit, target_quantity)
+            await self.run_parallel_async(settings, filters, timeout_limit, target_quantity)
         except Exception as ex:
             print(f"seting erro, use default value. {ex}")
         finally:

@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 23:32:30
+# @Last Modified time: 2026-03-23 05:26:35
 
 import asyncio
 import os
@@ -12,7 +12,6 @@ import re
 import flet as ft
 
 from .byterfiles import BinaryConverter as bc
-from .byterfiles import ResultCode as rc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import randomData
 from .loger import logr
@@ -328,10 +327,10 @@ class input_user_rule(ft.Container):
         global jackpot_seting
         # with open(jackpot_seting, "w", encoding="utf-8") as f:
         #     json.dump(temp, f, indent=4, ensure_ascii=False)
-        bc.save_binary(jackpot_seting, temp)
-        code, data = bc.to_base64_str(temp)
-        if code == rc.DONE:
-            self.page.session.store.set("settings", data)
+        bc.save(jackpot_seting, temp)
+        b64str = bc.to_base64(temp)
+        if b64str:
+            self.page.session.store.set("settings", b64str)
         if self.render_filters:
             self.render_filters()
         self.handle_Cancel()
@@ -398,17 +397,15 @@ class showRulev2(ft.Container):
 
     async def __load_json_setting(self):
         apply_rule = self.page.session.store.get("settings")
-        code, obj = bc.from_base64_str(apply_rule)
-        if code == rc.DONE:
-            return obj
+        setting_b64 = bc.from_base64(apply_rule)
+        if setting_b64:
+            return setting_b64
         try:
-            code, load = bc.load_binary(jackpot_seting)
-            if code == rc.ERROR:
-                return None
-            code, setd = bc.to_base64_str(load)
-            if code == rc.DONE:
-                self.page.session.store.set("settings", setd)
-            return load
+            load_setting_b64 = bc.load(jackpot_seting)
+            b64str = bc.to_base64(load_setting_b64)
+            if b64str:
+                self.page.session.store.set("settings", b64str)
+            return load_setting_b64
         except Exception as er:
             self.update_tips("Load json setting run error.", "#ee0f0f")
             logr.error("__load_json_setting run error.", {er})
@@ -630,10 +627,10 @@ class DefaultSettings(ft.Container):
                     "range_end": preset_data[k][1],
                     "count": preset_data[count_key],
                 }
-        bc.save_binary(jackpot_seting, valid_json)
-        code, data = bc.to_base64_str(valid_json)
-        if code == rc.DONE:
-            self.page.session.store.set("settings", data)
+        bc.save(jackpot_seting, valid_json)
+        b64str= bc.to_base64(valid_json)
+        if b64str:
+            self.page.session.store.set("settings", b64str)
         if self.render_filters:
             self.render_filters()
 
@@ -650,9 +647,9 @@ class DefaultSettings(ft.Container):
         filePath.parent.mkdir(parents=True, exist_ok=True)
         filePath.write_text("")
         storedid = {"path": self.stored_path, "id": id}
-        code, data = bc.to_base64_str(storedid)
-        if code == rc.DONE:
-            await ft.SharedPreferences().set("storedid", data)
+        b64str = bc.to_base64(storedid)
+        if b64str:
+            await ft.SharedPreferences().set("storedid", b64str)
             self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
 
     def __build_card(self):
@@ -743,17 +740,21 @@ class rsup(ft.Container):
 
     def did_mount(self):
         self.running = True
-        self.page.run_task(self.verdict_shows)
+        self.page.run_task(self.verdict_upstash)
 
     def will_unmount(self):
         self.running = False
 
-    async def verdict_shows(self):
+    async def verdict_upstash(self):
         """改变token按钮显示内容"""
-        jsondata = await ft.SharedPreferences().get("upstash")
-        if jsondata:
-            self.tokenbt.content = "Token Activation"
+        try:
+            jsondata = await ft.SharedPreferences().get("upstash")
+            temp = bc.from_base64(jsondata)
+            if temp:
+                self.tokenbt.content = "Token Activation"
             self.tokenbt.update()
+        except Exception as ex:
+            logr.info(f"verdict_upstash is error, {ex}")
 
     def __build_conter(self):
         bgc = RandColor(mode="neon", hue="green")
@@ -803,10 +804,10 @@ class rsup(ft.Container):
     async def handle_callback(self, jsondata: dict):
         """设置加密 upstash 数据"""
         if jsondata:
-            code, data = bc.to_base64_str(jsondata)
-            if code == rc.DONE:
-                await ft.SharedPreferences().set("upstash", data)
-            self.page.run_task(self.verdict_shows)
+            b64str = bc.to_base64(jsondata)
+            if b64str:
+                await ft.SharedPreferences().set("upstash", b64str)
+            self.page.run_task(self.verdict_upstash)
 
 
 # endregion

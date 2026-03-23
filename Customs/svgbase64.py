@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-13 07:14:33
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-22 07:13:23
+# @Last Modified time: 2026-03-23 01:46:06
 
 import base64
 
@@ -45,3 +45,19 @@ def check_select(bgcolor: str = "#7f7f7f", color: str = "#0ce829"):
     """
     b64_str = base64.b64encode(svg_code.encode("utf-8")).decode("utf-8")
     return b64_str
+
+
+def itemText():
+    svg_code = """
+    <svg width="299" height="33" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+    <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+    <g class="layer">
+    <title>Layer 1</title>
+    <text fill="#000000" font-family="Serif" font-size="24" id="svg_2" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1.17426 0 0 1.17426 141.382 -8.66728)" x="22.34" xml:space="preserve" y="30.65">02 03 04 05 06 07 + 19</text>
+    <g id="svg_6" transform="translate(-4.88 -6.28) matrix(0.565259 -0.32813 0.32813 0.565259 -150.525 83.4378)">
+    <ellipse cx="273.83" cy="52" fill="none" id="svg_3" rx="18" ry="18" stroke="#000000" stroke-width="3"/>
+    <text fill="#000000" font-family="Serif" font-size="24" id="svg_5" stroke="#000000" stroke-width="0" text-anchor="middle" transform="matrix(1.46667 0 0 1.46667 -48.9949 -174)" x="219.91" xml:space="preserve" y="161.93">A</text>
+    </g>
+    </g>
+    </svg>
+    """

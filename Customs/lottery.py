@@ -15,7 +15,6 @@ import flet as ft
 import requests
 
 from .byterfiles import BinaryConverter as bc
-from .byterfiles import ResultCode as rc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_lottery, calculate_batch_wrapper
 from .loger import logr
@@ -75,20 +74,18 @@ class itemC2plus(ft.Container):
         settings = self.page.session.store.get("settings")
         filters = self.page.session.store.get("filters")
 
-        code, sdata = bc.from_base64_str(settings)
-        if code == rc.ERROR:
+        settings = bc.from_base64(settings)
+        filters = bc.from_base64(filters)
+        if not settings:
             return
-
-        code, fdata = bc.from_base64_str(filters)
-        if code == rc.ERROR:
-            fdata = []
+        if not filters:
+            filters = []
 
         try:
-            logr.info(f"{type(sdata)=}")
             while self.state_exp == "calculating":
                 # 后台计算数据
 
-                tempd, state = await asyncio.to_thread(calculate_lottery, sdata, fdata)
+                tempd, state = await asyncio.to_thread(calculate_lottery, settings, filters)
                 current_time = time.time()
                 self.elapsed_time = current_time - self.start_time
 

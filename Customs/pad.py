@@ -79,17 +79,19 @@ class paditem(ft.Container):
 
     def __build_editable_unit(self, init_val: str):
         kids_width = 18
+
         def onsizechange(e):
             nonlocal kids_width
-            edit.width = e.width*1.25
+            edit.width = e.width * 1.25
             # print(f"onsizechange {e=}")
+
         show = ft.Text(
             init_val,
             size=15,
             color=self.userColor,
             weight="bold",
             text_align="center",
-            on_size_change=onsizechange
+            on_size_change=onsizechange,
         )
         edit = ft.TextField(
             value=init_val,
@@ -109,7 +111,9 @@ class paditem(ft.Container):
             height=25,
             padding=ft.Padding(5, 1, 5, 1),
             # border=ft.Border.all(1, ft.Colors.with_opacity(0.2, self.userColor)),
-            border=ft.Border.only(bottom=ft.BorderSide(1, ft.Colors.with_opacity(0.5, self.userColor))),
+            border=ft.Border.only(
+                bottom=ft.BorderSide(1, ft.Colors.with_opacity(0.5, self.userColor))
+            ),
             border_radius=3,
             bgcolor=ft.Colors.with_opacity(0.1, self.userColor),
             content=ft.Stack(alignment=ft.Alignment.CENTER, controls=[show, edit]),
@@ -148,7 +152,7 @@ class paditem(ft.Container):
 
     def handle_change(self, show: ft.Text, edit: ft.TextField, e):
         show.value = edit.value
-        edit.width = len(e.data)*10.84 + 14.4
+        edit.width = len(e.data) * 10.84 + 14.4
         # print(f'handle_change {e=} {edit.width=}')
 
 
