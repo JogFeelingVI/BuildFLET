@@ -309,7 +309,7 @@ class FiltersList(ft.Container):
             # 统一在这里更新 UI
             if self.running:
                 sw.update()
-                
+
     async def perform_full_sync(self):
         """执行完整的同步流程：本地保存 + 云端检测/上传"""
         logr.info(f"run is perform_full_sync. {self.filtersAll_change}")
@@ -327,20 +327,20 @@ class FiltersList(ft.Container):
                     await self._sync_with_cloud()
             except Exception as e:
                 logr.error(f"Error during sync process: {e}", exc_info=True)
-                
+
     async def _save_to_local(self) -> bool:
         """核心逻辑：本地保存"""
         if self.filtersAll_change == "none":
-            return True # 没有变动不需要保存
+            return True  # 没有变动不需要保存
 
         # 获取存储路径
         stored_id_b64 = await ft.SharedPreferences().get("storedid")
         config_info = bc.from_base64(stored_id_b64)
-        
+
         if not config_info or "path" not in config_info:
             logr.error("Local save path not found.")
             return False
-        
+
         if self.filtersAll_change == "none":
             logr.info("Data does not need to be saved.")
             return
@@ -352,44 +352,47 @@ class FiltersList(ft.Container):
             logr.info("Local configuration saved. [Local]")
             return True
         return False
-    
+
     async def _sync_with_cloud(self):
         """核心逻辑：云端同步 (Upstash)"""
         if not self.upredis_api:
-            self.upredis_api = RedisAPI(url=self.upstash["url"], token=self.upstash["token"])
-        
+            self.upredis_api = RedisAPI(
+                url=self.upstash["url"], token=self.upstash["token"]
+            )
+
         # 1. 检查是否有远端更新（避免覆盖别人的更新）
-        needs_pull = await self.upredis_api.check_needs_update(self.config_id, self.local_last_update)
-        
+        needs_pull = await self.upredis_api.check_needs_update(
+            self.config_id, self.local_last_update
+        )
+
         if needs_pull:
             logr.info("Cloud update detected, pulling...")
             cloud_data = await self.upredis_api.get_sync_data(self.config_id)
             if cloud_data and "data" in cloud_data:
                 await self._apply_cloud_data(cloud_data)
-                return # 拉取后不再立即上传，防止冲突
+                return  # 拉取后不再立即上传，防止冲突
 
         if self.filtersAll_change in ["none", "cloud"]:
             logr.info(f"Data does not need to be synchronized. [cloud]")
             return
-        
+
         # 2. 如果本地是较新的，上传到云端
         settings_b64 = self.page.session.store.get("settings")
         settings = bc.from_base64(settings_b64)
-        
-        payload = {
-            "setting": settings,
-            "filters": self.filtersAll
-        }
-        
+
+        payload = {"setting": settings, "filters": self.filtersAll}
+
         # 转换并上传
         payload_b64 = bc.to_base64(payload)
-        success, timestamp = await self.upredis_api.save_sync_data(self.config_id, payload_b64)
-        
+        success, timestamp = await self.upredis_api.save_sync_data(
+            self.config_id, payload_b64
+        )
+
         if success:
             self.local_last_update = timestamp
             logr.info(f"Cloud sync completed at {timestamp}")
-            self.filtersAll_change="none"
-            
+            self.filtersAll_change = "none"
+
     async def _apply_cloud_data(self, cloud_raw: dict):
         """将从云端拉取的数据应用到本地 UI 和存储"""
         data = bc.from_base64(cloud_raw.get("data"))
@@ -405,11 +408,11 @@ class FiltersList(ft.Container):
         for filter_item in data.get("filters", []):
             self.addFilter(filter_item, redis_async=True)
             # 这里的 sleep 可能是为了 UI 渲染，如果 addFilter 很快可以去掉
-            await asyncio.sleep(0.05) 
-        self.filtersAll_change="cloud"
+            await asyncio.sleep(0.05)
+        self.filtersAll_change = "cloud"
         self.local_last_update = cloud_raw.get("_updated_at", 0)
         logr.info("Cloud data applied to UI.")
-        
+
     async def load_upstash_confing(self):
         """界面判断是否已经设置 upstash"""
         b64 = await ft.SharedPreferences().get("upstash")
@@ -1012,7 +1015,9 @@ class CommandList(ft.Container):
         b64str = bc.to_base64(jackpot_setting_content)
         if b64str:
             self.page.session.store.set("filters", b64str)
-            self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(jackpot_setting_content)}"))
+            self.page.show_dialog(
+                ft.SnackBar(f"Reading complete. {len(jackpot_setting_content)}")
+            )
 
     async def handle_upload(self, e):
         await asyncio.sleep(0.5)
@@ -1080,7 +1085,9 @@ class CommandList(ft.Container):
                         self.filterAddItem(item)
                 self.page.session.store.set("filters", temp)
                 logr.info(f"Reading complete. {len(load_data)}")
-                self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(load_data)}"))
+                self.page.show_dialog(
+                    ft.SnackBar(f"Reading complete. {len(load_data)}")
+                )
         except Exception as er:
             logr.error(f"handle_Load error. {er}", exc_info=True)
 

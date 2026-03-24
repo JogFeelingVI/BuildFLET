@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-23 05:34:17
+# @Last Modified time: 2026-03-23 23:49:36
 
 
 import asyncio
@@ -482,7 +482,7 @@ class tadbx:
             height=160,
             visible=False,
             scroll=ft.ScrollMode.HIDDEN,
-            controls=[],
+            controls=[self.Details(type="tips", text="Waiting for the test to end.")],
             # on_size_change=handle_more_on_siee
         )
         acts = ft.Row(
@@ -541,24 +541,22 @@ class tadbx:
         # bold = kwargs.get("bold", False)
         # size = kwargs.get("size", 14)
         typed = kwargs.get("type", "more")  # more info
+        text = kwargs.get("text", "---")
         # usercolor = kwargs.get("usercolor", RandColor(mode="neon"))
         match typed:
-            case "more":
+            case "tips":
                 temp = ft.Container(
-                    data="more",
+                    data="tips",
                     padding=0,
                     content=ft.Row(
                         spacing=5,
                         controls=[
                             ft.Container(
-                                padding=0,
-                                expand=True,
-                                height=1,
-                                bgcolor=DraculaColors.FOREGROUND,
+                                padding=0, content=ft.Icon(ft.Icons.TIPS_AND_UPDATES)
                             ),
                             ft.Container(
                                 padding=0,
-                                content=ft.Text("* MORE *"),
+                                content=ft.Text(text),
                                 on_click=self.handle_more,
                             ),
                         ],
@@ -728,7 +726,7 @@ class upstashtoken:
         self.applycallback = callblack
 
     def setting_valid_info(self, jsondata: str):
-        data= bc.from_base64(jsondata)
+        data = bc.from_base64(jsondata)
         if data:
             self.intoken.value = data["token"]
             self.intoken_url.value = data["url"]
@@ -1008,7 +1006,7 @@ class joblibdlg:
             return
         if not filters:
             filters = []
-        
+
         def safe_get_int(control, default):
             val = control.value
             if val and str(val).strip():  # 确保有值且不是纯空格
@@ -1036,7 +1034,9 @@ class joblibdlg:
             # temp = await asyncio.to_thread(
             #     self.run_parallel, settings, filters, timeout_limit, target_quantity
             # )
-            await self.run_parallel_async(settings, filters, timeout_limit, target_quantity)
+            await self.run_parallel_async(
+                settings, filters, timeout_limit, target_quantity
+            )
         except Exception as ex:
             print(f"seting erro, use default value. {ex}")
         finally:
@@ -1251,12 +1251,12 @@ class joblibdlg:
         if is_mobile:
             executor_class = ThreadPoolExecutor
             n_cores = 2
-            chunk_size = 20  # 增加单次任务量
+            chunk_size = 50  # 增加单次任务量
             batch_count = 4  # 减少并发批次
         else:
             executor_class = ProcessPoolExecutor
             n_cores = multiprocessing.cpu_count()
-            chunk_size = 1
+            chunk_size = 20
             batch_count = n_cores * 2
 
         # 使用 executor

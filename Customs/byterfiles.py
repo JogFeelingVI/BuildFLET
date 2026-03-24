@@ -8,6 +8,7 @@ import msgpack
 from pathlib import Path
 from typing import Any, Union, Optional
 
+
 class BinaryConverter:
     """使用 MsgPack 处理对象与二进制/Base64 之间的转换"""
 

@@ -628,7 +628,7 @@ class DefaultSettings(ft.Container):
                     "count": preset_data[count_key],
                 }
         bc.save(jackpot_seting, valid_json)
-        b64str= bc.to_base64(valid_json)
+        b64str = bc.to_base64(valid_json)
         if b64str:
             self.page.session.store.set("settings", b64str)
         if self.render_filters:

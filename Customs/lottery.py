@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-22 07:24:01
+# @Last Modified time: 2026-03-24 06:37:13
 
 
 import asyncio
@@ -16,7 +16,7 @@ import requests
 
 from .byterfiles import BinaryConverter as bc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
-from .jackpot_core import calculate_lottery, calculate_batch_wrapper
+from .jackpot_core import calculate_lottery_rdffp, initialization
 from .loger import logr
 from .Savedialogbox import joblibdlg, operates, savedialog, tadbx
 from .svgbase64 import svgimage, check_select
@@ -42,6 +42,7 @@ class itemC2plus(ft.Container):
         self.tempd = None  # 记录计算结果
         # print(f'{self.tempd=}')
         self.start_time = 0.0
+        self.rdffp = None
         # 参数
         self.userColor = RandColor(mode="neon")
         self.bgc = HarmonyColors(
@@ -63,6 +64,16 @@ class itemC2plus(ft.Container):
             self.CALCR = "SELECT"
 
     # region generate_data_background
+
+    def load_rdffp(self, Forced: bool = False):
+        if not self.rdffp or Forced:
+            logr.info(f"initialization rdffp. Forced is {Forced}.")
+            settings = self.page.session.store.get("settings")
+            filters = self.page.session.store.get("filters")
+            settings = bc.from_base64(settings)
+            filters = bc.from_base64(filters)
+            self.rdffp = initialization(settings, filters)
+
     async def generate_data_background(self, name: str):
         if self.calc_task_running:
             return  # 如果已经在后台计算了，就不重复启动
@@ -71,21 +82,14 @@ class itemC2plus(ft.Container):
         self.calc_task_running = True
         self.state_exp = "calculating"
         self.start_time = time.time()
-        settings = self.page.session.store.get("settings")
-        filters = self.page.session.store.get("filters")
-
-        settings = bc.from_base64(settings)
-        filters = bc.from_base64(filters)
-        if not settings:
-            return
-        if not filters:
-            filters = []
 
         try:
             while self.state_exp == "calculating":
                 # 后台计算数据
 
-                tempd, state = await asyncio.to_thread(calculate_lottery, settings, filters)
+                tempd, state = await asyncio.to_thread(
+                    calculate_lottery_rdffp, *self.rdffp
+                )
                 current_time = time.time()
                 self.elapsed_time = current_time - self.start_time
 
@@ -225,6 +229,7 @@ class itemC2plus(ft.Container):
             ]
             and not self.tempd
         ):
+            self.load_rdffp()
             self.state_exp = "calculating"
             self.page.run_task(self.generate_data_background, name="background_task")
 
@@ -342,6 +347,7 @@ class itemC2plus(ft.Container):
             return
         # logr.info(f"markdata is running. {name}")
         self.state_exp = "calculating"
+        self.load_rdffp(Forced=True)
         self.page.run_task(self.generate_data_background, name=name)
         self.sync_ui_to_state()
 
