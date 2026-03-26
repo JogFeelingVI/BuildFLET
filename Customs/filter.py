@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-23 07:59:38
+# @Last Modified time: 2026-03-26 01:24:17
 
 import asyncio
 import hashlib
@@ -284,6 +284,7 @@ class FiltersList(ft.Container):
     def handle_switch(self, e):
         self.page.run_task(self.auto_save, e, 10)
 
+    #region auto_save
     async def auto_save(self, sw: CustomSwitch, time: int = 10):
         _time = time
         # 使用 while True 更符合你周期性重置时间的逻辑
@@ -419,6 +420,7 @@ class FiltersList(ft.Container):
         self.upstash = bc.from_base64(b64, default={})
         if self.upstash:
             logr.info("Cloud sync config loaded.")
+    #endregion
 
 
 # region InputPad

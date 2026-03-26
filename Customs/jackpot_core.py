@@ -383,8 +383,10 @@ class filterFunc:
     @staticmethod
     def sum_bit_xy(pabc: LotteryData, args: str, target: str):
         """bit1,2 >13 --z"""
+        # print(f'{pabc = } {args=} {target=}')
         pattern = r"bit(\d+),(\d+)\s+(.*)"
         match = re.search(pattern, args)
+        # print(f'{match=}')
         if not match:
             return False
 

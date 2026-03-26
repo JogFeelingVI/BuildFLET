@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-23 23:49:36
+# @Last Modified time: 2026-03-25 23:28:46
 
 
 import asyncio
@@ -314,10 +314,17 @@ class tadbx:
         await asyncio.sleep(0.3)
         for i, _fitem in enumerate(filters):
             # print(f"{_fitem}")
-            _f2func = filter_for_pabc(filters=[_fitem])
-            pass_rate = (
-                sum([1 for r in results if _f2func.handle(r)]) / len(results) * 100
-            )
+            try:
+                _f2func = filter_for_pabc(filters=[_fitem])
+            
+                pass_rate = (
+                    sum([1 for r in results if _f2func.handle(r)]) / len(results) * 100
+                )
+            except:
+                print(f"{_fitem} Syntax error.")
+                await self.detectstatus.addinfo(f"# {_fitem['condition']} Syntax error.")
+                self.detectstatus.task = "error"
+                return
             prinfo = [
                 f"{_fitem['func']}",
                 f"{_fitem['target']}",
@@ -330,13 +337,14 @@ class tadbx:
                 f"{_fitem['func']} {_fitem['target']} {_fitem['condition']}"
             )
             if pass_rate < 1.0:
+                await self.detectstatus.addinfo(f"# {_fitem['condition']} Logical error.")
                 self.detectstatus.task = "pass_rate_zero"
                 return
 
         self.detectstatus.task = "none"
 
     async def showresult(self):
-        while self.detectstatus.task in ["Detection", "pass_rate_zero", "skip"]:
+        while self.detectstatus.task in ["Detection", "pass_rate_zero", "skip", "error"]:
             await asyncio.sleep(0.3)
             text = self.detectstatus.getinfo()
             if text:
@@ -348,7 +356,7 @@ class tadbx:
                 f"Testing in progress... {self.pbar.value * 100:.0f}% complete"
             )
             self.adb.content.update()
-            if self.detectstatus.task in ["pass_rate_zero", "skip"]:
+            if self.detectstatus.task in ["pass_rate_zero", "skip","error"]:
                 self.detectstatus.task = "none"
                 return
 
