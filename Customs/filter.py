@@ -8,7 +8,6 @@ import asyncio
 import hashlib
 import os
 
-from fastapi.background import P
 import flet as ft
 
 from .adbox import adbx
