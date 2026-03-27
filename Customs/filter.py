@@ -2,12 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-26 01:24:17
+# @Last Modified time: 2026-03-26 12:44:06
 
 import asyncio
 import hashlib
 import os
 
+from fastapi.background import P
 import flet as ft
 
 from .adbox import adbx
@@ -284,7 +285,7 @@ class FiltersList(ft.Container):
     def handle_switch(self, e):
         self.page.run_task(self.auto_save, e, 10)
 
-    #region auto_save
+    # region auto_save
     async def auto_save(self, sw: CustomSwitch, time: int = 10):
         _time = time
         # 使用 while True 更符合你周期性重置时间的逻辑
@@ -420,7 +421,8 @@ class FiltersList(ft.Container):
         self.upstash = bc.from_base64(b64, default={})
         if self.upstash:
             logr.info("Cloud sync config loaded.")
-    #endregion
+
+    # endregion
 
 
 # region InputPad
@@ -979,16 +981,25 @@ class CommandList(ft.Container):
                         ),
                     ],
                 ),
-                ft.Text(
-                    value="Are you sure you want to clear all filters?",
-                    size=15,
-                    color=DraculaColors.FOREGROUND,
-                ),
-                ft.Button(
-                    icon=ft.Icons.CLEAR,
+                ft.Divider(height=1, color=DraculaColors.FOREGROUND),
+                clear := ft.Container(
+                    padding=ft.Padding(10,5,10,5),
+                    margin=ft.Margin(10,0,10,0),
+                    width=float("inf"),
+                    border_radius=8,
                     bgcolor=DraculaColors.RED,
-                    color=DraculaColors.FOREGROUND,
-                    content="Yes, Confirm all cleanup!",
+                    content=ft.Row(
+                        expand=True,
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        # vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        controls=[
+                            ft.Text(
+                                value="Yes, Confirm all cleanup!",
+                                size=15,
+                                color=DraculaColors.FOREGROUND,
+                            ),
+                        ],
+                    ),
                     on_click=confirm_clear,
                 ),
             ],

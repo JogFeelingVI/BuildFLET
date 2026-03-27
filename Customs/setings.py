@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-23 05:26:35
+# @Last Modified time: 2026-03-27 08:11:27
 
 import asyncio
 import os
@@ -16,7 +16,7 @@ from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import randomData
 from .loger import logr
 from .Savedialogbox import upstashtoken
-from .svgbase64 import svgimage
+from .svgbase64 import svgimage, upstashicon
 
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
 app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
@@ -751,36 +751,51 @@ class rsup(ft.Container):
             jsondata = await ft.SharedPreferences().get("upstash")
             temp = bc.from_base64(jsondata)
             if temp:
-                self.tokenbt.content = "Token Activation"
-            self.tokenbt.update()
+                self.tokenbt.value = "Token Activation"
+                bgc = RandColor(hue="green")
+                self.upstash_bg_change.bgcolor = ft.Colors.with_opacity(0.3, bgc)
+                self.upstash_bg_change.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, bgc))
+                self.tokenbt.update()
+                self.upstash_bg_change.update()
+            
         except Exception as ex:
             logr.info(f"verdict_upstash is error, {ex}")
 
     def __build_conter(self):
-        bgc = RandColor(mode="neon", hue="green")
+        bgc = RandColor(mode="neon", hue="red")
+        upstash = ft.Container(
+            padding=ft.Padding(10, 5, 10, 5),
+            alignment=ft.Alignment.CENTER,
+            border_radius=8,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.4, bgc)),
+            bgcolor=ft.Colors.with_opacity(0.3, bgc),
+            content=ft.Row(
+                tight=True,
+                controls=[
+                    ft.Image(
+                        src=upstashicon(),
+                        height=25,
+                        # width=35 * 3.45,
+                        repeat=ft.ImageRepeat.NO_REPEAT,
+                        fit=ft.BoxFit.CONTAIN,
+                    ),
+                    tokenbt := ft.Text(
+                        "Enter Your token", size=16, color=DraculaColors.FOREGROUND
+                    ),
+                ],
+            ),
+            on_click=self.handle_cilck,
+        )
         row = ft.Row(
             spacing=5,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER,
             controls=[
-                ft.Image(
-                    src="upstash-white-bg.svg",
-                    height=35,
-                    width=35 * 3.45,
-                    repeat=ft.ImageRepeat.NO_REPEAT,
-                    fit=ft.BoxFit.CONTAIN,
-                ),
-                tokenbt := ft.Button(
-                    content="Enter your token",
-                    icon=ft.Icons.TOKEN,
-                    icon_color=ft.Colors.BLACK,
-                    color=ft.Colors.BLACK,
-                    bgcolor=bgc,
-                    on_click=self.handle_cilck,
-                ),
+                upstash,
             ],
         )
         self.tokenbt = tokenbt
+        self.upstash_bg_change = upstash
         return row
 
     def __gradient(self):
