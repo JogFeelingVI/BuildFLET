@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-26 12:44:06
+# @Last Modified time: 2026-03-27 23:31:00
 
 import asyncio
 import hashlib
@@ -982,8 +982,8 @@ class CommandList(ft.Container):
                 ),
                 ft.Divider(height=1, color=DraculaColors.FOREGROUND),
                 clear := ft.Container(
-                    padding=ft.Padding(10,5,10,5),
-                    margin=ft.Margin(10,0,10,0),
+                    padding=ft.Padding(10, 5, 10, 5),
+                    margin=ft.Margin(10, 0, 10, 0),
                     width=float("inf"),
                     border_radius=8,
                     bgcolor=DraculaColors.RED,

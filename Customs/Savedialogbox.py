@@ -1030,7 +1030,9 @@ class joblibdlg:
                 try:
                     return int(val)
                 except ValueError:
-                    print(f"Warning: Enter' {val} 'Not a valid number, use default value {default}")
+                    print(
+                        f"Warning: Enter' {val} 'Not a valid number, use default value {default}"
+                    )
             return default
 
         timeout_limit = safe_get_int(self.intimeout, 60)

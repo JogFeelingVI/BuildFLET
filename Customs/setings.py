@@ -754,10 +754,12 @@ class rsup(ft.Container):
                 self.tokenbt.value = "Token Activation"
                 bgc = RandColor(hue="green")
                 self.upstash_bg_change.bgcolor = ft.Colors.with_opacity(0.3, bgc)
-                self.upstash_bg_change.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, bgc))
+                self.upstash_bg_change.border = ft.Border.all(
+                    1, ft.Colors.with_opacity(0.4, bgc)
+                )
                 self.tokenbt.update()
                 self.upstash_bg_change.update()
-            
+
         except Exception as ex:
             logr.info(f"verdict_upstash is error, {ex}")
 
