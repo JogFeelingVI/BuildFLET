@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-21 23:28:50
+# @Last Modified time: 2026-03-29 12:22:41
 
 import os
 
@@ -14,6 +14,7 @@ from Customs.loadfonts import FontManager
 from Customs.loger import logr
 from Customs.lottery import LotteryPage
 from Customs.setings import SetingsPage
+from Customs.mcp_fast import mcpserver
 
 # 获取系统标示
 app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
@@ -103,6 +104,8 @@ async def main(page: ft.Page):
     # 将内容添加到页面
     page.add(content_area)
     # page.update()
+    # mcp_server = mcpserver(page.platform)
+    # mcp_server.run_mcp_server()
 
 
 if __name__ == "__main__":
