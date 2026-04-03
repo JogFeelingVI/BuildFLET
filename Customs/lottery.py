@@ -2,11 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-02 11:43:45
+# @Last Modified time: 2026-04-03 01:25:55
 
 
 import asyncio
-import os
 import random
 import re
 import time
@@ -19,11 +18,7 @@ from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_lottery_rdffp, initialization
 from .loger import logr
 from .Savedialogbox import joblibdlg, operates, savedialog, tadbx
-from .svgbase64 import svgimage, check_select
-
-app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
-app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
-jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
+from .svgbase64 import check_select, svgimage
 
 
 # region itemC2plus

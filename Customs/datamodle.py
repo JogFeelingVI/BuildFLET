@@ -4,7 +4,8 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-03-31 12:51:01
 
-from typing import Literal, List, Optional
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel, Field
 
 

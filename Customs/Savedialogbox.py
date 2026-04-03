@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-02 11:37:25
+# @Last Modified time: 2026-04-03 00:35:10
 
 
 import asyncio
@@ -320,8 +320,8 @@ class tadbx:
                 pass_rate = (
                     sum([1 for r in results if _f2func.handle(r)]) / len(results) * 100
                 )
-            except:
-                print(f"{_fitem} Syntax error.")
+            except Exception as er:
+                print(f"{_fitem} Syntax error. {er}")
                 await self.detectstatus.addinfo(
                     f"# {_fitem['condition']} Syntax error."
                 )

@@ -2,26 +2,16 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-30 05:49:32
-
-import os
+# @Last Modified time: 2026-04-03 01:19:26
 
 import flet as ft
 from Customs.DraculaTheme import DraculaColors, RandColor
+from Customs.env_manager import env_manager
 from Customs.filter import FilterPage
-from Customs.jackpot_core import randomData
 from Customs.loadfonts import FontManager
 from Customs.loger import logr
 from Customs.lottery import LotteryPage
 from Customs.setings import SetingsPage
-
-# 获取系统标示
-app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
-app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
-app_assets_dir = os.getenv("FLET_ASSETS_DIR")
-jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
-
-os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)
 
 
 async def main(page: ft.Page):
@@ -102,12 +92,8 @@ async def main(page: ft.Page):
 
     # 将内容添加到页面
     page.add(content_area)
-    # page.update()
-    # mcp_server = mcpserver(page.platform)
-    # mcp_server.run_mcp_server()
-
 
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
-    # 运行应用
-    ft.run(main, upload_dir=app_temp_path, assets_dir=app_assets_dir)
+    # 运行应用，使用环境管理器中的路径
+    ft.run(main, upload_dir=env_manager.temp_path, assets_dir=env_manager.assets_dir)

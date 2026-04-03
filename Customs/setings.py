@@ -10,18 +10,17 @@ import pathlib
 import re
 
 import flet as ft
-from .mcp_fast import run_mcp_server, is_server_healthy, stop_mcp_server
+
 from .byterfiles import BinaryConverter as bc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
+from .env_manager import env_manager
 from .jackpot_core import randomData
 from .loger import logr
-from .Savedialogbox import upstashtoken
-from .svgbase64 import svgimage, upstashicon, mcpicon
 from .lotterMange import Lotter_Data
+from .mcp_fast import is_server_healthy, run_mcp_server, stop_mcp_server
+from .Savedialogbox import upstashtoken
+from .svgbase64 import mcpicon, svgimage, upstashicon
 
-app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
-app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
-jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 # region input_user_rule
 class input_user_rule(ft.Container):
@@ -256,10 +255,7 @@ class input_user_rule(ft.Container):
                         )
                 continue
 
-        global jackpot_seting
-        # with open(jackpot_seting, "w", encoding="utf-8") as f:
-        #     json.dump(temp, f, indent=4, ensure_ascii=False)
-        bc.save(jackpot_seting, temp)
+        bc.save(env_manager.jackpot_seting, temp)
         b64str = bc.to_base64(temp)
         if b64str:
             self.page.session.store.set("settings", b64str)
@@ -333,7 +329,7 @@ class showRulev2(ft.Container):
         if setting_b64:
             return setting_b64
         try:
-            load_setting_b64 = bc.load(jackpot_seting)
+            load_setting_b64 = bc.load(env_manager.jackpot_seting)
             b64str = bc.to_base64(load_setting_b64)
             if b64str:
                 self.page.session.store.set("settings", b64str)
@@ -559,7 +555,7 @@ class DefaultSettings(ft.Container):
                     "range_end": preset_data[k][1],
                     "count": preset_data[count_key],
                 }
-        bc.save(jackpot_seting, valid_json)
+        bc.save(env_manager.jackpot_seting, valid_json)
         b64str = bc.to_base64(valid_json)
         if b64str:
             self.page.session.store.set("settings", b64str)
@@ -568,7 +564,7 @@ class DefaultSettings(ft.Container):
 
     async def Regenerate_handle_click(self, e):
         id = f"{randomData.generate_secure_string(8)}"
-        self.stored_path = os.path.join(app_temp_path, f"gen_{id}.dict")
+        self.stored_path = os.path.join(env_manager.app_temp_path, f"gen_{id}.dict")
         filePath = pathlib.Path(self.stored_path)
         for item in filePath.parent.iterdir():
             if (
@@ -677,21 +673,21 @@ class rsup(ft.Container):
 
     def will_unmount(self):
         self.running = False
-        
+
     async def verify_data(self):
         await self.verdict_upstash()
         await self.verdict_mcp_server()
-            
+
     async def verdict_mcp_server(self):
-        is_alive = await is_server_healthy() # 用 requests 探测
-    
+        is_alive = await is_server_healthy()  # 用 requests 探测
+
         if is_alive:
             self.mcp_server_running = True
-            self.mcpbt.value = "MCP On" # 或者是 self.mcpbt.text
+            self.mcpbt.value = "MCP On"  # 或者是 self.mcpbt.text
         else:
             self.mcp_server_running = False
             self.mcpbt.value = "MCP Off"
-        
+
         self.mcpbt.update()
 
     async def verdict_upstash(self):
@@ -803,18 +799,18 @@ class rsup(ft.Container):
             return
         self.page.run_task(run_mcp_server)
         success = False
-        for _ in range(50): # 50 * 0.1s = 5s
-            if await is_server_healthy(): # 调用之前写的 requests 检查函数
+        for _ in range(50):  # 50 * 0.1s = 5s
+            if await is_server_healthy():  # 调用之前写的 requests 检查函数
                 success = True
                 break
             await asyncio.sleep(0.1)
-        
+
         if success:
             self.mcp_server_running = True
             print("MCP Server Started successfully.")
         else:
             print("MCP Server Start timeout.")
-        await self.verdict_mcp_server() # 更新 UI 显示
+        await self.verdict_mcp_server()  # 更新 UI 显示
 
     async def handle_callback(self, jsondata: dict):
         """设置加密 upstash 数据"""

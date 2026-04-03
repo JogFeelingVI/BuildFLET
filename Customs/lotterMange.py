@@ -4,10 +4,8 @@
 # @Last Modified by:   JogFeelingVI
 # @Last Modified time: 2026-04-02 12:38:40
 
-import flet as ft
-import asyncio
 
-STATUE = ["idle", "calculating", "done", "timeout", "error"]
+STATUE = ["idle", "calculating", "done", "timeout", "error", "stopped"]
 HOST = "0.0.0.0"
 PORT = 8000
 
@@ -98,11 +96,11 @@ class LotteryManager:
     def server_address(self):
         host_map = {"address": f"http://{HOST}:{PORT}/sse", "host": HOST, "port": PORT}
         return host_map
-    
+
     def setting_host(self, host: str):
         global HOST
         HOST = host
-        
+
     def setting_port(self, port: int):
         global PORT
         PORT = port

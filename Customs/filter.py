@@ -2,25 +2,23 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-30 00:21:01
+# @Last Modified time: 2026-04-03 01:47:21
 
 import asyncio
 import hashlib
 import os
+
 import flet as ft
 
 from .adbox import adbx
 from .asyncredis import RedisAPI
 from .byterfiles import BinaryConverter as bc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
+from .env_manager import env_manager
 from .jackpot_core import filterFunc
 from .loger import logr
 from .pad import quickpad
 from .Savedialogbox import CustomSwitch
-
-app_data_path = os.getenv("FLET_APP_STORAGE_DATA")
-app_temp_path = os.getenv("FLET_APP_STORAGE_TEMP")
-jackpot_seting = os.path.join(app_data_path, "jackpot_settings.json")
 
 
 # region FilterChipV2
@@ -373,7 +371,7 @@ class FiltersList(ft.Container):
                 return  # 拉取后不再立即上传，防止冲突
 
         if self.filtersAll_change in ["none", "cloud"]:
-            logr.info(f"Data does not need to be synchronized. [cloud]")
+            logr.info("Data does not need to be synchronized. [cloud]")
             return
 
         # 2. 如果本地是较新的，上传到云端
@@ -739,10 +737,9 @@ class InputPad(ft.Container):
 
     def handle_pn_click(self, e):
         try:
-            global jackpot_seting
-            if not os.path.exists(jackpot_seting):
+            if not os.path.exists(env_manager.jackpot_seting):
                 return
-            settings = bc.load(jackpot_seting)
+            settings = bc.load(env_manager.jackpot_seting)
             if settings:
                 random_data = settings.get("randomData", {})
                 self.target_pn = ["all"]
@@ -980,7 +977,7 @@ class CommandList(ft.Container):
                     ],
                 ),
                 ft.Divider(height=1, color=DraculaColors.FOREGROUND),
-                clear := ft.Container(
+                ft.Container(
                     padding=ft.Padding(10, 5, 10, 5),
                     margin=ft.Margin(10, 0, 10, 0),
                     width=float("inf"),
@@ -1034,7 +1031,7 @@ class CommandList(ft.Container):
         await asyncio.sleep(0.5)
         # logr.info(f"handle upload {e}")
         if e.progress == 1.0 and e.error is None:
-            filepath = os.path.join(app_temp_path, f"filter/{e.file_name}")
+            filepath = os.path.join(env_manager.app_temp_path, f"filter/{e.file_name}")
             logr.info(f"upload Fullpath {filepath}")
             if self.filter_clear_all:
                 self.filter_clear_all()

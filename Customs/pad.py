@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-22 16:21:36
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-03-22 09:23:29
+# @Last Modified time: 2026-04-03 08:44:03
 
 import random
 import re
@@ -30,8 +30,8 @@ class paditem(ft.Container):
         """构建行中的项目
         kwargs 可包含：
             text:
-                >{n}
-                <{n}
+                n>{n}
+                n<{n}
                 range {n,n}
                 mod{n}
                 {n+}
@@ -195,8 +195,11 @@ class quickpad(ft.Container):
         self.conten_row.update()
 
     def pop_item(self, index: int = -1):
-        self.conten_row.controls.pop(index)
-        self.conten_row.update()
+        try:
+            self.conten_row.controls.pop(index)
+            self.conten_row.update()
+        except IndexError:
+            print(f"Index {index} out of range for pop_item")
 
     def all_command(self):
         """获取所有项目的指令"""
