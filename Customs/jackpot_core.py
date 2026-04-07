@@ -306,7 +306,7 @@ def preprocess_source_data(pabc: dict, args: str, target: str):
     clean_args = args  # 默认干净的指令就是原始指令
 
     # 2. 如果包含 range 指令，进行切片并清理字符串
-    if args.startswith("range"):
+    if args.startswith("range") and target == "all":
         # 更加宽容的正则，处理可能存在的空格
         match = re.search(r"range\s+(\d+),(\d+)", args)
         if match:
