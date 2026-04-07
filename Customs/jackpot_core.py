@@ -170,7 +170,7 @@ class CalcUtils:
                 # 处理 "range 12,56"
                 nums = [int(x) for x in re.findall(r"\d+", base_part)]
                 if len(nums) >= 2:
-                    results = list(range(nums[0], nums[1]+1))  # 不包含 nums[1]
+                    results = list(range(nums[0], nums[1] + 1))  # 不包含 nums[1]
 
             elif base_part.startswith("<"):
                 # 处理 "<45" -> 0 到 45
@@ -291,6 +291,7 @@ def register(func):
     }
     return func
 
+
 def preprocess_source_data(pabc: dict, args: str, target: str):
     """
     预处理数据源和指令字符串
@@ -301,9 +302,9 @@ def preprocess_source_data(pabc: dict, args: str, target: str):
         data = [v for k in sorted(pabc.keys()) for v in pabc[k]]
     else:
         data = pabc[target]
-    
+
     clean_args = args  # 默认干净的指令就是原始指令
-    
+
     # 2. 如果包含 range 指令，进行切片并清理字符串
     if args.startswith("range"):
         # 更加宽容的正则，处理可能存在的空格
@@ -313,13 +314,13 @@ def preprocess_source_data(pabc: dict, args: str, target: str):
                 start = int(match.group(1)) - 1
                 end = int(match.group(2))
                 data = data[start:end]
-                
+
                 # 【关键点】删除匹配到的 range 部分，并去除首尾空格
                 # match.end() 会返回匹配结束的位置，我们取之后的字符串
-                clean_args = args[match.end():].strip()
+                clean_args = args[match.end() :].strip()
             except (ValueError, IndexError):
                 pass
-    
+
     return data, clean_args
 
 
@@ -332,17 +333,16 @@ class filterFunc:
     @register
     @staticmethod
     def avg(pabc: LotteryData, args: str, target: str) -> bool:
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         avgValue = CalcUtils.average(data)
         if avgValue in CalcUtils.nwped(clean_args):
             return True
         return False
 
-
     @register
     @staticmethod
     def Sum(pabc: LotteryData, args: str, target: str) -> bool:
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         if sum(data) in CalcUtils.nwped(clean_args):
             return True
         return False
@@ -350,7 +350,7 @@ class filterFunc:
     @register
     @staticmethod
     def include(pabc: LotteryData, args: str, target: str) -> bool:
-        data, clean_args = set(preprocess_source_data(pabc,args,target))
+        data, clean_args = set(preprocess_source_data(pabc, args, target))
         if set(data) & CalcUtils.nwped(clean_args):
             return True
         return False
@@ -364,17 +364,17 @@ class filterFunc:
     @staticmethod
     def bit(pabc: LotteryData, args: str, target: str) -> bool:
         if target not in pabc or target == "all":
-            pabcvalue =  [v for k in sorted(pabc.keys()) for v in pabc[k]]
+            pabcvalue = [v for k in sorted(pabc.keys()) for v in pabc[k]]
         else:
             pabcvalue = pabc[target]
-        
+
         pattern = r"bit(\d+)\s+(.*)"
         match = re.search(pattern, args)
         if not match:
             return False
-        idx_x= int(match.group(1))  # '2'
+        idx_x = int(match.group(1))  # '2'
         other_part = match.group(2)  # '>13 --z'
-        
+
         bitValue = pabcvalue[idx_x - 1]
 
         if bitValue in CalcUtils.nwped(other_part):
@@ -389,7 +389,7 @@ class filterFunc:
     @register
     @staticmethod
     def Ac(pabc: LotteryData, args: str, target: str) -> bool:
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         if len(data) == 1:
             return False
         acValue = CalcUtils.ac(data)
@@ -402,7 +402,7 @@ class filterFunc:
     def sum_bit_xy(pabc: LotteryData, args: str, target: str):
         """bit1,2 >13 --z"""
         # print(f'{pabc = } {args=} {target=}')
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         pattern = r"bit(\d+),(\d+)\s+(.*)"
         match = re.search(pattern, clean_args)
         # print(f'{match=}')
@@ -419,13 +419,12 @@ class filterFunc:
         if (bitx + bity) in CalcUtils.nwped(other_part):
             return True
         return False
-    
-    
+
     @register
     @staticmethod
     def diff_bit_xy(pabc: LotteryData, args: str, target: str):
         """bit1,2 >13 --z"""
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         pattern = r"bit(\d+),(\d+)\s+(.*)"
         match = re.search(pattern, clean_args)  # 使用 search 更方便拿分组
 
@@ -452,7 +451,7 @@ class filterFunc:
     @staticmethod
     def mod_x(pabc: LotteryData, args: str, target: str):
         """mod2 >13 --z"""
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         pattern = r"mod(\d+)\s+(.*)"
         match = re.search(pattern, clean_args)
 
@@ -468,7 +467,7 @@ class filterFunc:
     @register
     @staticmethod
     def any(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         if set(data) & CalcUtils.nwped(clean_args):
             return True
         return False
@@ -483,7 +482,7 @@ class filterFunc:
     @register
     @staticmethod
     def jiSum(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         jiList = [x for x in data if x % 2 == 1]
         if sum(jiList) in CalcUtils.nwped(clean_args):
             return True
@@ -492,7 +491,7 @@ class filterFunc:
     @register
     @staticmethod
     def ouSum(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         ouList = [x for x in data if x % 2 == 0]
         if sum(ouList) in CalcUtils.nwped(clean_args):
             return True
@@ -501,7 +500,7 @@ class filterFunc:
     @register
     @staticmethod
     def zsSum(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         zs = CalcUtils.get_primes(max(data))
         zsList = [x for x in data if x in zs]
         if sum(zsList) in CalcUtils.nwped(clean_args):
@@ -511,7 +510,7 @@ class filterFunc:
     @register
     @staticmethod
     def hsSum(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         zs = CalcUtils.get_primes(max(data))
         hsList = [x for x in data if x not in zs]
         if sum(hsList) in CalcUtils.nwped(clean_args):
@@ -521,7 +520,7 @@ class filterFunc:
     @register
     @staticmethod
     def max(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         if max(data) in CalcUtils.nwped(clean_args):
             return True
         return False
@@ -529,7 +528,7 @@ class filterFunc:
     @register
     @staticmethod
     def min(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         # minVale = min(minVale)
         # Number_for_args = CalcUtils.nwped(args)
         if min(data) in CalcUtils.nwped(clean_args):
@@ -539,7 +538,7 @@ class filterFunc:
     @register
     @staticmethod
     def lianhao(pabc: LotteryData, args: str, target: str):
-        data, clean_args = preprocess_source_data(pabc,args,target)
+        data, clean_args = preprocess_source_data(pabc, args, target)
         _lh = CalcUtils.lianhao(data)
         # Number_for_args = CalcUtils.nwped(args)
         if _lh in CalcUtils.nwped(clean_args):
@@ -588,7 +587,9 @@ class filter_for_pabc:
     def handle(self, pabc: dict):
         for f_info in self.active_filters:
             try:
-                if not f_info["func"](pabc, f_info["parsed_condition"], f_info["target"]):
+                if not f_info["func"](
+                    pabc, f_info["parsed_condition"], f_info["target"]
+                ):
                     return False
             except Exception as e:
                 # 这里可以选择记录日志或打印错误信息，方便调试

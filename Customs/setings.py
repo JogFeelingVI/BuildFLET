@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-02 13:24:35
+# @Last Modified time: 2026-04-04 13:35:35
 
 import asyncio
 import os
@@ -17,7 +17,7 @@ from .env_manager import env_manager
 from .jackpot_core import randomData
 from .loger import logr
 from .lotterMange import Lotter_Data
-from .mcp_fast import is_server_healthy, run_mcp_server, stop_mcp_server
+from .mcp_fast import is_server_healthy, run_mcp_server, stop_mcp_server, ReadSMS
 from .Savedialogbox import upstashtoken
 from .svgbase64 import mcpicon, svgimage, upstashicon
 
@@ -731,7 +731,7 @@ class rsup(ft.Container):
                     ),
                 ],
             ),
-            disabled=True,
+            disabled=False,
             on_click=self.handle_cilck_mcp,
         )
         upbgc = RandColor(mode="neon", hue="red")
@@ -800,6 +800,9 @@ class rsup(ft.Container):
         self.page.run_task(run_mcp_server)
         success = False
         for _ in range(50):  # 50 * 0.1s = 5s
+            sms = ReadSMS()
+            if sms:
+                logr.info(f"Read SMA: {sms}")
             if await is_server_healthy():  # 调用之前写的 requests 检查函数
                 success = True
                 break
@@ -807,9 +810,9 @@ class rsup(ft.Container):
 
         if success:
             self.mcp_server_running = True
-            print("MCP Server Started successfully.")
+            logr.info("MCP Server Started successfully.")
         else:
-            print("MCP Server Start timeout.")
+            logr.info("MCP Server Start timeout.")
         await self.verdict_mcp_server()  # 更新 UI 显示
 
     async def handle_callback(self, jsondata: dict):

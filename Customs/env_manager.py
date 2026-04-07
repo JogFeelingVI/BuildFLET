@@ -29,7 +29,11 @@ class EnvManager:
         self.app_assets_dir = os.getenv("FLET_ASSETS_DIR")
 
         # 构建应用程序特定的路径
-        self.jackpot_seting = os.path.join(self.app_data_path, "jackpot_settings.json") if self.app_data_path else None
+        self.jackpot_seting = (
+            os.path.join(self.app_data_path, "jackpot_settings.json")
+            if self.app_data_path
+            else None
+        )
 
         # 设置 Flet 密钥
         os.environ["FLET_SECRET_KEY"] = randomData.generate_secure_string(16)

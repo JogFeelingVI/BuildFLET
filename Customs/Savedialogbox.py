@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-03 00:35:10
+# @Last Modified time: 2026-04-05 09:30:49
 
 
 import asyncio
+from calendar import c
 import datetime
 import io
 import multiprocessing
@@ -1342,6 +1343,7 @@ class joblibdlg:
                         t.cancel()
                     # 显式吞掉取消可能引发的异常，确保不报警告
                     await asyncio.gather(*tasks, return_exceptions=True)
+            executor.shutdown(wait=True, cancel_futures=True)
         # print("fanhui shuju")
         self.taskbar_value = 1
         self.Launch_Cancelled = "none"

@@ -93,6 +93,7 @@ async def main(page: ft.Page):
     # 将内容添加到页面
     page.add(content_area)
 
+
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
     # 运行应用，使用环境管理器中的路径
