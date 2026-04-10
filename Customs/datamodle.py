@@ -65,8 +65,8 @@ class TaskStatus(BaseModel):
     )
     elapsed_time: float = Field(..., description="从计算开始到现在所经过的时间（秒）")
     result_uri: Optional[str] = Field(
-        None, 
-        description="当状态为 done 时，读取详细结果的资源 URI")
+        None, description="当状态为 done 时，读取详细结果的资源 URI"
+    )
 
 
 # endregion

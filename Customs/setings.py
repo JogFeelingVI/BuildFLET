@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-04 13:35:35
+# @Last Modified time: 2026-04-09 23:48:22
 
 import asyncio
 import os
@@ -17,8 +17,8 @@ from .env_manager import env_manager
 from .jackpot_core import randomData
 from .loger import logr
 from .lotterMange import Lotter_Data
-from .mcp_fast import is_server_healthy, run_mcp_server, stop_mcp_server, ReadSMS
-from .Savedialogbox import upstashtoken
+from .mcp_fast import ReadSMS, is_server_healthy, run_mcp_server, stop_mcp_server
+from .Savedialogbox import promptdlg, upstashtoken
 from .svgbase64 import mcpicon, svgimage, upstashicon
 
 
@@ -578,7 +578,8 @@ class DefaultSettings(ft.Container):
         b64str = bc.to_base64(storedid)
         if b64str:
             await ft.SharedPreferences().set("storedid", b64str)
-            self.page.show_dialog(ft.SnackBar(f"Regenerate id {id}"))
+            _pdlg = promptdlg("Regenerate ID", f"Regenerate id {id}")
+            self.page.show_dialog(_pdlg.adb)
 
     def __build_card(self):
         self.defrow = ft.Row(
@@ -758,6 +759,23 @@ class rsup(ft.Container):
             ),
             on_click=self.handle_cilck_token,
         )
+        testadb = ft.Container(
+            padding=ft.Padding(10, 5, 10, 5),
+            alignment=ft.Alignment.CENTER,
+            border_radius=8,
+            border=ft.Border.all(1, ft.Colors.with_opacity(0.4, upbgc)),
+            bgcolor=ft.Colors.with_opacity(0.3, upbgc),
+            content=ft.Row(
+                tight=True,
+                controls=[
+                    ft.Icon(ft.Icons.WARNING),
+                    tokenbt := ft.Text(
+                        "TEST ABD", size=16, color=DraculaColors.FOREGROUND
+                    ),
+                ],
+            ),
+            on_click=self.handle_click_test,
+        )
         row = ft.Row(
             spacing=5,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -778,6 +796,10 @@ class rsup(ft.Container):
             ],  # 颜色从蓝到黑
         )
         return grd
+
+    async def handle_click_test(self):
+        pdlg = promptdlg()
+        self.page.show_dialog(pdlg.adb)
 
     async def handle_cilck_token(self):
         token = upstashtoken()

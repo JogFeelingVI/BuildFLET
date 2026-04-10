@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-03 01:47:21
+# @Last Modified time: 2026-04-10 01:32:40
 
 import asyncio
 import hashlib
@@ -18,7 +18,7 @@ from .env_manager import env_manager
 from .jackpot_core import filterFunc
 from .loger import logr
 from .pad import quickpad
-from .Savedialogbox import CustomSwitch
+from .Savedialogbox import CustomSwitch, promptdlg
 
 
 # region FilterChipV2
@@ -665,7 +665,12 @@ class InputPad(ft.Container):
         allcmds = self.quickpad.all_command()
         self.pad_data["condition"] = allcmds.strip()
         if "" in self.pad_data.values():
-            self.page.show_dialog(ft.SnackBar("pad_data contains null values."))
+            _pdlg = promptdlg(
+                title="warning",
+                info="Filter parameters cannot be empty..",
+                typecolor="warning",
+            )
+            self.page.show_dialog(_pdlg.adb)
             return
         if not isinstance(e.control, ft.Chip):
             return
@@ -908,8 +913,11 @@ class CommandList(ft.Container):
 
     async def handle_Save(self, e):
         filters = self.page.session.store.get("filters")
+        _pdlg = promptdlg(
+            title="Error", info="read filters is error.", typecolor="error"
+        )
         if not filters:
-            self.page.show_dialog(ft.SnackBar("read filters is error."))
+            self.page.show_dialog(_pdlg.adb)
             return
         try:
             is_mobile_or_web = self.page.web or self.page.platform in [
@@ -927,15 +935,17 @@ class CommandList(ft.Container):
             if save_path and not is_mobile_or_web:
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
-                self.page.show_dialog(
-                    ft.SnackBar(f"{self.page.platform} file save complete.")
+                _pdlg.settinginfo(
+                    title="Finish", info=f"{self.page.platform} file save complete."
                 )
+                self.page.show_dialog(_pdlg.adb)
         except Exception as er:
-            self.page.show_dialog(
-                ft.SnackBar(
-                    f"handle_Save error: {save_path=} {self.page.platform=}. {er}."
-                )
+            _pdlg.settinginfo(
+                title="error",
+                info=f"{self.page.platform} file save complete.",
+                typecolor="error",
             )
+            self.page.show_dialog(_pdlg.adb)
         finally:
             logr.info(f"Filter saved {save_path}")
 
@@ -1006,8 +1016,11 @@ class CommandList(ft.Container):
     async def handle_Open(self, e):
         b64str = await ft.SharedPreferences().get("storedid")
         storedid = bc.from_base64(b64str)
+        _pdlg = promptdlg(
+            title="tips", info="storedid not found.", typecolor="warning", exittime=3
+        )
         if not storedid:
-            self.page.show_dialog(ft.SnackBar("ID not found."))
+            self.page.show_dialog(_pdlg.adb)
             return
 
         if self.filter_clear_all:
@@ -1018,14 +1031,23 @@ class CommandList(ft.Container):
                 if self.filterAddItem:
                     self.filterAddItem(line)
         except Exception as er:
-            self.page.show_dialog(ft.SnackBar(f"File reading error. {er}"))
+            _pdlg.settinginfo(
+                title="error",
+                info=f"File reading error. {er}",
+                typecolor="error",
+                exittime=5,
+            )
+            self.page.show_dialog(_pdlg.adb)
             return
         b64str = bc.to_base64(jackpot_setting_content)
         if b64str:
             self.page.session.store.set("filters", b64str)
-            self.page.show_dialog(
-                ft.SnackBar(f"Reading complete. {len(jackpot_setting_content)}")
+            _pdlg.settinginfo(
+                title="Finish",
+                info=f"Reading complete. {len(jackpot_setting_content)}",
+                typecolor="info",
             )
+            self.page.show_dialog(_pdlg.adb)
 
     async def handle_upload(self, e):
         await asyncio.sleep(0.5)
@@ -1045,7 +1067,6 @@ class CommandList(ft.Container):
                 if self.filterAddItem:
                     self.filterAddItem(item)
             self.page.session.store.set("filters", temp)
-            self.page.show_dialog(ft.SnackBar(f"Reading complete. {len(load_data)}"))
             os.remove(filepath)
 
     async def handle_Load(self, e):
@@ -1093,9 +1114,6 @@ class CommandList(ft.Container):
                         self.filterAddItem(item)
                 self.page.session.store.set("filters", temp)
                 logr.info(f"Reading complete. {len(load_data)}")
-                self.page.show_dialog(
-                    ft.SnackBar(f"Reading complete. {len(load_data)}")
-                )
         except Exception as er:
             logr.error(f"handle_Load error. {er}", exc_info=True)
 

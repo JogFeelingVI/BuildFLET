@@ -129,7 +129,7 @@ class LotteryManager:
     @property
     def server_address(self) -> str:
         return self.hostmap.address
-    
+
     @property
     def get_last_100_lines_of_log(self) -> str:
         """获取系统日志的最后100行，返回为字符串格式"""
@@ -146,11 +146,12 @@ class LotteryManager:
     def updatehostmap(self, hostmap: HostMap):
         self.hostmap = hostmap
 
-
     async def background_calculation_worker(self, name: str, timeout: int):
         # 这里是计算逻辑的占位符
         # 实际实现中会根据 self.settings 中的规则进行计算，并定期更新 self.status 和 self.elapsed_time
-        self.logs.append(f"Started background calculation for {name} with timeout {timeout} seconds.")
+        self.logs.append(
+            f"Started background calculation for {name} with timeout {timeout} seconds."
+        )
         return
 
 

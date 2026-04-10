@@ -17,24 +17,26 @@
 """
 
 import asyncio
-from email import message
-import socket
 import json
+import socket
+from email import message
 
 import uvicorn
 from mcp.server.fastmcp import FastMCP
 
 from . import datamodle as _DM_
-from .lotterMange import Lotter_Data, LotteryManager, StatusEnum, StatueData
+from .lotterMange import Lotter_Data, LotteryManager, StatueData, StatusEnum
 
 mcp = FastMCP("LOTTER-MCP-SSE")
 server_instance = None
 app_state = LotteryManager()
 message = "MCP Fast service module loaded."
 
+
 def WiterSMS(msg):
     global message
     message = msg
+
 
 def ReadSMS():
     global message
@@ -42,7 +44,8 @@ def ReadSMS():
     message = ""  # 读取后清空消息
     return temp
 
-#region resource
+
+# region resource
 @mcp.resource("lottery://system/supported_rules")
 def read_lottery_rules() -> str:
     """系统的彩票规则库说明书"""
@@ -50,6 +53,7 @@ def read_lottery_rules() -> str:
         return json.dumps(Lotter_Data, ensure_ascii=False)
     except Exception as e:
         return json.dumps({"error": "系统规则库解析失败"}, ensure_ascii=False)
+
 
 @mcp.resource("lottery://filters/current")
 def read_lottery_filters() -> str:
@@ -60,19 +64,23 @@ def read_lottery_filters() -> str:
     except Exception as e:
         return json.dumps({"error": f"解析过滤条件失败: {e}"}, ensure_ascii=False)
 
+
 @mcp.resource("lottery://results/latest")
 def get_latest_result() -> str:
     """获取最新一次计算的最终号码结果"""
     # 1. 拦截未完成状态
     if app_state.status.status != StatusEnum.DONE:
         return json.dumps({"error": "当前没有完成的计算结果可用"}, ensure_ascii=False)
-    
+
     # 2. 读取列表数据
     try:
         # app_state.latest_result 是列表
-        return json.dumps({"result": app_state.results}, ensure_ascii=False, default=str)
+        return json.dumps(
+            {"result": app_state.results}, ensure_ascii=False, default=str
+        )
     except Exception as e:
         return json.dumps({"error": f"序列化结果失败: {e}"}, ensure_ascii=False)
+
 
 @mcp.resource("lottery://logs/system_log")
 def read_system_logs() -> str:
@@ -84,9 +92,11 @@ def read_system_logs() -> str:
     except Exception as e:
         return json.dumps({"error": f"读取日志失败: {e}"}, ensure_ascii=False)
 
-#endregion
 
-#region tools
+# endregion
+
+
+# region tools
 @mcp.tool()
 def check_calc_status() -> _DM_.TaskStatus:
     """实时获取后台计算任务的进度。
@@ -105,7 +115,7 @@ def check_calc_status() -> _DM_.TaskStatus:
         dm.TaskStatus: 包含当前状态和已耗时间的任务状态对象。
             - status (str): 当前任务状态
             - elapsed_time (float): 已耗费的时间（秒）
-        
+
     返回状态说明：
         - status 为 done: 计算已完成。⚠️ 当且仅当状态为 done 时，你才可以去读取 lottery://results/latest 资源获取详细结果！
         - status 为 calculating: 计算正在进行中，请引导用户耐心等待。
@@ -121,7 +131,9 @@ def check_calc_status() -> _DM_.TaskStatus:
         url = "lottery://logs/system_log"
     # 直接返回模型实例，FastMCP 会自动处理序列化
     return _DM_.TaskStatus(
-        status=current_status.status, elapsed_time=current_status.elapsed_time, result_uri=url
+        status=current_status.status,
+        elapsed_time=current_status.elapsed_time,
+        result_uri=url,
     )
 
 
@@ -190,7 +202,7 @@ async def start_calculation(request: _DM_.CalculationRequest) -> str:
 
     此工具用于开启计算。如果是预设彩票，只需提供名字；
     如果需要自定义规则，请在 custom_rules 中提供球组配置。
-    
+
     Returns:
         str: 启动结果提示信息。
     """
@@ -213,42 +225,54 @@ async def start_calculation(request: _DM_.CalculationRequest) -> str:
                 match_key = key  # 确保名称完全匹配
                 break
         if not match_key:
-            return f"❌ 错误：找不到名为 '{request.name}' 的预设彩票，且未提供自定义规则。"
+            return (
+                f"❌ 错误：找不到名为 '{request.name}' 的预设彩票，且未提供自定义规则。"
+            )
         request.name = match_key  # 确保使用正确的预设名称
         info = Lotter_Data[request.name]
         # 解析预设彩票的规则（逻辑同 get_supported_lotteries）
-        potential_keys = sorted([k for k in info.keys() if not k.endswith("_K") and k != "description"])
+        potential_keys = sorted(
+            [k for k in info.keys() if not k.endswith("_K") and k != "description"]
+        )
         for key in potential_keys:
             count_key = f"{key}_K"
             if count_key in info:
                 group_id = key[1:] if len(key) > 1 and key[0] in ("P", "S") else key
-                rules_to_use.append(_DM_.BallGroup(
-                    group_id=group_id, 
-                    range=info[key], 
-                    count=info[count_key]
-                ))
+                rules_to_use.append(
+                    _DM_.BallGroup(
+                        group_id=group_id, range=info[key], count=info[count_key]
+                    )
+                )
         mode = "预设规则"
 
     # 3. 更新管理器状态为“计算中”
     app_state.settings = {
         "name": request.name,
-        "rules": [rule.model_dump() for rule in rules_to_use] # 存为字典方便后续计算使用
+        "rules": [
+            rule.model_dump() for rule in rules_to_use
+        ],  # 存为字典方便后续计算使用
     }
     app_state.timeout = request.timeout
     app_state.status = StatueData(status=StatusEnum.CALCULATING, elapsed_time=0.0)
     app_state.calc_task_running = True
 
     # 4. 触发后台异步计算任务 (不要用 await 阻塞它)
-    asyncio.create_task(app_state.background_calculation_worker(request.name, request.timeout))
+    asyncio.create_task(
+        app_state.background_calculation_worker(request.name, request.timeout)
+    )
 
-    return (f"✅ 成功以【{mode}】启动了 [{request.name}] 的计算任务！\n"
-            f"配置规则数: {len(rules_to_use)} 组\n"
-            f"设定超时时间: {request.timeout} 秒\n"
-            f"请开始定期调用 check_calc_status 获取最新进度。")
+    return (
+        f"✅ 成功以【{mode}】启动了 [{request.name}] 的计算任务！\n"
+        f"配置规则数: {len(rules_to_use)} 组\n"
+        f"设定超时时间: {request.timeout} 秒\n"
+        f"请开始定期调用 check_calc_status 获取最新进度。"
+    )
 
-#endregion
 
-#region prompt
+# endregion
+
+
+# region prompt
 @mcp.prompt()
 def lottery_workflow() -> str:
     """提供给 AI 的标准彩票计算工作流指南"""
@@ -262,9 +286,12 @@ def lottery_workflow() -> str:
     4. 获取结果：当 `check_calc_status` 返回的状态为 `done` 时，立刻读取资源 `lottery://results/latest`。
     5. 展示结果：将从资源中读取到的号码，以美观的排版呈现给最终用户。
     """
-#endregion
 
-#region run_mcp_server
+
+# endregion
+
+
+# region run_mcp_server
 async def run_mcp_server():
     """启动 MCP SSE 服务器。
 
@@ -339,9 +366,11 @@ async def stop_mcp_server():
     else:
         WiterSMS("Server is not running.")
 
-#endregion
 
-#region is_port_in_use
+# endregion
+
+
+# region is_port_in_use
 def is_port_in_use(host, port):
     """检查指定的主机和端口是否被占用。
 
@@ -359,9 +388,11 @@ def is_port_in_use(host, port):
         socke_status = s.connect_ex((host, port)) == 0
         return socke_status
 
-#endregion
 
-#region is_server_healthy
+# endregion
+
+
+# region is_server_healthy
 async def is_server_healthy():
     """检查 MCP 服务器是否正常运行。
 
@@ -404,5 +435,5 @@ async def is_server_healthy():
         print(f"Health check failed: {ex}")
         return False
 
-#endregion
 
+# endregion

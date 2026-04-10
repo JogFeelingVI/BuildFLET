@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-03 01:25:55
+# @Last Modified time: 2026-04-10 01:23:32
 
 
 import asyncio
@@ -363,15 +363,12 @@ class itemC2plus(ft.Container):
                 self.refresh(name="handle_refresh_data")
             case ft.Icons.STOP:
                 self.state_exp = "stopped"
-            # 如果当前是停止状态，则点击后直接调用 refresh 方法
-        self.page.show_dialog(ft.SnackBar(f"handle refresh data. {self.state_exp}"))
 
     def handle_delete(self, e):
         if self.calc_task_running or self.selected:
             return
         if self.Itemc2_remove:
             self.Itemc2_remove(self)
-        self.page.show_dialog(ft.SnackBar("handle delete."))
 
 
 # endregion

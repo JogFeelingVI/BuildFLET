@@ -2,11 +2,10 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-05 09:30:49
+# @Last Modified time: 2026-04-10 01:38:27
 
 
 import asyncio
-from calendar import c
 import datetime
 import io
 import multiprocessing
@@ -208,10 +207,7 @@ class savedialog:
                 if save_png and not is_mobile_or_web:
                     with open(save_png, "wb") as f:
                         f.write(image)
-                        self.adb.page.show_dialog(
-                            ft.SnackBar(f"{self.adb.page.platform} file save complete.")
-                        )
-                # print(f"Storage task completed.")
+                print(f"Storage task completed.")
             except Exception as er:
                 print(f"Image saving error. {er}")
             finally:
@@ -1462,65 +1458,94 @@ class operates:
 
 # endregion
 
-# #region itemslist_long_pess
-# class itemslist_long_pess:
-#     def __init__(self, mainitems:ft.Column):
-#         self.mainitems = mainitems
-#         self.conten = self.__builde_conter()
-#         self.adb = adbx(None, self.conten)
+
+# region itemslist_long_pess
+class promptdlg:
+    def __init__(
+        self,
+        title: str = "info",
+        info: str = "this is test abd dlg.",
+        typecolor: str = "info",
+        exittime: int = 7,
+    ):
+        self.nowait = False
+        self.exittime = exittime
+        self.typecolor = self.gettypecolor(typecolor)
+        self.conten = self.__builde_conter(title, info)
+        self.adb = adbx(None, self.conten)
+        self.adb.setting_did_mount_callback(self.AutoPopDlg)
+
+    def settinginfo(
+        self, title: str, info: str, typecolor: str = "info", exittime: int = 7
+    ):
+        print("settinginfo")
+        self.exittime = exittime
+        self.typecolor = self.gettypecolor(typecolor)
+        self.adb.content = self.__builde_conter(title, info)
+        # if self.adb.page: # 检查控件是否已经在页面上
+        #     self.adb.update()
+
+    def gettypecolor(self, typecolor: str):
+        color = "#ffffff"
+        match typecolor.lower():
+            case "info":
+                color = RandColor(mode="neon", hue="blue")
+            case "warning":
+                color = RandColor(mode="neon", hue="yellow")
+            case "error":
+                color = RandColor(mode="neon", hue="red")
+        return color
+
+    def handle_close(self):
+        self.adb.page.pop_dialog()
+
+    def handle_click_nowait(self):
+        self.nowait = True
+
+    async def AutoPopDlg(self):
+        count = self.exittime
+        while count != 0:
+            self.exitinfo.value = f"Disappears in {count} seconds."
+            if self.adb.page:
+                self.exitinfo.update()
+            await asyncio.sleep(1)
+            count -= 1
+            if self.nowait == True:
+                break
+        self.handle_close()
+
+    def __builde_conter(self, title: str, info: str):
+        title = ft.Text(
+            f"{title}",
+            size=16,
+            weight="bold",
+            color=self.typecolor,
+        )
+        info = ft.Text(
+            f"{info}",
+            size=14,
+            color=self.typecolor,
+        )
+        exitinfo = ft.Text(
+            f"Disappears in {self.exittime} seconds.",
+            size=12,
+            color=ft.Colors.with_opacity(0.7, DraculaColors.FOREGROUND),
+        )
+
+        onter = ft.Container(
+            padding=5,
+            border_radius=0,
+            content=ft.Column(
+                tight=True,
+                spacing=5,
+                alignment=ft.MainAxisAlignment.START,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
+                controls=[title, info, exitinfo],
+            ),
+            on_click=self.handle_click_nowait,
+        )
+        self.exitinfo = exitinfo
+        return onter
 
 
-#     def __builde_conter(self):
-#         len_mainitems = len(self.mainitems.controls) if self.mainitems and self.mainitems.controls else 0
-#         title = ft.Text(
-#             f"How do you want to handle these {len_mainitems} items",
-#             size=18,
-#             weight="bold",
-#             color=DraculaColors.FOREGROUND,
-#         )
-#         maxmin = ft.Row(
-#             spacing=10,
-#             controls=[
-#                 ft.Text("Max: 1000", size=13, color=ft.Colors.with_opacity(0.4, DraculaColors.FOREGROUND)),
-#                 ft.Text("Min: 0", size=13, color=ft.Colors.with_opacity(0.4, DraculaColors.FOREGROUND)),
-#             ],
-#         )
-#         schedule = ft.Text(
-#             "The latest 10 detected items will be displayed here.",
-#             size=13,
-#             color=ft.Colors.with_opacity(0.4, DraculaColors.FOREGROUND),
-#         )
-#         acts = ft.Row(
-#             alignment=ft.MainAxisAlignment.END,
-#             controls=[
-#                 ft.TextButton(
-#                     "Close",
-#                     on_click=self.handle_close,
-#                     style=ft.ButtonStyle(
-#                         color=ft.Colors.with_opacity(0.8, DraculaColors.FOREGROUND)
-#                     ),
-#                 ),
-#             ],
-#         )
-#         self.more_display = ft.Column(tight=True, spacing=5)
-#         self.info_display = ft.Column(tight=True, spacing=5)
-#         onter = ft.Container(
-#             padding=5,
-#             border_radius=0,
-#             content=ft.Column(
-#                 tight=True,
-#                 spacing=5,
-#                 alignment=ft.MainAxisAlignment.START,
-#                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-#                 controls=[
-#                     title,
-#                     ft.Divider(height=1, color=DraculaColors.FOREGROUND),
-#                     clear_all,
-#                     clear_select,
-#                     clear_unselected,
-#                 ],
-#             ),
-#         )
-#         return conter
-
-# #endregion
+# endregion
