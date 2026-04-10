@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-10 01:38:27
+# @Last Modified time: 2026-04-10 15:31:37
 
 
 import asyncio
@@ -1475,15 +1475,8 @@ class promptdlg:
         self.adb = adbx(None, self.conten)
         self.adb.setting_did_mount_callback(self.AutoPopDlg)
 
-    def settinginfo(
-        self, title: str, info: str, typecolor: str = "info", exittime: int = 7
-    ):
-        print("settinginfo")
-        self.exittime = exittime
-        self.typecolor = self.gettypecolor(typecolor)
-        self.adb.content = self.__builde_conter(title, info)
-        # if self.adb.page: # 检查控件是否已经在页面上
-        #     self.adb.update()
+    def settinginfo(self, **kwargs):
+        raise AttributeError("settinginfo Deleted. Usage is prohibited.")
 
     def gettypecolor(self, typecolor: str):
         color = "#ffffff"
@@ -1505,13 +1498,14 @@ class promptdlg:
     async def AutoPopDlg(self):
         count = self.exittime
         while count != 0:
+            if self.nowait:
+                break
             self.exitinfo.value = f"Disappears in {count} seconds."
             if self.adb.page:
                 self.exitinfo.update()
             await asyncio.sleep(1)
             count -= 1
-            if self.nowait == True:
-                break
+            
         self.handle_close()
 
     def __builde_conter(self, title: str, info: str):

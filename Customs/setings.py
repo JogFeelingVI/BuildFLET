@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-09 23:48:22
+# @Last Modified time: 2026-04-10 14:49:42
 
 import asyncio
 import os
@@ -780,7 +780,7 @@ class rsup(ft.Container):
             spacing=5,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
             alignment=ft.MainAxisAlignment.CENTER,
-            controls=[upstash, mcpstart],
+            controls=[upstash, mcpstart, testadb],
         )
         self.mcpbt = mcpbt
         self.tokenbt = tokenbt
@@ -798,7 +798,11 @@ class rsup(ft.Container):
         return grd
 
     async def handle_click_test(self):
-        pdlg = promptdlg()
+        pdlg = promptdlg(
+            title="test2",
+            info="this is test 2 show dlg.",
+            typecolor="error"
+        )
         self.page.show_dialog(pdlg.adb)
 
     async def handle_cilck_token(self):

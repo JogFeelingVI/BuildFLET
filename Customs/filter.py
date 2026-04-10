@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-10 01:32:40
+# @Last Modified time: 2026-04-10 15:23:07
 
 import asyncio
 import hashlib
@@ -935,12 +935,12 @@ class CommandList(ft.Container):
             if save_path and not is_mobile_or_web:
                 with open(save_path, "wb") as f:
                     f.write(content_bytes)
-                _pdlg.settinginfo(
+                _pdlg = promptdlg(
                     title="Finish", info=f"{self.page.platform} file save complete."
                 )
                 self.page.show_dialog(_pdlg.adb)
         except Exception as er:
-            _pdlg.settinginfo(
+            _pdlg = promptdlg(
                 title="error",
                 info=f"{self.page.platform} file save complete.",
                 typecolor="error",
@@ -1031,7 +1031,7 @@ class CommandList(ft.Container):
                 if self.filterAddItem:
                     self.filterAddItem(line)
         except Exception as er:
-            _pdlg.settinginfo(
+            _pdlg = promptdlg(
                 title="error",
                 info=f"File reading error. {er}",
                 typecolor="error",
@@ -1042,7 +1042,7 @@ class CommandList(ft.Container):
         b64str = bc.to_base64(jackpot_setting_content)
         if b64str:
             self.page.session.store.set("filters", b64str)
-            _pdlg.settinginfo(
+            _pdlg = promptdlg(
                 title="Finish",
                 info=f"Reading complete. {len(jackpot_setting_content)}",
                 typecolor="info",
