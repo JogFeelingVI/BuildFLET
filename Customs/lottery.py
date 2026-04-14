@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-10 01:23:32
+# @Last Modified time: 2026-04-13 06:22:54
 
 
 import asyncio
@@ -17,7 +17,7 @@ from .byterfiles import BinaryConverter as bc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_lottery_rdffp, initialization
 from .loger import logr
-from .Savedialogbox import joblibdlg, operates, savedialog, tadbx
+from .Savedialogbox import Lotterpng, joblibdlg, operates, tadbx
 from .svgbase64 import check_select, svgimage
 
 
@@ -427,7 +427,7 @@ class itemsList(ft.Container):
                 item.refresh(name="all_refresh")
                 await asyncio.sleep(0.1)
 
-    def get_item_exp(self, max_count: int = 10, data: str = "select"):
+    def get_item_exp(self, max_count: int = 10, data: str = "select") -> list:
         """
         data:
             all
@@ -630,10 +630,13 @@ class commandList(ft.Container):
     def handle_export(self, e):
         # if self.shot_capture:
         #     self.page.run_task(self.shot_capture)
-        sdb = savedialog()
-        sdb.seting_get_all_exp(self.get_exp_all)
-        sdb.setting_cancel(self.export_callback)
-        self.page.show_dialog(sdb.adb)
+        # sdb = savedialog()
+        # sdb.seting_get_all_exp(self.get_exp_all)
+        # sdb.setting_cancel(self.export_callback)
+        # self.page.show_dialog(sdb.adb)
+        lotter = Lotterpng()
+        lotter.seting_get_all_exp(self.get_exp_all)
+        self.page.show_dialog(lotter.adb)
 
     def export_callback(self, exp: list = None):
         if not exp:

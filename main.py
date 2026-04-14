@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-09 13:54:55
+# @Last Modified time: 2026-04-14 08:28:13
 
 import flet as ft
 from Customs.DraculaTheme import DraculaColors, RandColor
@@ -21,11 +21,12 @@ async def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.padding = ft.Padding.only(top=20)
     page.bgcolor = DraculaColors.BACKGROUND
+    # page.run
 
     # fsp = FastSourcePicker()
-    # fsp_fonts = fsp.get_fastest_json()
+    # fsp_fonts = fsp.get_fastest_json()s
     fsp_fonts = FontManager()
-    page.fonts = fsp_fonts.get_fonts()
+    page.fonts = fsp_fonts.fonts_map()
     for name, path in page.fonts.items():
         logr.info(f"Registered fonts: {name} {path}")
 

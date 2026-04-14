@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-22 16:21:36
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-03 08:44:03
+# @Last Modified time: 2026-04-14 15:01:54
 
 import random
 import re
@@ -82,7 +82,8 @@ class paditem(ft.Container):
 
         def onsizechange(e):
             nonlocal kids_width
-            edit.width = e.width * 1.25
+            new_width = edit.value.__len__()*8
+            edit.width = max(new_width, kids_width)
             # print(f"onsizechange {e=}")
 
         show = ft.Text(
