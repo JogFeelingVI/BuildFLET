@@ -2,11 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-14 13:58:13
+# @Last Modified time: 2026-04-14 22:41:02
 
 
 import asyncio
-import datetime
+# import datetime
 import io
 import multiprocessing
 import os
@@ -47,7 +47,7 @@ class savedialog:
 
     def __builde_conter(self):
         title_color = DraculaColors.ORANGE
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.genid = randomData.generate_secure_string(8)
         footer = ft.Row(
             controls=[
@@ -1745,7 +1745,8 @@ class Lotterpng:
             align="left",
             text_color=RandColor(mode="neon"),
         )
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.genid = randomData.generate_secure_string(8)
         renderer.add_text(
             text=f"⊕ {now} {self.genid}",

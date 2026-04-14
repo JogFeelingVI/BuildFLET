@@ -2,14 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-04-11 06:15:53
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-14 14:36:01
+# @Last Modified time: 2026-04-14 22:34:27
 
 import io
 import time
+import fitz
 from typing import Any
 
 from PIL import Image, ImageColor, ImageDraw, ImageFont
-
 try:
     from .DraculaTheme import RandColor
     from .loadfonts import FontManager
