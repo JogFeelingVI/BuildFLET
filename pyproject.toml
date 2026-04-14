@@ -9,13 +9,14 @@ authors = [
 
 dependencies = [
   "flet>=0.82.0",
-  "binaryornot==0.4.4",
   "requests",
   "upstash_redis",
   "Pillow",
+  "PyMuPDF",
   "mcp>=1.26.0",
   "msgpack>=1.1.0",
 ]
+# "binaryornot==0.4.4",
 
 [tool.flet]
 path = "main.py" # 明确指定入口文件
