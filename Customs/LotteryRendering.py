@@ -8,7 +8,6 @@ import io
 import time
 from typing import Any
 
-import fitz
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 
 try:
