@@ -2,14 +2,14 @@
 # @Author: JogFeelingVI
 # @Date:   2026-04-11 06:15:53
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-14 22:34:27
+# @Last Modified time: 2026-04-15 02:39:49
 
 import io
 import time
-import fitz
 from typing import Any
 
 from PIL import Image, ImageColor, ImageDraw, ImageFont
+
 try:
     from .DraculaTheme import RandColor
     from .loadfonts import FontManager
@@ -37,7 +37,7 @@ def displayinfo(msg: Any, verbose: int = 1, **kwargs):
 # region Imagers
 class Imagers:
     @staticmethod
-    def TextBackground(**kwargs) -> bytes:
+    def TextBackground(**kwargs) -> Image:
         """
         ## Rounded rectangle parameters
         - height: int | float = 200,
@@ -57,34 +57,42 @@ class Imagers:
         stroke = kwargs.get("stroke", "#ffffff")
         opacity = kwargs.get("opacity", 1.0)
         rx = kwargs.get("rx", 8)
-        svgcode = f"""
-        <svg width="{width + stroke_width * 2}" height="{height + stroke_width * 2}" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-        <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
-        <rect fill="{fill}" height="{height}" rx="{rx}" ry="{rx}" opacity="{opacity}" stroke="{stroke}" stroke-width="{stroke_width}" width="{width}" x="{stroke_width}" y="{stroke_width}"/>
-        </svg>
-        """
-        return svgcode.encode("utf-8")
+        # svgcode = f"""
+        # <svg width="{width + stroke_width * 2}" height="{height + stroke_width * 2}" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+        # <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
+        # <rect fill="{fill}" height="{height}" rx="{rx}" ry="{rx}" opacity="{opacity}" stroke="{stroke}" stroke-width="{stroke_width}" width="{width}" x="{stroke_width}" y="{stroke_width}"/>
+        # </svg>
+        # """
+        canvas_width = width + stroke_width * 4
+        canvas_height = height + stroke_width * 4
 
-    @staticmethod
-    def Background(**kwargs) -> bytes:
-        """
-        ## Create a background of specified size
-        - height: int | float = 200,
-        - width: int | float = 400,
-        - fill: str = "#44475a",
-        ### return
-        - bytes
-        """
-        height = kwargs.get("height", 200)
-        width = kwargs.get("width", 400)
-        fill = kwargs.get("fill", "#FF0000")
-        svgcode = f"""
-        <svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-        <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
-        <rect fill="{fill}" height="{height}" id="svg_1" stroke="#ffffff" stroke-width="0" width="{width}" x="0" y="0"/>
-        </svg>
-        """
-        return svgcode.encode("utf-8")
+        # 3. 处理颜色和透明度
+        def get_rgba(hex_str, op):
+            # 将 #RRGGBB 转为 (R, G, B)
+            rgb = ImageColor.getrgb(hex_str)
+            # 结合 opacity 算出 A (0-255)
+            return (rgb[0], rgb[1], rgb[2], int(255 * op))
+
+        rgba_fill = get_rgba(fill, opacity)
+        rgba_stroke = get_rgba(stroke, opacity)
+
+        # 4. 创建透明画布 (RGBA)
+        # 使用 (0,0,0,0) 确保背景完全透明
+        img = Image.new("RGBA", (canvas_width, canvas_height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        # 5. 绘制圆角矩形
+        # 坐标定义为 [左上x, 左上y, 右下x, 右下y]
+        shape = [
+            stroke_width,
+            stroke_width,
+            width + stroke_width,
+            height + stroke_width,
+        ]
+        draw.rounded_rectangle(
+            shape, radius=rx, fill=rgba_fill, outline=rgba_stroke, width=stroke_width
+        )
+        return img.resize((width, height), resample=Image.LANCZOS)
+
 
     @staticmethod
     def TextToImage(**kwargs) -> Image:
@@ -117,6 +125,8 @@ class Imagers:
         text_align = kwargs.get("align", "left")
         # 1. 找到对应的本地字体文件路径
         max_width = kwargs.get("max_width", None)
+
+
         try:
             r, g, b = ImageColor.getrgb(text_color)[:3]
             text_color = (r, g, b, int(opacity * 255))
@@ -143,11 +153,6 @@ class Imagers:
             align=text_align,
         )
         left, top, right, bottom = bbox
-        # if left < 0:
-        #     left = left - left
-        #     top = top -left
-        #     right = right + left
-        #     top = top + left
         width = right - left + 10
         height = bottom - top + 10
         # 3. 绘制
@@ -231,21 +236,23 @@ class Imagers:
 
         return img
 
-    @staticmethod
-    def bytestoPNG(svgcode: bytes) -> Image:
-        """
-        ## Byte to image
-        - TextBackground (func)
-        - Background (func)
-        ### Convert to png image
-        - Image
-        """
-        pix = fitz.open("svg", svgcode)[0].get_pixmap(dpi=72, alpha=True)
-        img = Image.open(io.BytesIO(pix.tobytes("png")))
-        bbox = img.getbbox()
-        if bbox:
-            img = img.crop(bbox)
-        return img
+    # @staticmethod
+    # def bytestoPNG(svgcode: bytes) -> Image:
+    #     """
+    #     ## Byte to image
+    #     - TextBackground (func)
+    #     - Background (func)
+    #     ### Convert to png image
+    #     - Image
+    #     """
+    #     pix = fitz.open("svg", svgcode)[0].get_pixmap(dpi=72, alpha=True)
+    #     img = Image.open(io.BytesIO(pix.tobytes("png")))
+
+    #     # img = Image.open(io.BytesIO.read(img_data))
+    #     bbox = img.getbbox()
+    #     if bbox:
+    #         img = img.crop(bbox)
+    #     return img
 
     @staticmethod
     def auto_wrap_text(text, font, max_width):
@@ -490,8 +497,8 @@ class Rendering:
         # 5. 生成背景图片
         bg_params["width"] = bg_w
         bg_params["height"] = bg_h
-        bg_svg_code = Imagers.TextBackground(**bg_params)
-        bg_img = Imagers.bytestoPNG(bg_svg_code)
+        bg_img = Imagers.TextBackground(**bg_params)
+        # bg_img = Imagers.bytestoPNG(bg_svg_code)
         # 6. 合成文字与背景
         # 创建一个能容纳背景的临时透明画布
         # 注意：bg_img 经过 bytestoPNG 裁切后，尺寸可能因描边微调，以实际为准
@@ -557,8 +564,6 @@ class Rendering:
 
 
 # endregion
-
-
 
 
 # 一下是测试程序
@@ -672,8 +677,8 @@ def test_text():
 
 def test_svgtopng():
     imgs = Imagers()
-    svg = imgs.TextBackground()
-    svgpng = imgs.bytestoPNG(svg)
+    svgpng = imgs.TextBackground()
+    # svgpng = imgs.bytestoPNG(svg)
     svgpng.Write_to_file("./svgtopng.png")
 
 
@@ -785,3 +790,4 @@ def test_log_list():
 
 if __name__ == "__main__":
     test_log_list()
+    # print(f'{}')

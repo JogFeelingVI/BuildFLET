@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-14 22:41:02
+# @Last Modified time: 2026-04-15 02:32:42
 
 
 import asyncio
+
 # import datetime
 import io
 import multiprocessing
@@ -22,8 +23,8 @@ from .asyncredis import RedisAPI
 from .byterfiles import BinaryConverter as bc
 from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_batch_wrapper, filter_for_pabc, randomData
-from .svgbase64 import svgimage
 from .LotteryRendering import Rendering
+from .svgbase64 import svgimage
 
 # tracemalloc.start()
 
@@ -1705,7 +1706,7 @@ class Lotterpng:
             # 没有设置getallexp直接退出
             return
         style_conf = self.style_config()
-        renderer = Rendering(width=400 * 2, height=888 * 2, padding=30, level=10)
+        renderer = Rendering(width=400 * 2, height=888 * 2, padding=30, level=0)
 
         total = len(exp_lines)
         print(f"exp len {total} Start progress report.")

@@ -82,7 +82,7 @@ class paditem(ft.Container):
 
         def onsizechange(e):
             nonlocal kids_width
-            new_width = edit.value.__len__()*8
+            new_width = edit.value.__len__() * 8
             edit.width = max(new_width, kids_width)
             # print(f"onsizechange {e=}")
 
