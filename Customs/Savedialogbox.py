@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-15 02:32:42
+# @Last Modified time: 2026-04-16 10:12:55
 
 
 import asyncio
@@ -25,6 +25,7 @@ from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .jackpot_core import calculate_batch_wrapper, filter_for_pabc, randomData
 from .LotteryRendering import Rendering
 from .svgbase64 import svgimage
+from .env_manager import env_manager
 
 # tracemalloc.start()
 
@@ -1653,7 +1654,13 @@ class Lotterpng:
 
     def style_config(self):
         return {
-            "background": {"fill": "#1A2F45", "opacity": 1},
+            "background": {"fill": "#172433", "opacity": 1, "buffer": True},
+            "image": {
+                "filepath": f"{env_manager.app_assets_dir}/1fa7acf2.png",
+                "rotate": -17.89,
+                "opacity": 0.5,
+                "bottom": -50
+            },
             "title": {
                 "text": "Today’s Super Jackpot",
                 "name": "RacingSansOne-Regular",
@@ -1710,8 +1717,10 @@ class Lotterpng:
 
         total = len(exp_lines)
         print(f"exp len {total} Start progress report.")
-        renderer.set_background(**style_conf["background"]).add_title(
-            **style_conf["title"]
+        (
+            renderer.set_background(**style_conf["background"])
+            .add_title(**style_conf["title"])
+            .add_image(**style_conf["image"])
         )
         progress_callback(0.1, "Background theme rendering completed")
         # 返回进度和描述

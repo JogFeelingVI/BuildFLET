@@ -2,9 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-04-11 06:15:53
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-15 02:39:49
+# @Last Modified time: 2026-04-16 10:01:41
 
+import dis
 import io
+import re
 import time
 from typing import Any
 
@@ -47,24 +49,20 @@ class Imagers:
         - stroke="#ffffff",
         - opacity: float = 0.6,
         - rx: int | float = 8,
+        - zoom int height, width * 2
         ### return
         - bytes
         """
-        height = kwargs.get("height", 200)
-        width = kwargs.get("width", 400)
+        zoom = kwargs.get("zoom", 4)
+        height = kwargs.get("height", 200) * zoom
+        width = kwargs.get("width", 400) * zoom
         fill = kwargs.get("fill", "#FF0000")
-        stroke_width = kwargs.get("stroke_width", 3)
+        stroke_width = int(kwargs.get("stroke_width", 3)) * zoom
         stroke = kwargs.get("stroke", "#ffffff")
         opacity = kwargs.get("opacity", 1.0)
         rx = kwargs.get("rx", 8)
-        # svgcode = f"""
-        # <svg width="{width + stroke_width * 2}" height="{height + stroke_width * 2}" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
-        # <!-- Created with SVG-edit - https://github.com/SVG-Edit/svgedit-->
-        # <rect fill="{fill}" height="{height}" rx="{rx}" ry="{rx}" opacity="{opacity}" stroke="{stroke}" stroke-width="{stroke_width}" width="{width}" x="{stroke_width}" y="{stroke_width}"/>
-        # </svg>
-        # """
-        canvas_width = width + stroke_width * 4
-        canvas_height = height + stroke_width * 4
+        canvas_width = width + stroke_width * 2
+        canvas_height = height + stroke_width * 2
 
         # 3. 处理颜色和透明度
         def get_rgba(hex_str, op):
@@ -91,8 +89,9 @@ class Imagers:
         draw.rounded_rectangle(
             shape, radius=rx, fill=rgba_fill, outline=rgba_stroke, width=stroke_width
         )
-        return img.resize((width, height), resample=Image.LANCZOS)
-
+        # img.save(f"./temp_bg.png")  # 调试用，查看生成的背景图
+        return img.resize((int(canvas_width / zoom), int(canvas_height / zoom)))
+        # return img
 
     @staticmethod
     def TextToImage(**kwargs) -> Image:
@@ -125,7 +124,6 @@ class Imagers:
         text_align = kwargs.get("align", "left")
         # 1. 找到对应的本地字体文件路径
         max_width = kwargs.get("max_width", None)
-
 
         try:
             r, g, b = ImageColor.getrgb(text_color)[:3]
@@ -174,8 +172,8 @@ class Imagers:
     @staticmethod
     def CircleNumber(**kwargs) -> Image:
         """
-        生成一个带数字的圆圈
-        参数:
+        ### 生成一个带数字的圆圈
+        #### 参数:
         - size: int (圆圈直径)
         - fill: str (圆圈填充颜色)
         - stroke: str (边框颜色)
@@ -185,11 +183,15 @@ class Imagers:
         - fontmap, name (字体相关)
         - font_size_ratio: float (字号占圆圈直径的比例，默认 0.6)
         - opacity: float 0.6
+        - zoom: int = 4 (整体放大倍数，默认为4，最后返回时会缩小回原始尺寸) 用于提升细节质量
+        #### 返回数据
+        - Image 对象
         """
-        size = kwargs.get("size", 60)
+        zoom = kwargs.get("zoom", 4)
+        size = kwargs.get("size", 60) * zoom
         fill = kwargs.get("fill", "#FF0000")
         stroke = kwargs.get("stroke", "#FFFFFF")
-        stroke_width = kwargs.get("stroke_width", 2)
+        stroke_width = int(kwargs.get("stroke_width", 2)) * zoom
         text = str(kwargs.get("text", "1"))
         text_color = kwargs.get("text_color", "#FFFFFF")
         opacity = kwargs.get("opacity", 0.6)
@@ -233,26 +235,10 @@ class Imagers:
             font=font,
             anchor="mm",  # m=middle (水平居中), m=middle (垂直居中)
         )
-
-        return img
-
-    # @staticmethod
-    # def bytestoPNG(svgcode: bytes) -> Image:
-    #     """
-    #     ## Byte to image
-    #     - TextBackground (func)
-    #     - Background (func)
-    #     ### Convert to png image
-    #     - Image
-    #     """
-    #     pix = fitz.open("svg", svgcode)[0].get_pixmap(dpi=72, alpha=True)
-    #     img = Image.open(io.BytesIO(pix.tobytes("png")))
-
-    #     # img = Image.open(io.BytesIO.read(img_data))
-    #     bbox = img.getbbox()
-    #     if bbox:
-    #         img = img.crop(bbox)
-    #     return img
+        return img.resize(
+            (int(img_size / zoom), int(img_size / zoom)), resample=Image.LANCZOS
+        )
+        # return img
 
     @staticmethod
     def auto_wrap_text(text, font, max_width):
@@ -277,21 +263,22 @@ class Imagers:
 # endregion
 
 
-# renion Rendering
+# region Rendering
 class Rendering:
     def __init__(self, **kwargs):
         """单位统一为px"""
         self.padding = kwargs.get("padding", 20)
         self.width = kwargs.get("width", 400)
         self.height = kwargs.get("height", 888)
-        self.bgcolor = kwargs.get("bgcolor", (255, 255, 255, 0))
+        # self.bgcolor = kwargs.get("bgcolor", (255, 255, 255, 0))
         self.fontsManager = FontManager()
         self.__fonts_map = self.fontsManager.fonts_map(abs=True)
-        self.canvas = Image.new("RGBA", (self.width, self.height), self.bgcolor)
+        self.canvas = Image.new("RGBA", (self.width, self.height), (255, 255, 255, 0))
         # 3. Y轴布局游标（记录当前画到了哪个高度）
         # 初始高度留出顶部的 padding
         self.current_y = self.padding
         self.kwargs = kwargs
+        self.buffer_task = []  # 用于存储需要后续处理的任务，例如需要在最后统一缩放的元素等
 
     # ==========================================
     # 核心装配引擎（私有方法）
@@ -353,13 +340,108 @@ class Rendering:
         if required_height > self.canvas.height:
             # 创建新画布，高度为需求高度（可以额外加点 buffer 减少频繁扩容）
             new_height = required_height + 200
-            new_canvas = Image.new("RGBA", (self.width, new_height), self.bgcolor)
+            new_canvas = Image.new("RGBA", (self.width, new_height), (255, 255, 255, 0))
             # 将旧内容贴到新画布
             new_canvas.paste(self.canvas, (0, 0))
             self.canvas = new_canvas
             displayinfo(
                 msg=f"🚀 Canvas expanded to {new_height}px", verbose=2, **self.kwargs
             )
+
+    def add_image(self, **kwargs):
+        """
+        ### 在当前画布上贴一张外部图片
+        #### kwargs
+        - buffer 是否启动缓存服务
+        - filepath: str *
+        - width: int 可选，指定宽度，保持原图宽高比
+        - height: int 可选，指定高度，保持原图宽高比
+        - rotate: float 旋转角度, 单位为度, 默认为0
+        - opacity: float 透明度, 范围0-1, 默认为1.0
+        - top: int None
+        - bottom: int None
+        - left: int None
+        - right: int None
+        - align: str 水平对齐方式, left/center/right, 默认 center
+        - buffer 默认False 立即执行 True 最后执行
+        """
+
+        # 1. 加载图片并转为 RGBA 模式
+        buffer = kwargs.get("buffer", False)
+        filepath = kwargs.get("filepath", None)
+        if not filepath:
+            return
+        if buffer:
+            self.buffer_task.append({"add_image": kwargs})
+            return self
+        width = kwargs.get("width", None)
+        height = kwargs.get("height", None)
+        rotate = kwargs.get("rotate", 0)
+        opacity = kwargs.get("opacity", 1.0)
+        top = kwargs.get("top", None)
+        bottom = kwargs.get("bottom", None)
+        left = kwargs.get("left", None)
+        right = kwargs.get("right", None)
+        align = kwargs.get("align", "center")
+        overlay = Image.open(filepath).convert("RGBA")
+        orig_w, orig_h = overlay.size
+
+        # 2. 尺寸处理 (自动比例计算)
+        if width and not height:
+            height = int(width * (orig_h / orig_w))
+        elif height and not width:
+            width = int(height * (orig_w / orig_h))
+        elif not width and not height:
+            width, height = orig_w, orig_h
+
+        if (width, height) != (orig_w, orig_h):
+            overlay = overlay.resize((width, height), Image.LANCZOS)
+
+        # 3. 旋转处理
+        if rotate != 0:
+            # expand=True 确保旋转后图片内容不被裁剪
+            overlay = overlay.rotate(rotate, expand=True, resample=Image.BICUBIC)
+        # 旋转后尺寸会发生变化，重新获取
+        img_w, img_h = overlay.size
+        # 4. 透明度处理
+        if opacity < 1.0:
+            # 分离通道
+            r, g, b, a = overlay.split()
+            # 增强 alpha 通道（改变透明度）
+            a = a.point(lambda p: p * opacity)
+            overlay = Image.merge("RGBA", (r, g, b, a))
+        # 5. 相对位置计算
+        canvas_w, canvas_h = self.canvas.size
+        x, y = 0, 0
+        # 水平定位控制
+        if left is not None:
+            x = left
+        elif right is not None:
+            x = canvas_w - img_w - right
+        else:
+            # 基于 align_h 自动计算
+            if align == "center":
+                x = (canvas_w - img_w) // 2
+            elif align == "right":
+                x = canvas_w - img_w
+            else:  # left
+                x = 0
+
+        # 垂直定位控制
+        if top is not None:
+            y = top
+        elif bottom is not None:
+            y = canvas_h - img_h - bottom
+        else:
+            # 默认居中（或者你可以根据需要修改默认逻辑）
+            y = (canvas_h - img_h) // 2
+        # 6. 合并图片
+        # 第三个参数 overlay 是作为遮罩（mask），确保透明度生效
+        # self.canvas.paste(overlay, (int(x), int(y)), overlay)
+        temp_text_layer = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+        temp_text_layer.paste(overlay, (int(x), int(y)), overlay)
+        self.canvas = Image.alpha_composite(self.canvas, temp_text_layer)
+        return self
 
     def add_spacing(self, **kwargs):
         """
@@ -380,17 +462,22 @@ class Rendering:
         #### kwargs
         - fill:str = #000000
         - opacity:float = 1.0
+        - buffer False 立即执行 True 最后执行
         """
+        buffer = kwargs.get("buffer", False)
         fill = kwargs.get("fill", "#000000")
         opacity = kwargs.get("opacity", 1.0)
-        self.bgcolor = fill
+        if buffer:
+            self.buffer_task.append({"set_background": kwargs})
         try:
             r, g, b = ImageColor.getrgb(fill)[:3]
             fill = (r, g, b, int(opacity * 255))
         except ValueError:
             fill = fill
-        bg = Image.new("RGBA", (self.width, self.height), self.bgcolor)
-        self.canvas.paste(bg, (0, 0))
+        width, height = self.canvas.size
+        bg = Image.new("RGBA", (width, height), fill)
+        self.canvas = Image.alpha_composite(bg, self.canvas)
+        # self.canvas.paste(bg, (0, 0))
         return self
 
     def add_title(self, **kwargs):
@@ -424,7 +511,22 @@ class Rendering:
 
     def add_circle_number(self, **kwargs):
         """
-        在画布上添加一个圆形数字
+        ### 在画布上添加一个圆形数字
+        #### 参数:
+        - align: str = center
+        - name: str = `RacingSansOne-Regular`
+        - size: int (圆圈直径)
+        - fill: str (圆圈填充颜色)
+        - stroke: str (边框颜色)
+        - stroke_width: int
+        - text: str/int (1-99)
+        - text_color: str
+        - fontmap, name (字体相关) 无须设置
+        - font_size_ratio: float (字号占圆圈直径的比例，默认 0.6)
+        - opacity: float 0.6
+        - zoom: int = 4 (整体放大倍数，默认为4，最后返回时会缩小回原始尺寸) 用于提升细节质量
+        #### 返回数据
+        - Image 对象
         """
         align = kwargs.pop("align", "center")
         margin_bottom = kwargs.pop("margin_bottom", 20)
@@ -438,7 +540,15 @@ class Rendering:
         return self
 
     def add_text(self, **kwargs):
-        """画文字"""
+        """
+        ### 画文字
+        #### 参数
+        - expand: bool = False
+        - align: str = center
+        - margin_bottom: int = 30
+        - textsize:int = 48
+        - name:str = RacingSansOne-Regular
+        """
         # 模拟生成
         expand = kwargs.pop("expand", False)
         align = kwargs.pop("align", "left")
@@ -467,6 +577,7 @@ class Rendering:
         - bg_stroke_width 3
         - bg_rx 8
         - bg_opacity 0.1
+        - bg_zoom 4
         """
         # 1. 提取布局和间距参数
         expand = kwargs.pop("expand", False)
@@ -482,6 +593,7 @@ class Rendering:
             "stroke_width": kwargs.pop("bg_stroke_width", 2),
             "rx": kwargs.pop("bg_rx", 10),
             "opacity": kwargs.pop("bg_opacity", 1.0),
+            "zoom": kwargs.pop("bg_zoom", 4),
         }
 
         # 3. 生成文字图片 (此时 kwargs 剩下的都是文字参数)
@@ -518,6 +630,17 @@ class Rendering:
         )
         return self
 
+    def apply_buffer(self):
+        for task in self.buffer_task:
+            for name, kwargs in task.items():
+                kwargs.pop("buffer", None)  # 移除 buffer 参数，避免重复处理
+                funx = getattr(self, name)
+                displayinfo(
+                    msg=f"😮 Applying buffered task: {name}", verbose=2, **self.kwargs
+                )
+                funx(**kwargs)
+        self.buffer_task = []  # 清空缓存任务列表
+
     def Trim_Invalid_Space(self) -> Image:
         """
         修剪图片
@@ -526,13 +649,14 @@ class Rendering:
         # 防止高度越界（如果 padding 很大或者没内容时）
         final_height = min(final_height, self.canvas.height)
         # 裁切画布：从 (0,0) 到 (宽, 当前游标位置+padding)
-        final_img = self.canvas.crop((0, 0, self.width, int(final_height)))
+        self.canvas = self.canvas.crop((0, 0, self.width, int(final_height)))
+        self.apply_buffer()
         displayinfo(
             msg=f"✅ Trim_Invalid_Space: ({self.width}x{int(final_height)}px)",
             verbose=1,
             **self.kwargs,
         )
-        return final_img
+        return self.canvas
 
     def Write_to_file(self, **kwargs):
         """
@@ -566,11 +690,13 @@ class Rendering:
 # endregion
 
 
+# region TEST Rendering
 # 一下是测试程序
 def test_Rendering():
     renderer = Rendering(width=400 * 2, height=888 * 2, padding=30, level=10)
     (
-        renderer.set_background(fill="#1A2F45", opacity=1)
+        renderer.set_background(fill="#1A2F45", opacity=1, buffer=True)
+        # renderer
         .add_title(
             text="Today’s super jackpot",
             name="RacingSansOne-Regular",
@@ -590,6 +716,7 @@ def test_Rendering():
             bg_stroke="#ffffff",  # 白色边框
             bg_stroke_width=0,
             bg_opacity=0.9,
+            bg_zoom=4,
             margin_bottom=10,
             expand=True,  # 下方留白
         )
@@ -606,10 +733,11 @@ def test_Rendering():
             bg_stroke="#ffffff",  # 白色边框
             bg_stroke_width=1,
             bg_opacity=0.8,
+            bg_zoom=9,
             margin_bottom=10,  # 下方留白
             expand=True,
         )
-        .add_spacing(20)
+        .add_spacing(height=20)
         .add_circle_number(
             align="left",
             text="1",
@@ -620,6 +748,7 @@ def test_Rendering():
             stroke_width=0,
             opacity=0.8,
         )
+        .add_image(filepath="./wuxin.png", rotate=-17.89, opacity=0.5, buffer=True)
         .add_text_with_bg(
             text="01 05 08 10 11 + 17 18",  # 文字内容
             name="Inter_18pt-SemiBold",  # 字体
@@ -663,10 +792,14 @@ def test_Rendering():
             text_color=RandColor(mode="neon"),
             opacity=1,
         )
-        .Write_to_file("./final_poster.png")
+        .Write_to_file(filepath="./final_poster.png")
     )
 
 
+# endregion
+
+
+# region test_text
 def test_text():
     fm = FontManager()
     imgs = Imagers()
@@ -675,16 +808,24 @@ def test_text():
     text.Write_to_file("./textpng.png")
 
 
-def test_svgtopng():
+# endregion
+
+
+# region Text Background
+def test_Background():
     imgs = Imagers()
     svgpng = imgs.TextBackground()
     # svgpng = imgs.bytestoPNG(svg)
     svgpng.Write_to_file("./svgtopng.png")
 
 
+# endregion
+
+
+# region test_log_list
 def test_log_list():
     style_conf = {
-        "background": {"fill": "#1A2F45", "opacity": 1},
+        "background": {"fill": "#131C26", "opacity": 1},
         "title": {
             "text": "Today’s Super Jackpot",
             "name": "RacingSansOne-Regular",
@@ -700,7 +841,7 @@ def test_log_list():
             "padding_y": 10,  # 上下撑开 20px
             "stroke_width": 0,
             "bg_fill": "#6b29ce",  # 背景颜色（绿色）
-            "bg_rx": 5,  # 大圆角
+            "bg_rx": 10,  # 大圆角
             "bg_stroke": "#ffffff",  # 白色边框
             "bg_stroke_width": 1,
             "bg_opacity": 0.45,
@@ -778,7 +919,7 @@ def test_log_list():
             text_color=RandColor(mode="neon"),
         )
         .add_text(
-            text="4. བསོད་ནམས་དཔལ་ཁ་དར་བར་ཤོག། བྱ་བ་ལམ་འགྲོ་ཡོང་བར་སྨོན།",
+            text="¥. བསོད་ནམས་དཔལ་ཁ་དར་བར་ཤོག། བྱ་བ་ལམ་འགྲོ་ཡོང་བར་སྨོན།\nThe beauty of life lies in those unexpected surprises that bloom in the middle of ordinary days.",
             name="Jomolhari-Regular",
             textsize=24,
             align="left",
@@ -788,6 +929,9 @@ def test_log_list():
     )
 
 
+# endregion
+
+
 if __name__ == "__main__":
-    test_log_list()
-    # print(f'{}')
+    test_Rendering()
+    # test_log_list()

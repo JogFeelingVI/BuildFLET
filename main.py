@@ -2,13 +2,13 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-14 08:28:13
+# @Last Modified time: 2026-04-16 10:11:33
 
 import flet as ft
 from Customs.DraculaTheme import DraculaColors, RandColor
 from Customs.env_manager import env_manager
 from Customs.filter import FilterPage
-from Customs.loadfonts import FontManager
+from Customs.loadfonts import FontManager, fsp_fonts
 from Customs.loger import logr
 from Customs.lottery import LotteryPage
 from Customs.setings import SetingsPage
@@ -24,8 +24,8 @@ async def main(page: ft.Page):
     # page.run
 
     # fsp = FastSourcePicker()
-    # fsp_fonts = fsp.get_fastest_json()s
-    fsp_fonts = FontManager()
+    # fsp_fonts = fsp.get_fastest_json()
+    # fsp_fonts = FontManager()
     page.fonts = fsp_fonts.fonts_map()
     for name, path in page.fonts.items():
         logr.info(f"Registered fonts: {name} {path}")
