@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-16 10:12:55
+# @Last Modified time: 2026-04-17 01:12:54
 
 
 import asyncio
@@ -1659,7 +1659,8 @@ class Lotterpng:
                 "filepath": f"{env_manager.app_assets_dir}/1fa7acf2.png",
                 "rotate": -17.89,
                 "opacity": 0.5,
-                "bottom": -50
+                "bottom": 0,
+                "buffer":True,
             },
             "title": {
                 "text": "Today’s Super Jackpot",
