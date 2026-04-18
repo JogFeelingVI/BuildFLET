@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-03-02 09:10:57
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-17 01:12:54
+# @Last Modified time: 2026-04-18 02:45:57
 
 
 import asyncio
@@ -742,11 +742,10 @@ class upstashtoken:
     def setting_apply_callback(self, callblack):
         self.applycallback = callblack
 
-    def setting_valid_info(self, jsondata: str):
-        data = bc.from_base64(jsondata)
+    def setting_valid_info(self, data: dict):
         if data:
             self.intoken.value = data["token"]
-            self.intoken_url.value = data["url"]
+            self.intoken_url.value = data["api"]
             self.syncsw.value = data["sync"]
             self.valid_data = data
             self.adb.update()
@@ -783,17 +782,17 @@ class upstashtoken:
 
         # 3. 缓存检测（如果信息没变且之前验证过，直接生效并退出）
         # 使用 dict.get 更加安全，防止 KeyError
-        if (
-            self.valid_data
-            and self.valid_data.get("valid")
-            and self.valid_data.get("token") == token
-            and self.valid_data.get("url") == token_url
-        ):
-            self.valid_data["sync"] = self.syncsw.value
-            if self.applycallback:
-                self.adb.page.run_task(self.applycallback, self.valid_data)
-            self.adb.page.pop_dialog()
-            return
+        # if (
+        #     self.valid_data
+        #     and self.valid_data.get("status") == "valid"
+        #     and self.valid_data.get("token") == token
+        #     and self.valid_data.get("api") == token_url
+        # ):
+        #     self.valid_data["sync"] = self.syncsw.value
+        #     if self.applycallback:
+        #         self.adb.page.run_task(self.applycallback, self.valid_data)
+        #     self.adb.page.pop_dialog()
+        #     return
 
         # 4. 开始 API 测试流程
         await show_tip("Connecting to Upstash...", DraculaColors.YELLOW)
@@ -822,12 +821,17 @@ class upstashtoken:
 
                 if self.applycallback:
                     backdata = {
+                        # new data
                         "token": token,
-                        "url": token_url,
-                        "valid": True,
+                        "api": token_url,
                         "sync": self.syncsw.value,
+                        "status": "valid",
+                        "message": "token is valid and data saved successfully.",
+                        "updated_at": int(time.time()),
+                        "note": f"User updated token settings at {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())}",
                     }
-                    self.adb.page.run_task(self.applycallback, backdata)
+                    # print(f'backdata: {backdata}')
+                    await self.applycallback(backdata)
 
                 self.adb.page.pop_dialog()
                 return  # 修复 Bug：验证成功后必须 return，防止穿透到下面
@@ -1660,7 +1664,7 @@ class Lotterpng:
                 "rotate": -17.89,
                 "opacity": 0.5,
                 "bottom": 0,
-                "buffer":True,
+                "buffer": True,
             },
             "title": {
                 "text": "Today’s Super Jackpot",

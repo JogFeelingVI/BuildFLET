@@ -1,0 +1,9 @@
+{
+    "token": "ARdJAAImcDIzMTUzOWI5ZGMwZTI0NTNjYTdiNzZlNWJiN2RhNmIxYnAyNTk2MQ",
+    "api": "https://clever-moray-5961.upstash.io",
+    "sync": true,
+    "status": "valid",
+    "message": "token is valid and data saved successfully.",
+    "updated_at": 1776481341,
+    "note": "User updated token settings at 2026-04-18 03:02:21"
+}

@@ -2,10 +2,11 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-10 15:23:07
+# @Last Modified time: 2026-04-18 02:53:01
 
 import asyncio
 import hashlib
+import json
 import os
 
 import flet as ft
@@ -321,7 +322,11 @@ class FiltersList(ft.Container):
                 await self._save_to_local()
 
                 # 2. 如果开启了同步，处理云端逻辑
-                if self.upstash and self.upstash.get("sync"):
+                if (
+                    self.upstash
+                    and self.upstash.get("sync")
+                    and self.upstash.get("status") == "valid"
+                ):
                     await self._sync_with_cloud()
             except Exception as e:
                 logr.error(f"Error during sync process: {e}", exc_info=True)
@@ -355,7 +360,7 @@ class FiltersList(ft.Container):
         """核心逻辑：云端同步 (Upstash)"""
         if not self.upredis_api:
             self.upredis_api = RedisAPI(
-                url=self.upstash["url"], token=self.upstash["token"]
+                url=self.upstash["api"], token=self.upstash["token"]
             )
 
         # 1. 检查是否有远端更新（避免覆盖别人的更新）
@@ -413,9 +418,20 @@ class FiltersList(ft.Container):
 
     async def load_upstash_confing(self):
         """界面判断是否已经设置 upstash"""
-        b64 = await ft.SharedPreferences().get("upstash")
-        self.upstash = bc.from_base64(b64, default={})
-        if self.upstash:
+        default_config = {
+            "token": "",
+            "api": "",
+            "sync": False,
+            "status": "invalid",
+            "message": "Config not found",
+            "updated_at": 0,
+            "note": ""
+        }
+        with open(env_manager.upstash_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            full_config = default_config.copy()
+            full_config.update(data)
+            self.upstash = full_config
             logr.info("Cloud sync config loaded.")
 
     # endregion

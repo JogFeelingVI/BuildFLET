@@ -374,7 +374,7 @@ class Rendering:
         if buffer:
             self.buffer_task.append({"add_image": kwargs})
             return self
-        trim = kwargs.get("trim", True) # 增加一个开关
+        trim = kwargs.get("trim", True)  # 增加一个开关
         width = kwargs.get("width", None)
         height = kwargs.get("height", None)
         rotate = kwargs.get("rotate", 0)
@@ -757,9 +757,7 @@ def test_Rendering():
             stroke_width=0,
             opacity=0.8,
         )
-        .add_image(
-            filepath="./wuxin.png", rotate=-17.89, opacity=0.5, buffer=True
-        )
+        .add_image(filepath="./wuxin.png", rotate=-17.89, opacity=0.5, buffer=True)
         .add_text_with_bg(
             text="01 05 08 10 11 + 17 18",  # 文字内容
             name="Inter_18pt-SemiBold",  # 字体
