@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-04-11 06:15:53
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-17 13:29:51
+# @Last Modified time: 2026-04-18 05:51:20
 
 import dis
 import io
@@ -364,6 +364,7 @@ class Rendering:
         - right: int None
         - align: str 水平对齐方式, left/center/right, 默认 center
         - buffer 默认False 立即执行 True 最后执行
+        - trim: bool 是否清除图像边缘的透明区域，默认为 True
         """
 
         # 1. 加载图片并转为 RGBA 模式
@@ -886,8 +887,8 @@ def test_log_list():
         "03 07 21 23 29 33 + 03",
         "01 11 17 18 22 32 + 04",
         "15 18 20 26 31 32 + 02",
-        "03 11 21 27 29 30 + 01",
-        "04 07 17 23 24 26 + 04",
+        # "03 11 21 27 29 30 + 01",
+        # "04 07 17 23 24 26 + 04",
         # "09 11 12 16 28 30 + 02",
         # "03 05 15 19 29 33 + 03",
         # "08 15 19 23 28 29 + 02",

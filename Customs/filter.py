@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-18 02:53:01
+# @Last Modified time: 2026-04-18 23:28:18
 
 import asyncio
 import hashlib
@@ -327,7 +327,11 @@ class FiltersList(ft.Container):
                     and self.upstash.get("sync")
                     and self.upstash.get("status") == "valid"
                 ):
-                    await self._sync_with_cloud()
+                    # await self._sync_with_cloud()
+                    # 这里出现错误需要处理
+                    # AttributeError: 'NoneType' object has no attribute 'loop'
+                    # self.page.run_task(self._sync_with_cloud)
+                    asyncio.create_task(self._sync_with_cloud())
             except Exception as e:
                 logr.error(f"Error during sync process: {e}", exc_info=True)
 
@@ -425,7 +429,7 @@ class FiltersList(ft.Container):
             "status": "invalid",
             "message": "Config not found",
             "updated_at": 0,
-            "note": ""
+            "note": "",
         }
         with open(env_manager.upstash_file, "r", encoding="utf-8") as f:
             data = json.load(f)

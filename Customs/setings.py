@@ -700,7 +700,7 @@ class rsup(ft.Container):
             "status": "invalid",
             "message": "Config not found",
             "updated_at": 0,
-            "note": ""
+            "note": "",
         }
         try:
             with open(env_manager.upstash_file, "r", encoding="utf-8") as f:
@@ -863,7 +863,7 @@ class rsup(ft.Container):
             # print(f'path: {env_manager.upstash_file} \n data: {upstash_data}')
             with open(env_manager.upstash_file, "w", encoding="utf-8") as f:
                 json.dump(upstash_data, f, ensure_ascii=False, indent=4)
-
+            logr.info("Upstash token saved successfully.")
             self.update()
 
 
