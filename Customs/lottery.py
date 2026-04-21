@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-03 09:47:48
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-19 06:27:20
+# @Last Modified time: 2026-04-20 23:46:05
 
 
 import asyncio
@@ -627,6 +627,7 @@ class commandList(ft.Container):
         )
 
     def handle_test(self, e):
+        """测试所有过滤器"""
         tdb = tadbx()
         self.page.show_dialog(tdb.adb)
 
