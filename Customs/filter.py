@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-18 23:28:18
+# @Last Modified time: 2026-04-21 13:41:20
 
 import asyncio
 import hashlib
@@ -411,11 +411,42 @@ class FiltersList(ft.Container):
         self.page.session.store.set("filters", bc.to_base64(data.get("filters")))
 
         # 更新 UI 组件 (注意这里可能会比较耗时)
-        self.clear_all()
-        for filter_item in data.get("filters", []):
-            self.addFilter(filter_item, redis_async=True)
-            # 这里的 sleep 可能是为了 UI 渲染，如果 addFilter 很快可以去掉
-            await asyncio.sleep(0.05)
+        # 这里需要修改代码
+        # self.clear_all()
+        # for filter_item in data.get("filters", []):
+        #     print(filter_item)
+        #     self.addFilter(filter_item, redis_async=True)
+        #     # 这里的 sleep 可能是为了 UI 渲染，如果 addFilter 很快可以去掉
+        #     await asyncio.sleep(0.1)
+
+        # {'func': 'mod_x', 'target': 'PA', 'condition': 'mod11 <36 --m312'}
+        filters = data.get("filters", [])
+        filters_cp = filters.copy()
+        # print(f"Applying cloud filters: {filters[0:5]}...")
+        row_len = len(self.content.controls)
+        # 如果 row_len == 1，说明只有那个按钮行，没有 filter chip，可以直接添加
+        if row_len == 1:
+            for filter_item in filters:
+                self.addFilter(filter_item, redis_async=True)
+                await asyncio.sleep(0.1)
+        elif row_len > 1:
+            # row_len > 1 说已经添加新数据
+            remove_items = []
+            for item in self.content.controls:
+                if isinstance(item, FilterChipV2):
+                    scp = item.data
+                    # print(f"Checking filter: {ruff(scp)}...")
+                    if scp in filters:
+                        filters_cp.remove(scp)
+                    else:
+                        remove_items.append(item)
+            for filter_item in filters_cp:
+                self.addFilter(filter_item, redis_async=True)
+                await asyncio.sleep(0.1)
+            for item in remove_items:
+                if item in self.content.controls:
+                    self.content.controls.remove(item)
+
         self.filtersAll_change = "cloud"
         self.local_last_update = cloud_raw.get("_updated_at", 0)
         logr.info("Cloud data applied to UI.")
