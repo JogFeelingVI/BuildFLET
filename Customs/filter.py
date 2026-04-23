@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-01-01 12:20:24
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-21 13:41:20
+# @Last Modified time: 2026-04-23 13:45:58
 
 import asyncio
 import hashlib
@@ -20,6 +20,7 @@ from .jackpot_core import filterFunc
 from .loger import logr
 from .pad import quickpad
 from .Savedialogbox import CustomSwitch, promptdlg
+from .gen_id_manager import system_conf
 
 
 # region FilterChipV2
@@ -338,27 +339,13 @@ class FiltersList(ft.Container):
     async def _save_to_local(self) -> bool:
         """核心逻辑：本地保存"""
         if self.filtersAll_change == "none":
-            return True  # 没有变动不需要保存
-
-        # 获取存储路径
-        stored_id_b64 = await ft.SharedPreferences().get("storedid")
-        config_info = bc.from_base64(stored_id_b64)
-
-        if not config_info or "path" not in config_info:
-            logr.error("Local save path not found.")
-            return False
-
-        if self.filtersAll_change == "none":
             logr.info("Data does not need to be saved.")
-            return
-
-        # 保存到磁盘 (MsgPack)
-        if bc.save(config_info["path"], self.filtersAll):
-            # 更新 Session 缓存
-            self.page.session.store.set("filters", bc.to_base64(self.filtersAll))
-            logr.info("Local configuration saved. [Local]")
-            return True
-        return False
+            return False
+        # filters_path = system_conf.get_stored_path()
+        system_conf.write_to_file(data=self.filtersAll)
+        self.page.session.store.set("filters", bc.to_base64(self.filtersAll))
+        logr.info("Local configuration saved. [Local]")
+        return True
 
     async def _sync_with_cloud(self):
         """核心逻辑：云端同步 (Upstash)"""
@@ -386,9 +373,7 @@ class FiltersList(ft.Container):
         # 2. 如果本地是较新的，上传到云端
         settings_b64 = self.page.session.store.get("settings")
         settings = bc.from_base64(settings_b64)
-
         payload = {"setting": settings, "filters": self.filtersAll}
-
         # 转换并上传
         payload_b64 = bc.to_base64(payload)
         success, timestamp = await self.upredis_api.save_sync_data(
@@ -1065,20 +1050,12 @@ class CommandList(ft.Container):
         logr.info("long press run cls.")
 
     async def handle_Open(self, e):
-        b64str = await ft.SharedPreferences().get("storedid")
-        storedid = bc.from_base64(b64str)
-        _pdlg = promptdlg(
-            title="tips", info="storedid not found.", typecolor="warning", exittime=3
-        )
-        if not storedid:
-            self.page.show_dialog(_pdlg.adb)
-            return
-
+        # b64str = await ft.SharedPreferences().get("storedid")
+        filtered_content = system_conf.open_from_file()
         if self.filter_clear_all:
             self.filter_clear_all()
         try:
-            jackpot_setting_content = bc.load(storedid["path"])
-            for line in jackpot_setting_content:
+            for line in filtered_content:
                 if self.filterAddItem:
                     self.filterAddItem(line)
         except Exception as er:
@@ -1090,12 +1067,12 @@ class CommandList(ft.Container):
             )
             self.page.show_dialog(_pdlg.adb)
             return
-        b64str = bc.to_base64(jackpot_setting_content)
+        b64str = bc.to_base64(filtered_content)
         if b64str:
             self.page.session.store.set("filters", b64str)
             _pdlg = promptdlg(
                 title="Finish",
-                info=f"Reading complete. {len(jackpot_setting_content)}",
+                info=f"Reading complete. {len(filtered_content)}",
                 typecolor="info",
             )
             self.page.show_dialog(_pdlg.adb)
@@ -1167,8 +1144,6 @@ class CommandList(ft.Container):
                 logr.info(f"Reading complete. {len(load_data)}")
         except Exception as er:
             logr.error(f"handle_Load error. {er}", exc_info=True)
-
-
 # endregion
 
 

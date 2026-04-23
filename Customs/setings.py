@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-18 02:54:53
+# @Last Modified time: 2026-04-22 13:05:11
 
 import asyncio
 import os
@@ -21,6 +21,7 @@ from .lotterMange import Lotter_Data
 from .mcp_fast import ReadSMS, is_server_healthy, run_mcp_server, stop_mcp_server
 from .Savedialogbox import promptdlg, upstashtoken
 from .svgbase64 import mcpicon, svgimage, upstashicon
+from .gen_id_manager import system_conf
 
 
 # region input_user_rule
@@ -564,22 +565,9 @@ class DefaultSettings(ft.Container):
             self.render_filters()
 
     async def Regenerate_handle_click(self, e):
-        id = f"{randomData.generate_secure_string(8)}"
-        self.stored_path = os.path.join(env_manager.app_temp_path, f"gen_{id}.dict")
-        filePath = pathlib.Path(self.stored_path)
-        for item in filePath.parent.iterdir():
-            if (
-                item.is_file() or item.is_symlink() and item.name.startswith("gen_")
-            ):  # 确保只删除文件
-                logr.info(f"Regenerate_id Delete {item.name}.")
-                item.unlink()
-        filePath.parent.mkdir(parents=True, exist_ok=True)
-        filePath.write_text("")
-        storedid = {"path": self.stored_path, "id": id}
-        b64str = bc.to_base64(storedid)
-        if b64str:
-            await ft.SharedPreferences().set("storedid", b64str)
-            _pdlg = promptdlg("Regenerate ID", f"Regenerate id {id}")
+            system_conf.set_stored_id().set_stored_path()
+            newid = system_conf.get_stored_id()
+            _pdlg = promptdlg("Regenerate ID", f"Regenerate id {newid}")
             self.page.show_dialog(_pdlg.adb)
 
     def __build_card(self):
