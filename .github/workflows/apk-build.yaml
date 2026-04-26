@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-03 21:33:23
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-26 13:56:40
+# @Last Modified time: 2026-04-26 13:57:16
 name: Flet Builds
 
 on:
@@ -163,6 +163,6 @@ jobs:
           path: ${{ matrix.artifact_path }}
           if-no-files-found: error
           overwrite: false
-          retention-days: 5 
+          retention-days: 1 
           # 2. 压缩级别（v4+ 支持，1-9，增加压缩率可节省空间）
           compression-level: 9 
