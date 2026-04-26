@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-03 21:33:23
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-26 14:44:24
+# @Last Modified time: 2026-04-27 06:49:39
 name: Flet Builds
 
 on:
@@ -111,11 +111,11 @@ jobs:
     steps:
       - name: Checkout repository
         if: matrix.should_build == true || matrix.should_build == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup uv
         if: matrix.should_build == true || matrix.should_build == 'true'
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
 
       - name: Install Linux dependencies
         if: (matrix.should_build == true || matrix.should_build == 'true') && matrix.needs_linux_deps
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload Artifact
         if: matrix.should_build == true || matrix.should_build == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.name }}-build-artifact
           path: ${{ matrix.artifact_path }}
@@ -166,3 +166,4 @@ jobs:
           retention-days: 1 
           # 2. 压缩级别（v4+ 支持，1-9，增加压缩率可节省空间）
           compression-level: 9 
+          archive: true
