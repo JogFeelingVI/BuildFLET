@@ -1,0 +1,43 @@
+# @Author: JogFeelingVI
+# @Date:   2026-04-26 14:14:19
+# @Last Modified by:   JogFeelingVI
+# @Last Modified time: 2026-04-26 14:18:00
+name: Cleanup Artifacts and Show Usage
+
+on:
+    workflow_dispatch:
+        # 手动触发，也可以加定期触发
+
+jobs:
+    cleanup:
+        runs-on: ubuntu-latest
+        steps:
+            - name: 安装 GitHub CLI
+              run: |
+                  type gh || sudo apt-get install gh
+
+            - name: 显示当前 Artifact 统计
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
+                  cat artifacts.json | jq '.artifacts | length as $l | "当前artifact数量: \($l)"'
+                  cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add as $t | "总大小: \($t / 1024 / 1024) MB"'
+
+            - name: 删除30天前的 artifacts
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
+                  for id in $(cat artifacts.json | jq '.artifacts[] | select(.expired==true or .created_at<="'$(date -d '30 days ago' --iso-8601=seconds)'") | .id'); do
+                    echo "删除artifact id: $id"
+                    gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
+                  done
+
+            - name: 再次统计剩余 artifact
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
+                  cat artifacts.json | jq '.artifacts | length as $l | "剩余artifact数量: \($l)"'
+                  cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add as $t | "剩余总大小: \($t / 1024 / 1024) MB"'

@@ -2,11 +2,9 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-22 13:05:11
+# @Last Modified time: 2026-04-26 14:22:51
 
 import asyncio
-import os
-import pathlib
 import re
 import json
 
@@ -759,7 +757,7 @@ class rsup(ft.Container):
             upstash.bgcolor = ft.Colors.with_opacity(0.3, upbgc)
             upstash.border = ft.Border.all(1, ft.Colors.with_opacity(0.4, upbgc))
         # 测试对话框
-        testadb = ft.Container(
+        _ = ft.Container(
             padding=ft.Padding(10, 5, 10, 5),
             alignment=ft.Alignment.CENTER,
             border_radius=8,
