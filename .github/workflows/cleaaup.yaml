@@ -1,43 +1,53 @@
 # @Author: JogFeelingVI
 # @Date:   2026-04-26 14:14:19
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-26 14:18:00
+# @Last Modified time: 2026-04-26 14:29:35
 name: Cleanup Artifacts and Show Usage
 
 on:
     workflow_dispatch:
-        # 手动触发，也可以加定期触发
+        # 可手动触发
 
 jobs:
     cleanup:
         runs-on: ubuntu-latest
         steps:
-            - name: 安装 GitHub CLI
+            - name: 安装依赖
               run: |
-                  type gh || sudo apt-get install gh
+                  sudo apt-get update
+                  sudo apt-get install -y jq gh
 
             - name: 显示当前 Artifact 统计
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GH_PAT }}
               run: |
                   gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
-                  cat artifacts.json | jq '.artifacts | length as $l | "当前artifact数量: \($l)"'
-                  cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add as $t | "总大小: \($t / 1024 / 1024) MB"'
+                  ARTCOUNT=$(cat artifacts.json | jq '.artifacts | length')
+                  ARTSIZE=$(cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add // 0')
+                  echo "当前 artifact 数量: $ARTCOUNT"
+                  echo "artifact 总大小: $((ARTSIZE / 1024 / 1024)) MB"
 
             - name: 删除30天前的 artifacts
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GH_PAT }}
               run: |
                   gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
-                  for id in $(cat artifacts.json | jq '.artifacts[] | select(.expired==true or .created_at<="'$(date -d '30 days ago' --iso-8601=seconds)'") | .id'); do
-                    echo "删除artifact id: $id"
-                    gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
+                  DATE_LIMIT=$(date -d '30 days ago' --iso-8601=seconds)
+                  for row in $(jq -r '.artifacts[] | "\(.id) \(.created_at)"' artifacts.json); do
+                    id=$(echo $row | cut -d" " -f1)
+                    created=$(echo $row | cut -d" " -f2)
+                    if [[ "$created" < "$DATE_LIMIT" ]]; then
+                      echo "删除 artifact id: $id, 创建时间 $created"
+                      gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$id
+                    fi
                   done
 
-            - name: 再次统计剩余 artifact
+            - name: 再次统计剩余 artifact 占用
               env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GH_PAT }}
               run: |
                   gh api repos/${{ github.repository }}/actions/artifacts > artifacts.json
-                  cat artifacts.json | jq '.artifacts | length as $l | "剩余artifact数量: \($l)"'
-                  cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add as $t | "剩余总大小: \($t / 1024 / 1024) MB"'
+                  ARTCOUNT=$(cat artifacts.json | jq '.artifacts | length')
+                  ARTSIZE=$(cat artifacts.json | jq '[.artifacts[].size_in_bytes] | add // 0')
+                  echo "剩余 artifact 数量: $ARTCOUNT"
+                  echo "剩余 artifact 总大小: $((ARTSIZE / 1024 / 1024)) MB"
