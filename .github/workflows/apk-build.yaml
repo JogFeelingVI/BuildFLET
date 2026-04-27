@@ -1,7 +1,7 @@
 # @Author: JogFeelingVI
 # @Date:   2026-02-03 21:33:23
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-04-27 06:49:39
+# @Last Modified time: 2026-04-27 08:59:56
 name: Flet Builds
 
 on:
@@ -116,6 +116,8 @@ jobs:
       - name: Setup uv
         if: matrix.should_build == true || matrix.should_build == 'true'
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+            enable-cache: false 
 
       - name: Install Linux dependencies
         if: (matrix.should_build == true || matrix.should_build == 'true') && matrix.needs_linux_deps
