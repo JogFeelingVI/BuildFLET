@@ -5,8 +5,6 @@
 # @Last Modified time: 2026-07-23 10:19:17
 
 import asyncio
-import os
-import pathlib
 import re
 import json
 
@@ -18,9 +16,8 @@ from .env_manager import env_manager
 from .jackpot_core import randomData
 from .loger import logr
 from .lotterMangex import Lotter_Data
-from .mcp_fast import ReadSMS, is_server_healthy, run_mcp_server, stop_mcp_server
 from .Savedialogbox import promptdlg, upstashtoken
-from .svgbase64 import mcpicon, svgimage, upstashicon
+from .svgbase64 import svgimage, upstashicon
 from .gen_id_manager import system_conf
 
 
