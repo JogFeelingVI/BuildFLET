@@ -2,7 +2,7 @@
 # @Author: JogFeelingVI
 # @Date:   2025-12-28 00:32:47
 # @Last Modified by:   JogFeelingVI
-# @Last Modified time: 2026-07-23 10:19:17
+# @Last Modified time: 2026-07-23 22:47:07
 
 import asyncio
 import re
@@ -15,7 +15,7 @@ from .DraculaTheme import DraculaColors, HarmonyColors, RandColor
 from .env_manager import env_manager
 from .jackpot_core import randomData
 from .loger import logr
-from .lotterMangex import Lotter_Data
+from .lotterMange import Lotter_Data
 from .Savedialogbox import promptdlg, upstashtoken
 from .svgbase64 import svgimage, upstashicon
 from .gen_id_manager import system_conf
